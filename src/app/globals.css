@@ -1,0 +1,160 @@
+@import "tailwindcss";
+
+/* ── Sycomo Digital · Design Tokens v1.0 ── */
+:root {
+  /* Superfici */
+  --paper: #f7f4ed;
+  --paper-2: #f1ede4;
+  --lift: #fffefb;
+
+  /* Inchiostro & neutri */
+  --ink: #20201c;
+  --ink-soft: #4c483f;
+  --muted: #948e80;
+  --hair: #e2ddd1;
+
+  /* Rosso — brand */
+  --red: #e12c1a;
+  --red-deep: #8f2014;
+}
+
+@theme inline {
+  /* Colori esposti a Tailwind (es. bg-paper, text-red, border-hair) */
+  --color-paper: var(--paper);
+  --color-paper-2: var(--paper-2);
+  --color-lift: var(--lift);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-muted: var(--muted);
+  --color-hair: var(--hair);
+  --color-red: var(--red);
+  --color-red-deep: var(--red-deep);
+
+  /* Font (es. font-title, font-sans, font-mono) */
+  --font-title: var(--font-manrope), sans-serif;
+  --font-sans: var(--font-geist-sans), "Inter", sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--red);
+  color: var(--paper);
+}
+
+/* ── Logo Sycomo Digital ── */
+.logo-lockup {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  align-self: flex-start; /* non stirarsi nel flex-column del genitore */
+  line-height: 1;
+}
+.logo-word {
+  /* align-items: baseline → il quadratino (vuoto) ha la baseline sul proprio
+     bordo inferiore, quindi poggia esattamente sulla linea di base del testo,
+     come un vero punto tipografico. */
+  display: inline-flex;
+  align-items: baseline;
+  font-family: var(--font-sans); /* Geist */
+  font-weight: 700;
+  font-size: 1em;
+  letter-spacing: -0.045em;
+  line-height: 0.9;
+  color: var(--ink);
+}
+.logo-dot {
+  width: 0.17em;
+  height: 0.17em;
+  margin-left: 0.12em;
+  flex-shrink: 0;
+  background: var(--red);
+}
+.logo-sub {
+  font-family: var(--font-title); /* Manrope */
+  font-weight: 600;
+  font-size: 0.24em;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: var(--ink);
+  margin-top: 0.16em;
+  /* em qui si risolve sul font-size del sottotitolo (0.24em del lockup):
+     4.2em ≈ 1.0em del lockup → la D cade tra la "y" e la "c" di sycomo. */
+  margin-left: 4.2em;
+}
+
+/* ── Sipario d'apertura (drain liquido) ── */
+.intro-root {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  pointer-events: none;
+  overflow: hidden;
+}
+.intro-curtain {
+  position: absolute;
+  inset: 0;
+  background: var(--red);
+  will-change: transform;
+  animation: intro-drain 2s cubic-bezier(0.6, 0, 0.35, 1) 0.25s forwards;
+}
+.intro-wave {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 100%;
+  width: 100%;
+  height: 170px;
+  margin-bottom: -1px;
+  display: block;
+  fill: var(--red);
+}
+.intro-drop {
+  position: absolute;
+  bottom: 100%;
+  border-radius: 50%;
+  background: var(--red);
+  transform: translateY(0) scale(0);
+  animation-name: intro-splash;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
+  animation-iteration-count: infinite;
+}
+@keyframes intro-drain {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(130vh);
+  }
+}
+@keyframes intro-splash {
+  0% {
+    transform: translateY(28px) scale(0.4);
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-64px) scale(1);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .intro-drop {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .intro-curtain {
+    animation-duration: 0.01ms;
+    animation-delay: 0ms;
+  }
+}
