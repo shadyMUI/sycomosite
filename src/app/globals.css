@@ -49,6 +49,12 @@ body {
   color: var(--paper);
 }
 
+/* Progresso della transizione hero → header (0 = hero, 1 = header).
+   Scritto da ScrollDirector con inseguimento smorzato. */
+:root {
+  --p: 0;
+}
+
 /* ── Logo Sycomo Digital ── */
 .logo-lockup {
   display: inline-flex;
@@ -88,6 +94,33 @@ body {
   /* em qui si risolve sul font-size del sottotitolo (0.24em del lockup):
      4.2em ≈ 1.0em del lockup → la D cade tra la "y" e la "c" di sycomo. */
   margin-left: 4.2em;
+}
+
+/* ── Volo del logo: da centro-hero a header (guidato da --p) ──
+   left resta 0.45em: siccome l'em segue il font-size interpolato, il
+   margine sinistro scala da "una lettera del logo" a un padding da header. */
+.logo-fly {
+  position: fixed;
+  left: 0;
+  top: calc((1 - var(--p)) * 50vh + var(--p) * 10px);
+  translate: 0 calc(-50% * (1 - var(--p)));
+  margin-left: 0.45em;
+  font-size: calc((1 - var(--p)) * clamp(72px, 17vw, 240px) + var(--p) * 34px);
+  z-index: 50;
+}
+
+/* Barra della header: appare mentre il logo ci vola dentro */
+.site-header {
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: 64px;
+  z-index: 40;
+  background: color-mix(in srgb, var(--paper) 86%, transparent);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--hair);
+  opacity: var(--p);
+  pointer-events: none;
 }
 
 /* ── Sipario d'apertura (drain liquido) ── */
@@ -172,7 +205,9 @@ body {
    Tutto su compositor, niente layout. ─────────────────────────────────── */
 
 .hero-art {
-  position: absolute;
+  /* fondale fisso: le forme non seguono lo scroll della pagina,
+     si muovono solo con la coreografia guidata da --p */
+  position: fixed;
   inset: 0;
   pointer-events: none;
   overflow: hidden;
@@ -445,6 +480,104 @@ body {
     right: -22%;
     width: min(88vw, 420px);
   }
+}
+
+/* ── Viaggio allo scroll (guidato da --p) ──────────────────────────────
+   Ogni forma dichiara la propria rotta (--tx/--ty) e il delta di scala
+   (--ds). Il viaggio vive sulla proprietà `transform`, che si COMPONE con
+   le proprietà individuali translate/scale animate da derive e respiri:
+   niente conflitti, le forme continuano a vivere mentre viaggiano. */
+/* Solo figli diretti del canvas (massa ed eco): le lastre DENTRO la massa
+   erediterebbero il suo --tx e lo applicherebbero una seconda volta. */
+.cl-mass,
+.hero-art--cluster > .cl-shape {
+  transform: translate3d(
+      calc(var(--tx, 0px) * var(--p)),
+      calc(var(--ty, 0px) * var(--p)),
+      0
+    )
+    scale(calc(1 + var(--ds, 0) * var(--p)));
+}
+
+/* Il cluster migra in blocco, intatto, da destra a sinistra: la posizione
+   d'arrivo è lo specchio di quella di partenza (bordo che sanguina a
+   sinistra come all'inizio sanguinava a destra). Nessun cambio di taglia. */
+.cl-mass {
+  /* partenza: right:-8% (di viewport) → left = 1.08*100vw - W.
+     arrivo speculare: left = -8% di viewport → tx = W - 1.16*100vw. */
+  --tx: calc(clamp(360px, 46vw, 760px) - 116vw);
+  --ty: -2vh;
+}
+
+/* Dentro la massa: all'arrivo le lastre si ricompongono — si scambiano le
+   posizioni (il quadrato maggiore sale, il minore scende, cerchi che
+   slittano) restando tutte nella zona sinistra. Il reset di --tx/--ty/--ds
+   è OBBLIGATORIO: senza, erediterebbero la rotta della massa e la
+   applicherebbero una seconda volta. */
+.cl-mass > .cl-shape {
+  --tx: 0px;
+  --ty: 0px;
+  --ds: 0;
+  transform: translate3d(
+      calc(var(--tx) * var(--p)),
+      calc(var(--ty) * var(--p)),
+      0
+    )
+    scale(calc(1 + var(--ds) * var(--p)));
+}
+.cl-circle-hero {
+  --tx: 2vw;
+  --ty: 5vh;
+  --ds: 0.05;
+}
+.cl-square-major {
+  --tx: 6vw;
+  --ty: -14vh;
+  --ds: -0.08;
+}
+.cl-square-minor {
+  --tx: -4vw;
+  --ty: 16vh;
+  --ds: 0.25;
+}
+.cl-circle-pin {
+  --tx: 5vw;
+  --ty: -6vh;
+  --ds: 0.35;
+}
+
+/* Le eco viaggiano con lo scroll come il resto, ma con rotte che le
+   portano nella metà destra e sui bordi: mai sopra il cluster arrivato
+   a sinistra (che occupa ~x 0–33%, y 18–73%). Le piccole crescono. */
+.cl-echo-nw {
+  --tx: 18vw;
+  --ty: -2vh;
+  --ds: 0.6;
+}
+.cl-echo-n {
+  --tx: 14vw;
+  --ty: 2vh;
+  --ds: 0.4;
+}
+.cl-echo-mid {
+  --tx: 18vw;
+  --ty: 10vh;
+  --ds: 0.9;
+}
+.cl-echo-w {
+  --tx: 30vw;
+  --ty: 4vh;
+  --ds: 0.8;
+}
+.cl-echo-se {
+  --tx: 8vw;
+  --ty: -4vh;
+  --ds: 0.5;
+}
+.cl-echo-s {
+  --tx: 28vw;
+  --ty: -6vh;
+  --ds: 0.3;
 }
 
 /* ── Alive, ma con calma: derive e respiri lentissimi (pixel fissi:
