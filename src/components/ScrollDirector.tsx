@@ -12,6 +12,7 @@ import { useEffect } from "react";
  */
 const RANGE = 520;
 const EASE = 0.14;
+const LANDED = 0.85; // oltre questa soglia il cluster è "atterrato"
 
 export default function ScrollDirector() {
   useEffect(() => {
@@ -28,6 +29,7 @@ export default function ScrollDirector() {
       current = reduced ? target : current + (target - current) * EASE;
       if (Math.abs(target - current) < 0.001) current = target;
       root.style.setProperty("--p", current.toFixed(4));
+      root.classList.toggle("hero-landed", current >= LANDED);
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
@@ -35,6 +37,7 @@ export default function ScrollDirector() {
     return () => {
       cancelAnimationFrame(raf);
       root.style.removeProperty("--p");
+      root.classList.remove("hero-landed");
     };
   }, []);
 

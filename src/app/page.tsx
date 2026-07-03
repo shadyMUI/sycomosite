@@ -1,6 +1,7 @@
 import Logo from "@/components/Logo";
 import HeroArt from "@/components/HeroArt";
 import ScrollDirector from "@/components/ScrollDirector";
+import Tagline from "@/components/Tagline";
 
 export default function Home() {
   return (
@@ -13,6 +14,9 @@ export default function Home() {
       <main className="relative flex min-h-svh w-full flex-1 flex-col justify-center py-32">
         {/* Canvas decorativo a tutta hero, dietro al logo */}
         <HeroArt />
+
+        {/* Claim sulla destra: appare quando il cluster è atterrato */}
+        <Tagline />
 
         {/* Il logo vive fuori dal flusso: parte grande e centrato nella hero,
             allo scroll vola in alto a sinistra e diventa la header */}

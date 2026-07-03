@@ -253,10 +253,11 @@ body {
 
 /* ── Massa principale · destra-centro, sanguina oltre il bordo destro ── */
 .cl-mass {
+  --w: clamp(360px, 46vw, 760px);
   position: absolute;
   top: 50%;
   right: -8%;
-  width: clamp(360px, 46vw, 760px);
+  width: var(--w);
   aspect-ratio: 1 / 0.94;
   translate: 0 -52%;
 }
@@ -477,8 +478,9 @@ body {
 /* su schermi stretti la massa si stringe al bordo destro, dietro al logo */
 @media (max-width: 640px) {
   .cl-mass {
+    --w: min(88vw, 420px);
     right: -22%;
-    width: min(88vw, 420px);
+    width: var(--w);
   }
 }
 
@@ -505,45 +507,52 @@ body {
 .cl-mass {
   /* partenza: right:-8% (di viewport) → left = 1.08*100vw - W.
      arrivo speculare: left = -8% di viewport → tx = W - 1.16*100vw. */
-  --tx: calc(clamp(360px, 46vw, 760px) - 116vw);
+  --tx: calc(var(--w) - 116vw);
   --ty: -2vh;
 }
 
-/* Dentro la massa: all'arrivo le lastre si ricompongono — si scambiano le
-   posizioni (il quadrato maggiore sale, il minore scende, cerchi che
-   slittano) restando tutte nella zona sinistra. Il reset di --tx/--ty/--ds
-   è OBBLIGATORIO: senza, erediterebbero la rotta della massa e la
-   applicherebbero una seconda volta. */
+/* Dentro la massa: all'arrivo la composizione è la STESSA dell'inizio ma
+   ruotata di 180° (riflessione puntuale: specchiata su X E ribaltata
+   sopra/sotto su Y). Per ogni forma:
+     --tx = (100 - 2L - S)% di --w           (specchio orizzontale)
+     --ty = (100 - 2T - Sy)% dell'altezza     (ribaltamento verticale)
+   Le rotazioni tornano all'ORIGINALE: mirror-X + mirror-Y = giro di 180°,
+   che sui quadrati preserva l'inclinazione (--dr resta 0).
+   L'altezza della massa è 0.94·--w (aspect-ratio 1/0.94), quindi le quote
+   verticali sono già scalate per quel fattore. Il reset di --tx/--ty/--ds
+   è OBBLIGATORIO: senza, le lastre erediterebbero la rotta della massa. */
 .cl-mass > .cl-shape {
   --tx: 0px;
   --ty: 0px;
   --ds: 0;
+  --dr: 0deg;
   transform: translate3d(
       calc(var(--tx) * var(--p)),
       calc(var(--ty) * var(--p)),
       0
     )
-    scale(calc(1 + var(--ds) * var(--p)));
+    scale(calc(1 + var(--ds) * var(--p)))
+    rotate(calc(var(--dr) * var(--p)));
 }
-.cl-circle-hero {
-  --tx: 2vw;
-  --ty: 5vh;
-  --ds: 0.05;
+/* hero: L18 T7 W62 → X a 20%, Y in basso (~+19% di --w) */
+.cl-mass > .cl-circle-hero {
+  --tx: calc(0.02 * var(--w));
+  --ty: calc(0.188 * var(--w));
 }
-.cl-square-major {
-  --tx: 6vw;
-  --ty: -14vh;
-  --ds: -0.08;
+/* major: spostato in basso-sinistra sul cerchio (come indicato) */
+.cl-mass > .cl-square-major {
+  --tx: calc(0.35 * var(--w));
+  --ty: calc(0.24 * var(--w));
 }
-.cl-square-minor {
-  --tx: -4vw;
-  --ty: 16vh;
-  --ds: 0.25;
+/* minor: L62 T1 W27 → X a 11% (sinistra), Y in basso */
+.cl-mass > .cl-square-minor {
+  --tx: calc(-0.51 * var(--w));
+  --ty: calc(0.651 * var(--w));
 }
-.cl-circle-pin {
-  --tx: 5vw;
-  --ty: -6vh;
-  --ds: 0.35;
+/* pin: L33 T72 W17 → X a 50%, Y in alto */
+.cl-mass > .cl-circle-pin {
+  --tx: calc(0.17 * var(--w));
+  --ty: calc(-0.584 * var(--w));
 }
 
 /* Le eco viaggiano con lo scroll come il resto, ma con rotte che le
@@ -638,5 +647,179 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .hero-art--cluster .cl-shape {
     animation: none;
+  }
+}
+
+/* ── Tagline "WE ARE sycomo." ──────────────────────────────────────────
+   Fissa sulla destra, visibile quando il cluster è atterrato
+   (html.hero-landed). "WE ARE" in Manrope (come DIGITAL) in dissolvenza;
+   "sycomo" in Geist composto da uno sciame di quadratini glass che volano
+   al loro posto e si dissolvono nella parola; punto quadrato che nasce da
+   una bolla che scoppia. */
+.tagline {
+  position: fixed;
+  top: 50%;
+  right: 7vw;
+  translate: 0 -50%;
+  z-index: 10;
+  pointer-events: none;
+}
+.tagline-we {
+  display: block;
+  font-family: var(--font-title); /* Manrope, come DIGITAL */
+  font-weight: 600;
+  font-size: clamp(14px, 1.6vw, 24px);
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: var(--ink);
+  margin: 0 0 0.9em 0.15em;
+  opacity: 0;
+}
+.tagline-word {
+  position: relative;
+  display: inline-flex;
+  align-items: baseline; /* il punto (vuoto) poggia sulla baseline */
+  font-family: var(--font-sans); /* Geist, come il logo */
+  font-weight: 700;
+  font-size: clamp(56px, 7vw, 130px);
+  letter-spacing: -0.045em;
+  line-height: 0.9;
+  color: var(--ink);
+}
+.tagline-sycomo {
+  opacity: 0;
+}
+.tagline-dot {
+  width: 0.17em;
+  height: 0.17em;
+  margin-left: 0.12em;
+  flex-shrink: 0;
+  position: relative;
+  background: var(--red);
+  opacity: 0;
+}
+/* anello dello scoppio */
+.tagline-dot::after {
+  content: "";
+  position: absolute;
+  inset: -45%;
+  border-radius: 50%;
+  border: 2px solid var(--red);
+  opacity: 0;
+}
+
+/* sciame: quadratini glass in miniatura, come quelli di sfondo */
+.tagline-frags {
+  position: absolute;
+  inset: 0;
+}
+.tagline-frag {
+  position: absolute;
+  aspect-ratio: 1;
+  border-radius: 20%;
+  border: 1px solid color-mix(in srgb, var(--lift) 45%, transparent);
+  opacity: 0;
+}
+.tagline-frag:nth-child(odd) {
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--red) 62%, transparent) 0%,
+    color-mix(in srgb, var(--red-deep) 48%, transparent) 100%
+  );
+}
+.tagline-frag:nth-child(even) {
+  background: linear-gradient(
+    150deg,
+    color-mix(in srgb, var(--red-deep) 60%, transparent) 0%,
+    color-mix(in srgb, var(--red) 44%, transparent) 100%
+  );
+}
+
+/* ── Coreografia all'atterraggio ── */
+.hero-landed .tagline-we {
+  animation: tag-fade 0.7s ease 0.1s forwards;
+}
+.hero-landed .tagline-frag {
+  animation:
+    tag-frag-in 0.5s cubic-bezier(0.2, 0.8, 0.3, 1) var(--fd) both,
+    tag-frag-out 0.4s ease-in calc(var(--fd) + 0.72s) forwards;
+}
+.hero-landed .tagline-sycomo {
+  animation: tag-fade 0.8s ease 0.95s forwards;
+}
+.hero-landed .tagline-dot {
+  animation: tag-dot-pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 1.45s forwards;
+}
+.hero-landed .tagline-dot::after {
+  animation: tag-dot-burst 0.5s ease-out 1.78s forwards;
+}
+
+@keyframes tag-fade {
+  to {
+    opacity: 1;
+  }
+}
+@keyframes tag-frag-in {
+  from {
+    opacity: 0;
+    transform: translate(var(--fx), var(--fy)) scale(0.3) rotate(25deg);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes tag-frag-out {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.45);
+  }
+}
+/* bolla: si gonfia tonda e traslucida, scoppia e resta il quadrato */
+@keyframes tag-dot-pop {
+  0% {
+    opacity: 0;
+    scale: 0;
+    border-radius: 50%;
+  }
+  55% {
+    opacity: 0.85;
+    scale: 1.35;
+    border-radius: 50%;
+  }
+  70% {
+    scale: 0.7;
+    border-radius: 40%;
+  }
+  100% {
+    opacity: 1;
+    scale: 1;
+    border-radius: 0;
+  }
+}
+@keyframes tag-dot-burst {
+  0% {
+    opacity: 0.8;
+    scale: 0.4;
+  }
+  100% {
+    opacity: 0;
+    scale: 2.2;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tagline-frag {
+    display: none;
+  }
+  .hero-landed .tagline-we,
+  .hero-landed .tagline-sycomo,
+  .hero-landed .tagline-dot {
+    animation: none;
+    opacity: 1;
   }
 }
