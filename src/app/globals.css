@@ -158,3 +158,352 @@ body {
     animation-delay: 0ms;
   }
 }
+
+/* ── Hero Art · "Massa di Vetro" — cluster + contrappeso ──────────────────
+   Solo cerchi e quadrati, fermi e riconoscibili. Liquid glass opaco stile
+   HyperOS: riempimenti a gradiente tra i due rossi (color-mix, alpha alta),
+   bordo-luce e riflessi in --lift, ombra calda in --red-deep.
+   Il vetro "vero" nasce nelle sovrapposizioni: le lastre .cl-glass hanno
+   backdrop-filter e sfocano i bordi di quelle sottostanti (3 sovrapposizioni
+   deliberate nel cluster).
+   Movimento: derive/respiri 9–18s su `translate`/`scale` individuali, in
+   pixel fissi così tutta la composizione ha lo stesso respiro a ogni taglia;
+   le rotazioni statiche vivono su `rotate` e compongono senza conflitti.
+   Tutto su compositor, niente layout. ─────────────────────────────────── */
+
+.hero-art {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* base condivisa delle lastre di vetro; --edge regola il filo di luce */
+.hero-art--cluster .cl-shape {
+  --edge: color-mix(in srgb, var(--lift) 52%, transparent);
+  position: absolute;
+  display: block;
+  border: 1px solid var(--edge);
+  box-shadow:
+    /* filo di luce sul bordo superiore: il taglio della lastra */
+    inset 0 1px 0 0 color-mix(in srgb, var(--lift) 62%, transparent),
+    /* luce interna che scende dall'alto: vetro smerigliato spesso */
+    inset 0 26px 52px -22px color-mix(in srgb, var(--lift) 24%, transparent),
+    /* fondo della lastra leggermente più denso: spessore */
+    inset 0 -18px 36px -24px color-mix(in srgb, var(--red-deep) 46%, transparent),
+    /* ombra calda a contatto + alone soffuso */
+    0 10px 24px -14px color-mix(in srgb, var(--red-deep) 34%, transparent),
+    0 34px 80px -32px color-mix(in srgb, var(--red-deep) 40%, transparent);
+}
+
+/* vetro attivo: solo le lastre superiori smerigliano ciò che hanno sotto */
+.hero-art--cluster .cl-glass {
+  -webkit-backdrop-filter: blur(var(--glass-blur, 16px)) saturate(1.1);
+  backdrop-filter: blur(var(--glass-blur, 16px)) saturate(1.1);
+}
+
+/* sheen: riflesso morbido in alto-sinistra, luce unica e coerente su tutte le lastre */
+.hero-art--cluster .cl-shape::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    120% 88% at 26% 16%,
+    color-mix(in srgb, var(--lift) 30%, transparent) 0%,
+    color-mix(in srgb, var(--lift) 10%, transparent) 34%,
+    transparent 58%
+  );
+}
+
+/* ── Massa principale · destra-centro, sanguina oltre il bordo destro ── */
+.cl-mass {
+  position: absolute;
+  top: 50%;
+  right: -8%;
+  width: clamp(360px, 46vw, 760px);
+  aspect-ratio: 1 / 0.94;
+  translate: 0 -52%;
+}
+
+/* 1 · cerchio-eroe: l'ancora della massa, il vetro più grande */
+.cl-circle-hero {
+  left: 18%;
+  top: 7%;
+  width: 62%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--red) 72%, transparent) 0%,
+    color-mix(in srgb, var(--red) 66%, transparent) 38%,
+    color-mix(in srgb, var(--red-deep) 58%, transparent) 100%
+  );
+  --in: 1.15s;
+  animation:
+    cl-drift-a 18s ease-in-out -6s infinite,
+    cl-breathe 14s ease-in-out -3s infinite,
+    cl-enter 1s cubic-bezier(0.22, 1, 0.36, 1) var(--in) backwards;
+}
+
+/* arco speculare sul bordo alto del cerchio-eroe: curvatura del vetro */
+.cl-circle-hero::after {
+  content: "";
+  position: absolute;
+  inset: 4.5%;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  border-top-color: color-mix(in srgb, var(--lift) 42%, transparent);
+  rotate: -24deg;
+}
+
+/* 2 · quadrato maggiore: sopra il cerchio, ne sfoca il bordo → profondità */
+.cl-square-major {
+  --glass-blur: 22px;
+  left: 1%;
+  top: 43%;
+  width: 44%;
+  aspect-ratio: 1;
+  rotate: -8deg;
+  border-radius: 13%;
+  background: linear-gradient(
+    150deg,
+    color-mix(in srgb, var(--red-deep) 80%, transparent) 0%,
+    color-mix(in srgb, var(--red) 62%, transparent) 100%
+  );
+  --in: 1.4s;
+  animation:
+    cl-drift-b 15s ease-in-out -4s infinite,
+    cl-enter 1s cubic-bezier(0.22, 1, 0.36, 1) var(--in) backwards;
+}
+
+/* 3 · quadrato minore: tocca il bordo alto del cerchio, vetro più chiaro */
+.cl-square-minor {
+  --glass-blur: 16px;
+  left: 62%;
+  top: 1%;
+  width: 27%;
+  aspect-ratio: 1;
+  rotate: 12deg;
+  border-radius: 14%;
+  background: linear-gradient(
+    130deg,
+    color-mix(in srgb, var(--red) 58%, transparent) 0%,
+    color-mix(in srgb, var(--red-deep) 46%, transparent) 100%
+  );
+  --in: 0.95s;
+  animation:
+    cl-drift-a 12s ease-in-out -8s infinite reverse,
+    cl-enter 1s cubic-bezier(0.22, 1, 0.36, 1) var(--in) backwards;
+}
+
+/* 4 · cerchio-perno: piccolo e denso, aggancia l'angolo del quadrato maggiore */
+.cl-circle-pin {
+  --glass-blur: 14px;
+  left: 33%;
+  top: 72%;
+  width: 17%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: linear-gradient(
+    140deg,
+    color-mix(in srgb, var(--red-deep) 86%, transparent) 0%,
+    color-mix(in srgb, var(--red) 70%, transparent) 100%
+  );
+  --in: 1.6s;
+  animation:
+    cl-drift-b 10s ease-in-out -2s infinite reverse,
+    cl-breathe 9s ease-in-out -5s infinite,
+    cl-enter 1s cubic-bezier(0.22, 1, 0.36, 1) var(--in) backwards;
+}
+
+/* ── Contrappesi · eco piccole, vetro più leggero ── */
+.hero-art--cluster .cl-echo {
+  --edge: color-mix(in srgb, var(--lift) 42%, transparent);
+  box-shadow:
+    inset 0 1px 0 0 color-mix(in srgb, var(--lift) 48%, transparent),
+    inset 0 -10px 22px -14px color-mix(in srgb, var(--red-deep) 36%, transparent),
+    0 14px 34px -18px color-mix(in srgb, var(--red-deep) 30%, transparent);
+}
+
+/* quadratino alto-sinistra: sopra il logo, fuori dalla safe-zone */
+.cl-echo-nw {
+  left: 7%;
+  top: 9%;
+  width: clamp(44px, 5vw, 76px);
+  aspect-ratio: 1;
+  rotate: -14deg;
+  border-radius: 16%;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--red) 46%, transparent) 0%,
+    color-mix(in srgb, var(--red-deep) 34%, transparent) 100%
+  );
+  --in: 0.65s;
+  animation:
+    cl-breathe 16s ease-in-out -7s infinite,
+    cl-enter 1s cubic-bezier(0.22, 1, 0.36, 1) var(--in) backwards;
+}
+
+/* cerchio basso-centro: sanguina oltre il bordo inferiore */
+.cl-echo-s {
+  left: 38%;
+  bottom: -3%;
+  width: clamp(64px, 7.5vw, 116px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--red-deep) 44%, transparent) 0%,
+    color-mix(in srgb, var(--red) 30%, transparent) 100%
+  );
+  --in: 1.95s;
+  animation:
+    cl-drift-a 14s ease-in-out -10s infinite,
+    cl-enter 1s cubic-bezier(0.22, 1, 0.36, 1) var(--in) backwards;
+}
+
+/* ── Eco aggiuntive: riempiono i vuoti tra logo, massa e bordi ── */
+
+/* quadratino alto-centro, tra logo e massa */
+.cl-echo-n {
+  --in: 0.7s;
+  left: 45%;
+  top: 6%;
+  width: clamp(36px, 3.6vw, 58px);
+  aspect-ratio: 1;
+  rotate: 22deg;
+  border-radius: 16%;
+  background: linear-gradient(
+    140deg,
+    color-mix(in srgb, var(--red) 44%, transparent) 0%,
+    color-mix(in srgb, var(--red-deep) 32%, transparent) 100%
+  );
+  animation:
+    cl-drift-b 13s ease-in-out -7s infinite,
+    cl-enter 1s cubic-bezier(0.22, 1, 0.36, 1) var(--in) backwards;
+}
+
+/* cerchio medio in alto, nel canale tra logo e cluster */
+.cl-echo-mid {
+  --in: 0.85s;
+  left: 53%;
+  top: 15%;
+  width: clamp(48px, 5.5vw, 88px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--red) 52%, transparent) 0%,
+    color-mix(in srgb, var(--red-deep) 40%, transparent) 100%
+  );
+  animation:
+    cl-breathe 13s ease-in-out -4s infinite,
+    cl-enter 1s cubic-bezier(0.22, 1, 0.36, 1) var(--in) backwards;
+}
+
+/* cerchietto basso-sinistra, sotto la zona del logo */
+.cl-echo-w {
+  --in: 1.7s;
+  left: 20%;
+  top: 77%;
+  width: clamp(30px, 3.2vw, 52px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--red-deep) 40%, transparent) 0%,
+    color-mix(in srgb, var(--red) 28%, transparent) 100%
+  );
+  animation:
+    cl-breathe 15s ease-in-out -9s infinite,
+    cl-enter 1s cubic-bezier(0.22, 1, 0.36, 1) var(--in) backwards;
+}
+
+/* quadratino basso, tra il perno e il cerchio che sanguina */
+.cl-echo-se {
+  --in: 1.8s;
+  left: 67%;
+  top: 79%;
+  width: clamp(40px, 4.4vw, 72px);
+  aspect-ratio: 1;
+  rotate: -16deg;
+  border-radius: 15%;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--red) 50%, transparent) 0%,
+    color-mix(in srgb, var(--red-deep) 38%, transparent) 100%
+  );
+  animation:
+    cl-drift-b 12s ease-in-out -8s infinite,
+    cl-enter 1s cubic-bezier(0.22, 1, 0.36, 1) var(--in) backwards;
+}
+
+/* su schermi stretti la massa si stringe al bordo destro, dietro al logo */
+@media (max-width: 640px) {
+  .cl-mass {
+    right: -22%;
+    width: min(88vw, 420px);
+  }
+}
+
+/* ── Alive, ma con calma: derive e respiri lentissimi (pixel fissi:
+     stesso respiro controllato per ogni forma, grande o piccola) ── */
+@keyframes cl-drift-a {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 10px -8px;
+  }
+}
+@keyframes cl-drift-b {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  38% {
+    translate: -9px 6px;
+  }
+  72% {
+    translate: 5px 9px;
+  }
+}
+@keyframes cl-breathe {
+  0%,
+  100% {
+    scale: 1;
+  }
+  50% {
+    scale: 1.035;
+  }
+}
+
+/* Comparsa: ogni forma sboccia inseguendo il sipario liquido che scende
+   (delay --in scalati per posizione verticale). Fill `backwards`: prima del
+   proprio turno la forma è invisibile; a fine corsa l'animazione si sgancia
+   e restituisce scale/opacity a respiri e derive (mai `forwards`, che
+   congelerebbe la scale per sempre). */
+@keyframes cl-enter {
+  0% {
+    opacity: 0;
+    scale: 0.5;
+  }
+  55% {
+    opacity: 1;
+  }
+  72% {
+    scale: 1.05;
+  }
+  100% {
+    opacity: 1;
+    scale: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-art--cluster .cl-shape {
+    animation: none;
+  }
+}
