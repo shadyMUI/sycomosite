@@ -49,10 +49,22 @@ body {
   color: var(--paper);
 }
 
-/* Progresso della transizione hero → header (0 = hero, 1 = header).
-   Scritto da ScrollDirector con inseguimento smorzato. */
+/* Progresso della transizione hero → header (0 = hero, 1 = header) e
+   progresso della fase 2 (--p2: 0 = punto, 1 = pannello CTA aperto).
+   Scritti da ScrollDirector con inseguimento smorzato. */
+
+/* Registrare --p2 come <number> lo rende robusto in calc(): viene sempre
+   trattato come numero puro (non stringa), quindi (var(--p2) - 0.55)/0.45 e
+   simili sono validi anche quando la property non è ancora stata scritta. */
+@property --p2 {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+
 :root {
   --p: 0;
+  --p2: 0;
 }
 
 /* ── Logo Sycomo Digital ── */
@@ -659,7 +671,7 @@ body {
 .tagline {
   position: fixed;
   top: 50%;
-  right: 7vw;
+  right: 13vw;
   translate: 0 -50%;
   z-index: 10;
   pointer-events: none;
@@ -668,7 +680,7 @@ body {
   display: block;
   font-family: var(--font-title); /* Manrope, come DIGITAL */
   font-weight: 600;
-  font-size: clamp(14px, 1.6vw, 24px);
+  font-size: clamp(18px, 2.2vw, 34px);
   letter-spacing: 0.34em;
   text-transform: uppercase;
   color: var(--ink);
@@ -681,7 +693,7 @@ body {
   align-items: baseline; /* il punto (vuoto) poggia sulla baseline */
   font-family: var(--font-sans); /* Geist, come il logo */
   font-weight: 700;
-  font-size: clamp(56px, 7vw, 130px);
+  font-size: clamp(64px, 13vw, 200px);
   letter-spacing: -0.045em;
   line-height: 0.9;
   color: var(--ink);
@@ -812,6 +824,66 @@ body {
   }
 }
 
+/* ── Coreografia inversa (scroll verso l'alto) ──
+   Il contrario dell'entrata, in ordine inverso: prima il punto torna bolla
+   e si sgonfia, poi "sycomo" si sgretola in quadratini che rivolano via,
+   infine "WE ARE" svanisce. */
+.hero-leaving .tagline-dot {
+  animation: tag-dot-unpop 0.5s ease-in forwards;
+}
+.hero-leaving .tagline-sycomo {
+  animation: tag-fade-out 0.45s ease 0.12s forwards;
+}
+.hero-leaving .tagline-frag {
+  animation: tag-frag-exit 0.55s cubic-bezier(0.5, 0, 0.75, 0)
+    calc(var(--fd) + 0.15s) forwards;
+}
+.hero-leaving .tagline-we {
+  animation: tag-fade-out 0.5s ease 0.4s forwards;
+}
+
+@keyframes tag-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+/* punto → torna bolla tonda gonfia e si sgonfia fino a sparire */
+@keyframes tag-dot-unpop {
+  0% {
+    opacity: 1;
+    scale: 1;
+    border-radius: 0;
+  }
+  40% {
+    opacity: 0.85;
+    scale: 1.35;
+    border-radius: 50%;
+  }
+  100% {
+    opacity: 0;
+    scale: 0;
+    border-radius: 50%;
+  }
+}
+/* la parola si sgretola: i quadratini riappaiono e rivolano all'origine */
+@keyframes tag-frag-exit {
+  0% {
+    opacity: 0;
+    transform: none;
+  }
+  20% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--fx), var(--fy)) scale(0.3) rotate(-25deg);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .tagline-frag {
     display: none;
@@ -822,4 +894,119 @@ body {
     animation: none;
     opacity: 1;
   }
+  .hero-leaving .tagline-we,
+  .hero-leaving .tagline-sycomo,
+  .hero-leaving .tagline-dot {
+    animation: none;
+    opacity: 0;
+  }
 }
+
+/* ── CTA "so, what do we do." · il punto che invade (fase --p2) ──────────
+   Secondo atto guidato dallo scroll: il PUNTO QUADRATO ROSSO in coda a
+   "sycomo" cresce, ancorato al lato destro e al centro verticale, fino a un
+   pannello rosso con margine di 3cm (inset:3cm). Tutto è funzione continua
+   di --p2 via calc()/clamp(): reveal "scrubby", reversibile scrollando.
+   (@property --p2 è registrato più in alto in questo file.) */
+
+/* Radice: copre tutto, sopra il resto, trasparente agli eventi. */
+.cta-reveal {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+}
+
+/* Il pannello È il punto e cresce ESATTAMENTE da esso. L'ancora
+   (--dot-cx / --dot-cy / --dot-size) è misurata dal vivo da ScrollDirector
+   sul vero punto di "sycomo." → niente "secondo punto", parte da lì.
+   Fallback usati prima che il JS scriva le vars (o a JS spento). */
+.cta-reveal--iris-corner .cr-panel {
+  --gap: 3cm;
+  --grow: clamp(0, var(--p2), 1);
+  --seed: var(--dot-size, 32px);
+  --ax: var(--dot-cx, 84vw); /* centro X del punto (px, viewport) */
+  --ay: var(--dot-cy, 46vh); /* centro Y del punto (px, viewport) */
+
+  position: absolute;
+
+  /* left/top: dal bordo del punto (centro − mezzo lato) fino a 3cm.
+     width/height: dal lato del punto fino a viewport − 2·3cm.
+     A --grow=1 ⇒ left/top = 3cm e width/height = 100vw−6cm / 100svh−6cm,
+     cioè esattamente inset:3cm. */
+  left: calc(
+    (var(--ax) - var(--seed) / 2) +
+      (var(--gap) - (var(--ax) - var(--seed) / 2)) * var(--grow)
+  );
+  top: calc(
+    (var(--ay) - var(--seed) / 2) +
+      (var(--gap) - (var(--ay) - var(--seed) / 2)) * var(--grow)
+  );
+  width: calc(var(--seed) + (100vw - 2 * var(--gap) - var(--seed)) * var(--grow));
+  height: calc(var(--seed) + (100svh - 2 * var(--gap) - var(--seed)) * var(--grow));
+
+  background: var(--red);
+
+  /* squadrato, come il punto del brand: nessun angolo arrotondato */
+  border-radius: 0;
+
+  /* invisibile a --p2=0 (durante la fase 1 non deve comparire nessun
+     quadrato vagante); appare appena la fase 2 inizia, sovrapposto al punto */
+  opacity: clamp(0, calc(var(--p2) * 24), 1);
+
+  /* profondità coerente col linguaggio glass del sito (monta con --p2) */
+  box-shadow:
+    0 24px 60px -30px
+      color-mix(in srgb, var(--red-deep) calc(60% * var(--grow)), transparent),
+    0 6px 18px -12px
+      color-mix(in srgb, var(--red-deep) calc(50% * var(--grow)), transparent);
+}
+
+/* Layer testo: dimensione piena del pannello, centrato. Il testo non è mai
+   stirato perché non eredita alcuno scale. */
+.cta-reveal--iris-corner .cr-textwrap {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 0 6vw;
+}
+
+/* --show: 0 fino a --p2=0.55, poi sale a 1 entro --p2=1 (seconda metà). */
+.cta-reveal--iris-corner .cr-text {
+  --show: clamp(0, calc((var(--p2) - 0.55) / 0.45), 1);
+
+  margin: 0;
+  font-family: var(--font-sans); /* Geist */
+  font-weight: 600;
+  font-size: clamp(28px, 5vw, 74px);
+  letter-spacing: -0.03em;
+  line-height: 1;
+  text-align: center;
+  color: var(--paper); /* risalta sul rosso */
+
+  display: inline-flex;
+  align-items: baseline; /* il punto quadrato poggia sulla baseline */
+  justify-content: center;
+
+  opacity: var(--show);
+  /* piccolo assestamento dal basso mentre appare, derivato da --show */
+  translate: 0 calc((1 - var(--show)) * 0.4em);
+  will-change: opacity;
+}
+
+/* Punto finale quadrato, color --paper per essere visibile sul rosso.
+   Entra un filo dopo il testo: mappa la coda di --p2 (0.8 → 1). */
+.cta-reveal--iris-corner .cr-dot {
+  width: 0.17em;
+  height: 0.17em;
+  margin-left: 0.1em;
+  flex-shrink: 0;
+  align-self: baseline;
+  background: var(--paper);
+  opacity: clamp(0, calc((var(--p2) - 0.8) / 0.2), 1);
+}
+
+/* Motion ridotto: nessun override necessario. ScrollDirector scrive --p2
+   direttamente (senza lerp), quindi il reveal segue comunque lo scroll, solo
+   in modo più netto invece che smorzato. */

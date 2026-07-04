@@ -2,6 +2,7 @@ import Logo from "@/components/Logo";
 import HeroArt from "@/components/HeroArt";
 import ScrollDirector from "@/components/ScrollDirector";
 import Tagline from "@/components/Tagline";
+import CtaReveal from "@/components/CtaReveal";
 
 export default function Home() {
   return (
@@ -23,8 +24,11 @@ export default function Home() {
         <Logo className="logo-fly" />
       </main>
 
-      {/* Spazio placeholder per le prossime sezioni: dà corsa allo scroll */}
-      <section aria-hidden="true" className="h-[150vh]" />
+      {/* Fase 2: il punto di sycomo cresce in un pannello CTA a tutto schermo */}
+      <CtaReveal />
+
+      {/* Spazio placeholder: dà corsa allo scroll (fase 1 + fase 2) */}
+      <section aria-hidden="true" className="h-[220vh]" />
     </>
   );
 }
