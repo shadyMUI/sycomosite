@@ -61,10 +61,22 @@ body {
   inherits: true;
   initial-value: 0;
 }
+@property --p3 {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+@property --p4 {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
 
 :root {
   --p: 0;
   --p2: 0;
+  --p3: 0;
+  --p4: 0;
 }
 
 /* ── Logo Sycomo Digital ── */
@@ -922,8 +934,15 @@ body {
    sul vero punto di "sycomo." → niente "secondo punto", parte da lì.
    Fallback usati prima che il JS scriva le vars (o a JS spento). */
 .cta-reveal--iris-corner .cr-panel {
-  --gap: 3cm;
-  --grow: clamp(0, var(--p2), 1);
+  /* Fase 3: il margine di 3cm si riassorbe (smoothstep su --p3) finché il
+     pannello copre tutto lo schermo — in contemporanea con l'affondo. */
+  --t3: clamp(0, var(--p3), 1);
+  --g3: calc(var(--t3) * var(--t3) * (3 - 2 * var(--t3)));
+  --gap: calc(3cm * (1 - var(--g3)));
+  /* smoothstep: crescita con ease-in-out (parte e si posa in modo morbido,
+     non meccanico) invece che lineare. t²(3−2t). */
+  --t: clamp(0, var(--p2), 1);
+  --grow: calc(var(--t) * var(--t) * (3 - 2 * var(--t)));
   --seed: var(--dot-size, 32px);
   --ax: var(--dot-cx, 84vw); /* centro X del punto (px, viewport) */
   --ay: var(--dot-cy, 46vh); /* centro Y del punto (px, viewport) */
@@ -945,14 +964,24 @@ body {
   width: calc(var(--seed) + (100vw - 2 * var(--gap) - var(--seed)) * var(--grow));
   height: calc(var(--seed) + (100svh - 2 * var(--gap) - var(--seed)) * var(--grow));
 
-  background: var(--red);
+  /* rosso pieno + sheen radiale morbido in alto-sinistra: profondità, non
+     un rosso piatto (coerente col linguaggio glass del sito) */
+  background:
+    radial-gradient(
+      130% 110% at 28% 18%,
+      color-mix(in srgb, var(--lift) 14%, transparent),
+      transparent 55%
+    ),
+    var(--red);
 
   /* squadrato, come il punto del brand: nessun angolo arrotondato */
   border-radius: 0;
 
   /* invisibile a --p2=0 (durante la fase 1 non deve comparire nessun
-     quadrato vagante); appare appena la fase 2 inizia, sovrapposto al punto */
-  opacity: clamp(0, calc(var(--p2) * 24), 1);
+     quadrato vagante); appare appena la fase 2 inizia, sovrapposto al punto.
+     In fase 4 si DISSOLVE (× 1−smoothstep(--p4)) rivelando la scena invertita. */
+  --fade4: calc(var(--p4) * var(--p4) * (3 - 2 * var(--p4)));
+  opacity: calc(clamp(0, calc(var(--p2) * 24), 1) * (1 - var(--fade4)));
 
   /* profondità coerente col linguaggio glass del sito (monta con --p2) */
   box-shadow:
@@ -972,14 +1001,16 @@ body {
   padding: 0 6vw;
 }
 
-/* --show: 0 fino a --p2=0.55, poi sale a 1 entro --p2=1 (seconda metà). */
+/* Il testo emerge nell'ultima parte (0.6→1), con progresso addolcito da
+   smoothstep: sale e appare in modo morbido, mai a scatto. */
 .cta-reveal--iris-corner .cr-text {
-  --show: clamp(0, calc((var(--p2) - 0.55) / 0.45), 1);
+  --raw: clamp(0, calc((var(--p2) - 0.6) / 0.4), 1);
+  --show: calc(var(--raw) * var(--raw) * (3 - 2 * var(--raw)));
 
   margin: 0;
   font-family: var(--font-sans); /* Geist */
   font-weight: 600;
-  font-size: clamp(28px, 5vw, 74px);
+  font-size: clamp(34px, 6.2vw, 92px);
   letter-spacing: -0.03em;
   line-height: 1;
   text-align: center;
@@ -990,23 +1021,839 @@ body {
   justify-content: center;
 
   opacity: var(--show);
-  /* piccolo assestamento dal basso mentre appare, derivato da --show */
-  translate: 0 calc((1 - var(--show)) * 0.4em);
-  will-change: opacity;
+  /* salita morbida dal basso mentre appare, derivata dal progresso addolcito */
+  translate: 0 calc((1 - var(--show)) * 0.6em);
+  will-change: opacity, translate;
 }
 
-/* Punto finale quadrato, color --paper per essere visibile sul rosso.
-   Entra un filo dopo il testo: mappa la coda di --p2 (0.8 → 1). */
-.cta-reveal--iris-corner .cr-dot {
-  width: 0.17em;
-  height: 0.17em;
-  margin-left: 0.1em;
-  flex-shrink: 0;
-  align-self: baseline;
-  background: var(--paper);
-  opacity: clamp(0, calc((var(--p2) - 0.8) / 0.2), 1);
+/* ── Affondo delle lettere (fase --p3) ──
+   Ogni lettera ha il suo profilo (--st partenza, --sx/--sy deriva, --sr
+   rotazione): scende, rimpicciolisce e si sfoca come vista dall'alto mentre
+   va a fondo. Tutto continuo su --p3 → reversibile. */
+.cta-reveal--iris-corner .cr-sink {
+  display: inline;
 }
+.cta-reveal--iris-corner .cr-letter {
+  --lp0: clamp(0, calc((var(--p3) - var(--st, 0)) / 0.55), 1);
+  --lp: calc(var(--lp0) * var(--lp0) * (3 - 2 * var(--lp0)));
+  /* discesa che ACCELERA (gravità in acqua): quadrato del progresso */
+  --lp2: calc(var(--lp) * var(--lp));
+  /* campana 0→1→0: piccolo sussulto di galleggiamento prima di affondare */
+  --bell: calc(4 * var(--lp) * (1 - var(--lp)));
+
+  display: inline-block;
+
+  /* resta visibile a lungo mentre sfoca e viene assorbita, svanisce tardi */
+  opacity: calc(1 - var(--lp) * var(--lp2));
+
+  /* su di un soffio (galleggiamento) → poi giù sempre più veloce */
+  translate: calc(var(--sx, 0em) * 2 * var(--lp))
+    calc(var(--sy, 0.3em) * 2.6 * var(--lp2) - 0.09em * var(--bell));
+  scale: calc(1 - 0.62 * var(--lp2) - 0.03 * var(--bell));
+  rotate: calc(var(--sr, 0deg) * 1.7 * var(--lp));
+
+  /* la profondità sfoca tardi ma forte */
+  filter: blur(calc(13px * var(--lp2)));
+
+  /* assorbita dall'acqua: perde il bianco e prende il colore del fondo */
+  color: color-mix(
+    in srgb,
+    var(--paper) calc(100% - 62% * var(--lp)),
+    var(--red-deep)
+  );
+
+  will-change: opacity, translate, scale, filter;
+}
+
 
 /* Motion ridotto: nessun override necessario. ScrollDirector scrive --p2
    direttamente (senza lerp), quindi il reveal segue comunque lo scroll, solo
    in modo più netto invece che smorzato. */
+
+/* Root condiviso: fondo ROSSO solido appena la fase 4 inizia (×16), z 55.
+   Invisibile a --p4≈0 → fasi precedenti intatte, ma pieno sotto il pannello
+   CTA (z 60) che si dissolve sopra. Velo caldo per profondità (mai piatto). */
+.inverted-scene {
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+  pointer-events: none;
+  overflow: hidden;
+  /* rosso CHIARO: il tono che avevano le figure glass rosse sulla carta
+     (red al ~72% su paper), non il rosso pieno del pannello */
+  background: color-mix(in srgb, var(--red) 72%, var(--paper));
+  opacity: clamp(0, calc(var(--p4) * 16), 1);
+  background-image:
+    radial-gradient(
+      140% 120% at 22% 14%,
+      color-mix(in srgb, var(--lift) 10%, transparent),
+      transparent 52%
+    ),
+    radial-gradient(
+      120% 120% at 88% 96%,
+      color-mix(in srgb, var(--red-deep) 46%, transparent),
+      transparent 60%
+    );
+}
+
+/* Alive: derive e respiri lentissimi (8–18s), SOLO translate/scale individuali
+   → sul compositor, niente layout, nessun conflitto con l'opacità su --p4. */
+@keyframes is-drift-a {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: -9px 8px;
+  }
+}
+@keyframes is-drift-b {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  38% {
+    translate: 8px -6px;
+  }
+  72% {
+    translate: -5px -9px;
+  }
+}
+@keyframes is-breathe {
+  0%,
+  100% {
+    scale: 1;
+  }
+  50% {
+    scale: 1.03;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   VARIANTE "massa in ALTO-DESTRA" — contrappeso opposto alle fasi precedenti.
+   Tutto scoping sotto .inverted-scene--mass-right-top → coesiste/rimpiazza
+   altre varianti senza collisioni. */
+
+/* ── Base condivisa delle lastre panna · liquid glass INVERTITO ──
+   Gradiente morbido tra --paper e --lift (con un filo di --paper-2),
+   bordo-luce chiaro in --lift, ombra soffusa in --red-deep. Materiche. */
+.inverted-scene--mass-right-top .is-shape {
+  --edge: color-mix(in srgb, var(--lift) 78%, transparent);
+  position: absolute;
+  display: block;
+  border: 1px solid var(--edge);
+  background: linear-gradient(
+    150deg,
+    color-mix(in srgb, var(--lift) 92%, var(--paper)) 0%,
+    var(--paper) 52%,
+    color-mix(in srgb, var(--paper-2) 88%, var(--lift)) 100%
+  );
+  box-shadow:
+    /* filo di luce sul bordo superiore: il taglio chiaro della lastra */
+    inset 0 1px 0 0 color-mix(in srgb, var(--lift) 90%, transparent),
+    /* luce interna dall'alto: vetro smerigliato spesso */
+    inset 0 26px 54px -24px color-mix(in srgb, var(--lift) 70%, transparent),
+    /* fondo più denso (paper-2): spessore della lastra */
+    inset 0 -20px 40px -26px color-mix(in srgb, var(--paper-2) 82%, transparent),
+    /* ombra calda a contatto + alone soffuso, in red-deep sul fondo rosso */
+    0 12px 28px -16px color-mix(in srgb, var(--red-deep) 50%, transparent),
+    0 40px 90px -36px color-mix(in srgb, var(--red-deep) 46%, transparent);
+  will-change: transform, opacity;
+}
+
+/* vetro attivo: solo le lastre superiori smerigliano ciò che hanno sotto
+   (backdrop-filter dove due figure si sovrappongono → profondità) */
+.inverted-scene--mass-right-top .is-glass {
+  -webkit-backdrop-filter: blur(var(--glass-blur, 16px)) saturate(1.05);
+  backdrop-filter: blur(var(--glass-blur, 16px)) saturate(1.05);
+}
+
+/* sheen: riflesso morbido in alto-sinistra, luce unica e coerente su tutte */
+.inverted-scene--mass-right-top .is-shape::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    120% 88% at 26% 16%,
+    color-mix(in srgb, var(--lift) 60%, transparent) 0%,
+    color-mix(in srgb, var(--lift) 22%, transparent) 34%,
+    transparent 58%
+  );
+}
+
+/* eco più leggere: meno spessore, ombra più tenue */
+.inverted-scene--mass-right-top .is-echo {
+  --edge: color-mix(in srgb, var(--lift) 64%, transparent);
+  box-shadow:
+    inset 0 1px 0 0 color-mix(in srgb, var(--lift) 76%, transparent),
+    inset 0 -12px 26px -18px color-mix(in srgb, var(--paper-2) 70%, transparent),
+    0 16px 38px -20px color-mix(in srgb, var(--red-deep) 40%, transparent);
+}
+
+/* ── Opacità delle figure mappata su --p4, con stagger ──
+   Ogni figura ha soglia (--o0) e ampiezza (--ow): emergono in sequenza —
+   prima la massa alto-destra, poi le eco verso basso-sinistra — mentre il
+   rosso del pannello si scioglie. Vale anche per le lastre DENTRO la massa
+   (sono .is-shape a loro volta). */
+.inverted-scene--mass-right-top .is-shape {
+  /* A riposo: FUORI dal campo (--fx/--fy) e invisibili. Quando la scena è
+     viva (html.scene-live) ognuna entra con una `transition` a tempo e un
+     ease-OUT marcato: parte VELOCE e RALLENTA molto arrivando al suo posto,
+     scaglionata da --sd. La transition sul `transform` si compone con
+     translate/scale delle derive senza conflitti. */
+  opacity: 0;
+  transform: translate(var(--fx, 16vw), var(--fy, 0vh));
+  transition:
+    transform 1.25s cubic-bezier(0.16, 0.86, 0.26, 1) var(--sd, 0s),
+    opacity 0.55s ease var(--sd, 0s);
+}
+.scene-live .inverted-scene--mass-right-top .is-shape {
+  opacity: 1;
+  transform: translate(0, 0);
+}
+
+/* ── Massa principale · ALTO-DESTRA, sanguina oltre l'angolo ──
+   Contenitore posizionato: le 4 lastre vivono in % al suo interno e derivano
+   come un blocco. NON è una .is-shape → nessun vetro/opacità propri: solo
+   geometria. Le lastre figlie portano vetro e opacità. */
+.inverted-scene--mass-right-top .is-mass {
+  --w: clamp(380px, 48vw, 800px);
+  position: absolute;
+  top: -14%;
+  right: -10%;
+  width: var(--w);
+  aspect-ratio: 1 / 0.96;
+}
+
+/* 1 · cerchio-eroe: l'ancora, la panna più grande, sanguina dall'angolo
+   alto-destro. Emerge per primo (soglia bassa). */
+.inverted-scene--mass-right-top .is-circle-hero {
+  --o0: 0.06;
+  --ow: 0.5;
+  --fx: 15vw;
+  --fy: -11vh;
+  --sd: 0s;
+  right: 4%;
+  top: 6%;
+  width: 66%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  animation:
+    is-drift-a 18s ease-in-out -6s infinite,
+    is-breathe 15s ease-in-out -3s infinite;
+}
+/* arco speculare chiaro sul bordo alto: curvatura del vetro */
+.inverted-scene--mass-right-top .is-circle-hero::after {
+  content: "";
+  position: absolute;
+  inset: 5%;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  border-top-color: color-mix(in srgb, var(--lift) 70%, transparent);
+  rotate: -24deg;
+}
+
+/* 2 · quadrato maggiore: interseca il cerchio dal basso-sinistra, ne sfoca il
+   bordo → profondità. Vetro spesso (blur 22px). */
+.inverted-scene--mass-right-top .is-square-major {
+  --o0: 0.16;
+  --ow: 0.54;
+  --fx: 20vw;
+  --fy: 7vh;
+  --sd: 0.1s;
+  --glass-blur: 22px;
+  right: 40%;
+  top: 46%;
+  width: 46%;
+  aspect-ratio: 1;
+  rotate: 9deg;
+  border-radius: 13%;
+  animation:
+    is-drift-b 15s ease-in-out -4s infinite,
+    is-breathe 17s ease-in-out -9s infinite;
+}
+
+/* 3 · quadrato minore: tocca il bordo alto-sinistra del cerchio, vetro chiaro */
+.inverted-scene--mass-right-top .is-square-minor {
+  --o0: 0.24;
+  --ow: 0.5;
+  --fx: 9vw;
+  --fy: -15vh;
+  --sd: 0.17s;
+  --glass-blur: 16px;
+  right: 60%;
+  top: 4%;
+  width: 28%;
+  aspect-ratio: 1;
+  rotate: -12deg;
+  border-radius: 14%;
+  animation: is-drift-a 12s ease-in-out -8s infinite reverse;
+}
+
+/* 4 · cerchio-perno: piccolo e denso, aggancia la base della massa. */
+.inverted-scene--mass-right-top .is-circle-pin {
+  --o0: 0.3;
+  --ow: 0.5;
+  --fx: 13vw;
+  --fy: 11vh;
+  --sd: 0.24s;
+  --glass-blur: 14px;
+  right: 24%;
+  top: 74%;
+  width: 18%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  animation:
+    is-drift-b 10s ease-in-out -2s infinite reverse,
+    is-breathe 9s ease-in-out -5s infinite;
+}
+
+/* ── Contrappesi · eco ridistribuite in basso-SINISTRA e centro ── */
+
+/* 5 · quadrato basso-sinistra: il contrappeso maggiore alla massa alto-destra */
+.inverted-scene--mass-right-top .is-echo-sw {
+  --o0: 0.22;
+  --ow: 0.56;
+  --fx: -17vw;
+  --fy: 13vh;
+  --sd: 0.12s;
+  left: 7%;
+  bottom: 9%;
+  width: clamp(72px, 9vw, 152px);
+  aspect-ratio: 1;
+  rotate: -11deg;
+  border-radius: 15%;
+  animation:
+    is-breathe 16s ease-in-out -7s infinite,
+    is-drift-a 17s ease-in-out -9s infinite;
+}
+
+/* 6 · cerchio medio-sinistra, sopra il quadrato basso: sale il canale sinistro */
+.inverted-scene--mass-right-top .is-echo-w {
+  --o0: 0.34;
+  --ow: 0.5;
+  --fx: -19vw;
+  --fy: 5vh;
+  --sd: 0.28s;
+  left: 15%;
+  top: 40%;
+  width: clamp(52px, 6vw, 104px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  animation: is-drift-b 13s ease-in-out -5s infinite;
+}
+
+/* 7 · cerchio al centro, fluttuante: cuce la massa alto-destra col vuoto sx */
+.inverted-scene--mass-right-top .is-echo-c {
+  --o0: 0.4;
+  --ow: 0.5;
+  --fx: -9vw;
+  --fy: 11vh;
+  --sd: 0.32s;
+  left: 46%;
+  top: 55%;
+  width: clamp(46px, 5.2vw, 88px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  animation:
+    is-breathe 13s ease-in-out -4s infinite,
+    is-drift-a 15s ease-in-out -11s infinite;
+}
+
+/* 8 · quadratino basso-centro: sanguina oltre il bordo inferiore, ancora il fondo */
+.inverted-scene--mass-right-top .is-echo-s {
+  --o0: 0.46;
+  --ow: 0.5;
+  --fx: 7vw;
+  --fy: 17vh;
+  --sd: 0.38s;
+  left: 33%;
+  bottom: -4%;
+  width: clamp(40px, 4.6vw, 78px);
+  aspect-ratio: 1;
+  rotate: 16deg;
+  border-radius: 16%;
+  animation: is-drift-b 12s ease-in-out -8s infinite;
+}
+
+/* su schermi stretti la massa si stringe all'angolo alto-destro; le eco
+   restano ariose senza affollarsi */
+@media (max-width: 640px) {
+  .inverted-scene--mass-right-top .is-mass {
+    --w: min(92vw, 460px);
+    right: -20%;
+    top: -10%;
+  }
+  .inverted-scene--mass-right-top .is-echo-c {
+    left: 40%;
+  }
+}
+
+/* Motion ridotto: ferma derive e respiri; la composizione statica resta bella
+   (posizioni, taglie e opacità mappate su --p4 restano intatte). */
+@media (prefers-reduced-motion: reduce) {
+  .inverted-scene--mass-right-top .is-shape {
+    animation: none;
+  }
+}
+
+/* ── Headline della scena invertita · salita dal "portale" (A TEMPO) ──
+   Quando la scena è rivelata (html.scene-live, da ScrollDirector), ogni
+   lettera SALE dal portale sotto i suoi piedi (cella overflow:hidden) con
+   un'animazione a tempo, in sequenza da sinistra — non segue lo scroll.
+   Chiude il classico punto quadrato, qui BIANCO, che nasce da una bolla
+   che si gonfia e scoppia (stesso effetto della tagline). */
+.inverted-scene--mass-right-top .is-title {
+  position: absolute;
+  left: 7vw;
+  top: 50%;
+  translate: 0 -50%;
+  margin: 0;
+  font-family: var(--font-sans); /* Geist */
+  font-weight: 700;
+  font-size: clamp(44px, 6.5vw, 110px);
+  letter-spacing: -0.04em;
+  line-height: 1.08;
+  color: var(--ink); /* il nero di sempre */
+}
+.inverted-scene--mass-right-top .is-word {
+  display: inline-block;
+  white-space: nowrap;
+}
+/* la cella È il portale: taglia tutto ciò che sta sotto il suo bordo */
+.inverted-scene--mass-right-top .is-cell {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: bottom;
+}
+/* a riposo il glifo sta sotto il portale, invisibile */
+.inverted-scene--mass-right-top .is-glyph {
+  /* transition (non keyframe) → sale con scene-live e TORNA GIÙ da solo
+     quando scene-live viene tolto: la salita è reversibile all'indietro.
+     La bezier con y>1 dà il piccolo rimbalzo d'arrivo. */
+  display: inline-block;
+  translate: 0 115%;
+  transition: translate 0.72s cubic-bezier(0.2, 1.12, 0.32, 1) var(--gd, 0s);
+  will-change: translate;
+}
+/* punto finale quadrato BIANCO: nasce dalla bolla, a riposo invisibile */
+.inverted-scene--mass-right-top .is-title-dot {
+  display: inline-block;
+  width: 0.17em;
+  height: 0.17em;
+  margin-left: 0.12em;
+  background: var(--lift);
+  opacity: 0;
+  position: relative;
+}
+.inverted-scene--mass-right-top .is-title-dot::after {
+  content: "";
+  position: absolute;
+  inset: -45%;
+  border-radius: 50%;
+  border: 2px solid var(--lift);
+  opacity: 0;
+}
+
+/* scena rivelata → il titolo sale al suo posto (transition sopra) */
+.scene-live .inverted-scene--mass-right-top .is-glyph {
+  translate: 0 0;
+}
+.scene-live .inverted-scene--mass-right-top .is-title-dot {
+  animation: is-dot-pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 1.5s forwards;
+}
+.scene-live .inverted-scene--mass-right-top .is-title-dot::after {
+  animation: is-dot-burst 0.5s ease-out 1.83s forwards;
+}
+
+@keyframes is-glyph-rise {
+  0% {
+    translate: 0 115%;
+  }
+  72% {
+    translate: 0 -4%;
+  }
+  100% {
+    translate: 0 0%;
+  }
+}
+/* bolla: si gonfia tonda e traslucida, scoppia e resta il quadrato bianco */
+@keyframes is-dot-pop {
+  0% {
+    opacity: 0;
+    scale: 0;
+    border-radius: 50%;
+  }
+  55% {
+    opacity: 0.85;
+    scale: 1.35;
+    border-radius: 50%;
+  }
+  70% {
+    scale: 0.7;
+    border-radius: 40%;
+  }
+  100% {
+    opacity: 1;
+    scale: 1;
+    border-radius: 0;
+  }
+}
+@keyframes is-dot-burst {
+  0% {
+    opacity: 0.8;
+    scale: 0.4;
+  }
+  100% {
+    opacity: 0;
+    scale: 2.2;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scene-live .inverted-scene--mass-right-top .is-glyph {
+    animation: none;
+    translate: 0 0%;
+  }
+  .scene-live .inverted-scene--mass-right-top .is-title-dot {
+    animation: none;
+    opacity: 1;
+  }
+}
+
+
+/* ── BlackHoleFx · il gran finale (a tempo, scroll bloccato) ──────────────
+   Regia: ScrollDirector accende html.bh-live (e a fine corsa html.bh-done).
+   Tutta la sequenza è CSS con delay assoluti dal trigger:
+   volo 0–0.9 · lettere 0.8–2.2 · figure 2.1–4.0 · bianco 3.9–4.5 ·
+   arrossamento continuo 0.6–4.4 · fermo 4.5–5.5 · esplosione 5.5–6.2. */
+
+.bh {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  pointer-events: none;
+  visibility: hidden;
+}
+.bh-live .bh {
+  visibility: visible;
+}
+
+/* bianco che resta quando il colore viene risucchiato */
+.bh-white {
+  position: absolute;
+  inset: 0;
+  background: var(--lift);
+  opacity: 0;
+}
+.bh-live .bh-white {
+  animation: bh-white-in 0.6s ease 3.9s forwards;
+}
+@keyframes bh-white-in {
+  to {
+    opacity: 1;
+  }
+}
+
+/* cielo stellato post-esplosione */
+.bh-space {
+  position: absolute;
+  inset: 0;
+  background: #050505;
+  opacity: 0;
+}
+.bh-live .bh-space {
+  animation: bh-space-in 0.5s ease 5.6s forwards;
+}
+@keyframes bh-space-in {
+  to {
+    opacity: 1;
+  }
+}
+.bh-star {
+  position: absolute;
+  border-radius: 50%;
+  background: var(--lift);
+  opacity: var(--o, 0.7);
+  animation: bh-twinkle var(--tw, 3s) ease-in-out var(--twd, 0s) infinite;
+}
+@keyframes bh-twinkle {
+  0%,
+  100% {
+    opacity: var(--o, 0.7);
+    scale: 1;
+  }
+  50% {
+    opacity: calc(var(--o, 0.7) * 0.25);
+    scale: 0.8;
+  }
+}
+
+/* anello d'urto dell'esplosione */
+.bh-ring {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 90px;
+  height: 90px;
+  translate: -50% -50%;
+  border: 3px solid var(--red);
+  border-radius: 50%;
+  opacity: 0;
+}
+.bh-live .bh-ring {
+  animation: bh-ring-burst 0.7s cubic-bezier(0.2, 0.7, 0.3, 1) 5.55s forwards;
+}
+@keyframes bh-ring-burst {
+  0% {
+    opacity: 0.9;
+    scale: 0.3;
+  }
+  100% {
+    opacity: 0;
+    scale: 14;
+  }
+}
+
+/* IL quadrato-buco-nero: parte dal punto del titolo (vettore misurato dal
+   JS: --bh-dx0/--bh-dy0/--bh-s0), vola al centro, poi mangia e arrossisce
+   (bianco → rosso), infine esplode. Tre animazioni SEQUENZIALI su transform
+   (volo → crescita/rotazione → esplosione): ognuna parte quando la
+   precedente ha finito e vince essendo dopo nella lista. */
+.bh-square {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 46px;
+  height: 46px;
+  background: var(--lift);
+  transform: translate(calc(-50% + var(--bh-dx0, 30vw)), calc(-50% + var(--bh-dy0, -5vh)))
+    scale(var(--bh-s0, 0.4));
+  opacity: 0;
+  box-shadow: 0 0 40px -6px color-mix(in srgb, var(--red-deep) 40%, transparent);
+}
+.bh-live .bh-square {
+  opacity: 1;
+  animation:
+    bh-fly 0.9s cubic-bezier(0.3, 0.8, 0.3, 1) 0s forwards,
+    bh-feed 3.6s ease-in-out 0.9s forwards,
+    bh-explode 0.65s cubic-bezier(0.6, 0, 0.9, 0.4) 5.5s forwards,
+    bh-redden 3.8s linear 0.6s forwards;
+}
+@keyframes bh-fly {
+  from {
+    transform: translate(
+        calc(-50% + var(--bh-dx0, 30vw)),
+        calc(-50% + var(--bh-dy0, -5vh))
+      )
+      scale(var(--bh-s0, 0.4));
+  }
+  to {
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+/* mentre mangia: cresce piano e ruota, come una macina */
+@keyframes bh-feed {
+  from {
+    transform: translate(-50%, -50%) scale(1) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) scale(1.55) rotate(135deg);
+  }
+}
+/* esplosione: gonfia di colpo e collassa nel nulla */
+@keyframes bh-explode {
+  0% {
+    transform: translate(-50%, -50%) scale(1.55) rotate(135deg);
+    opacity: 1;
+  }
+  45% {
+    transform: translate(-50%, -50%) scale(2.1) rotate(150deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(0) rotate(200deg);
+    opacity: 0;
+  }
+}
+/* pasto dopo pasto, sempre più rosso */
+@keyframes bh-redden {
+  0% {
+    background: var(--lift);
+  }
+  30% {
+    background: color-mix(in srgb, var(--red) 38%, var(--lift));
+  }
+  70% {
+    background: color-mix(in srgb, var(--red) 78%, var(--lift));
+  }
+  100% {
+    background: var(--red);
+  }
+}
+
+/* ── Risucchio: lettere e figure spiralano nel centro ──
+   Il JS scrive su ogni bersaglio il vettore verso il centro (--sdx/--sdy)
+   e il proprio ritardo (--sd). La keyframe è unica: accelerazione da buco
+   nero (ease-in forte), avvitamento e collasso a zero. `transform` compone
+   con translate/scale delle derive → nessun conflitto. */
+.bh-live .inverted-scene--mass-right-top .is-cell,
+.bh-live .inverted-scene--mass-right-top .is-shape {
+  animation: bh-suck 0.65s cubic-bezier(0.65, 0, 0.95, 0.5) var(--sd, 1s)
+    forwards;
+}
+/* le lettere continuano anche le loro animazioni base? no: il risucchio
+   vince su transform; opacità/translate di scena restano ma il collasso a
+   scale(0.01) le rende irrilevanti. */
+@keyframes bh-suck {
+  0% {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--sdx, 0px), var(--sdy, 0px)) scale(0.01)
+      rotate(170deg);
+    opacity: 0;
+  }
+}
+
+/* il punto del titolo sparisce nell'istante in cui il buco nero "parte da lì" */
+.bh-live .inverted-scene--mass-right-top .is-title-dot {
+  animation: none;
+  opacity: 0;
+}
+
+/* dopo il finale, il cielo resta e copre tutto */
+.bh-done .bh-space {
+  opacity: 1;
+}
+.bh-done .bh {
+  visibility: visible;
+}
+
+/* Motion ridotto: niente cinematica — subito il cielo stellato */
+@media (prefers-reduced-motion: reduce) {
+  .bh-live .bh-square,
+  .bh-live .bh-ring,
+  .bh-live .inverted-scene--mass-right-top .is-cell,
+  .bh-live .inverted-scene--mass-right-top .is-shape {
+    animation: none;
+  }
+  .bh-live .bh-square {
+    opacity: 0;
+  }
+  .bh-live .bh-white,
+  .bh-live .bh-space {
+    animation: none;
+    opacity: 1;
+  }
+  .bh-star {
+    animation: none;
+  }
+}
+
+/* ── Rewind · acqua bianca che riempte e si svuota (onda liquida) ──────────
+   Attivo con html.bh-rewind (da ScrollDirector, tornando su dopo il finale).
+   Riempie dal basso (rise) fino a coprire, tiene un istante, poi si svuota
+   verso il basso — la superficie ondeggia come nel sipario d'apertura. */
+.bh-flood {
+  position: fixed;
+  inset: 0;
+  z-index: 80; /* sopra il cielo stellato (z 70) */
+  pointer-events: none;
+  overflow: hidden;
+  visibility: hidden;
+}
+.bh-rewind .bh-flood {
+  visibility: visible;
+}
+.bh-flood-body {
+  position: absolute;
+  inset: 0;
+  background: var(--lift);
+  transform: translateY(100%); /* a riposo: vuoto, sotto lo schermo */
+  will-change: transform;
+}
+.bh-rewind .bh-flood-body {
+  animation: bh-flood 2s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+/* superficie liquida: onda sul bordo superiore del blocco */
+.bh-flood-wave {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 100%;
+  width: 100%;
+  height: 90px;
+  margin-bottom: -1px;
+  display: block;
+  fill: var(--lift);
+}
+@keyframes bh-flood {
+  0% {
+    transform: translateY(100%);
+  }
+  38% {
+    transform: translateY(0);
+  }
+  56% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(112%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bh-rewind .bh-flood-body {
+    animation: none;
+    transform: translateY(112%);
+  }
+}
+
+/* ── Wipe diagonale · ritorno da "this is a demo" alla schermata arancione ──
+   Attivo con html.wipe-run (da ScrollDirector, tornando indietro dall'atto 4).
+   Un rettangolo bianco inclinato (skewX) sfreccia da DESTRA a SINISTRA: a metà
+   corsa copre tutto lo schermo (lì avviene lo swap alla schermata rossa),
+   poi esce a sinistra rivelandola. */
+.wipe {
+  position: fixed;
+  inset: 0;
+  z-index: 85; /* sopra tutto (scena, pannello, finale, flood) */
+  pointer-events: none;
+  overflow: hidden;
+  visibility: hidden;
+}
+.wipe-run .wipe {
+  visibility: visible;
+}
+.wipe-bar {
+  position: absolute;
+  left: -25%;
+  width: 150%; /* più largo del viewport → copre pieno anche inclinato */
+  top: -30%;
+  height: 160%;
+  background: var(--lift); /* bianco */
+  box-shadow: 0 0 60px -10px color-mix(in srgb, var(--red-deep) 40%, transparent);
+  transform: translateX(180%) skewX(-16deg); /* fuori a destra, diagonale */
+  will-change: transform;
+}
+.wipe-run .wipe-bar {
+  animation: wipe-sweep 0.8s cubic-bezier(0.5, 0, 0.35, 1) forwards;
+}
+@keyframes wipe-sweep {
+  0% {
+    transform: translateX(180%) skewX(-16deg);
+  }
+  100% {
+    transform: translateX(-200%) skewX(-16deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wipe-run .wipe-bar {
+    animation: none;
+  }
+}

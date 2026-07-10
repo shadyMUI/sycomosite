@@ -1,37 +1,92 @@
 /*
- * CtaReveal — secondo atto, guidato dallo scroll (--p2, 0 → 1).
+ * CtaReveal — secondo e terzo atto, guidati dallo scroll.
  *
- * Angolo: ESPANSIONE ANCORATA ("iris-corner"). Un UNICO quadrato rosso è il
- * pannello. A --p2 = 0 è il puntino ~34px in coda a "sycomo" (destra, centro
- * verticale). Al crescere di --p2 la sua width/height aumentano e la posizione
- * (right) si riallinea, ancorata al lato destro e al centro verticale: cresce
- * verso sinistra/alto/basso come una goccia d'inchiostro che invade, finché a
- * --p2 = 1 è un pannello rosso con margine di 3cm su ogni bordo (inset:3cm) e
- * al centro "so, what do we do." in --paper, col suo punto quadrato finale
- * (anch'esso --paper, per risaltare sul rosso).
+ * Fase --p2 (0→1): il punto quadrato rosso di "sycomo." cresce, ancorato al
+ * punto reale (misurato da ScrollDirector), fino a un pannello rosso con
+ * margine 3cm; al centro emerge "so, what do we do?" in --paper, col
+ * quadratino che fa da puntino del punto di domanda.
  *
- * Server component puro: niente "use client", niente hook, niente stato.
- * Tutta l'interpolazione è CSS in calc()/clamp() su var(--p2): il reveal è
- * "scrubby" — funzione continua di --p2, reversibile scrollando su/giù.
- * ScrollDirector si limita a scrivere il numero --p2 su :root.
+ * Fase --p3 (0→1): il pannello si mangia anche i 3cm fino a coprire tutto lo
+ * schermo MENTRE le lettere affondano — ognuna col suo profilo pseudo-casuale
+ * (partenza --st, deriva --sx/--sy, rotazione --sr): scendono, rimpiccioliscono
+ * e si sfocano come viste dall'alto mentre vanno a fondo nell'acqua.
+ *
+ * Server component puro: tutte le interpolazioni sono CSS calc() su --p2/--p3
+ * → scrubby e reversibile. I profili delle lettere sono costanti (SSR-safe).
  */
+
+type Sink = {
+  ch: string;
+  st: string; // partenza dell'affondo (frazione di --p3, 0–0.45)
+  sx: string; // deriva orizzontale
+  sy: string; // discesa
+  sr: string; // rotazione
+};
+
+const LETTERS: (Sink | " ")[] = [
+  { ch: "s", st: "0.08", sx: "-0.12em", sy: "0.30em", sr: "-6deg" },
+  { ch: "o", st: "0.30", sx: "0.10em", sy: "0.38em", sr: "5deg" },
+  { ch: ",", st: "0.18", sx: "-0.05em", sy: "0.26em", sr: "-9deg" },
+  " ",
+  { ch: "w", st: "0.02", sx: "0.14em", sy: "0.34em", sr: "7deg" },
+  { ch: "h", st: "0.36", sx: "-0.16em", sy: "0.30em", sr: "-4deg" },
+  { ch: "a", st: "0.12", sx: "0.06em", sy: "0.42em", sr: "8deg" },
+  { ch: "t", st: "0.26", sx: "-0.10em", sy: "0.28em", sr: "-7deg" },
+  " ",
+  { ch: "d", st: "0.40", sx: "0.12em", sy: "0.36em", sr: "5deg" },
+  { ch: "o", st: "0.06", sx: "-0.08em", sy: "0.30em", sr: "-5deg" },
+  " ",
+  { ch: "w", st: "0.22", sx: "0.10em", sy: "0.40em", sr: "6deg" },
+  { ch: "e", st: "0.34", sx: "-0.13em", sy: "0.27em", sr: "-8deg" },
+  " ",
+  { ch: "d", st: "0.16", sx: "0.07em", sy: "0.33em", sr: "4deg" },
+  { ch: "o", st: "0.44", sx: "-0.09em", sy: "0.29em", sr: "-6deg" },
+];
+
+const sinkVars = (l: Sink) =>
+  ({
+    "--st": l.st,
+    "--sx": l.sx,
+    "--sy": l.sy,
+    "--sr": l.sr,
+  }) as React.CSSProperties;
+
 export default function CtaReveal() {
   return (
     <div
       className="cta-reveal cta-reveal--iris-corner"
       role="region"
-      aria-label="so, what do we do."
+      aria-label="so, what do we do?"
     >
-      {/* Il pannello È il punto: un solo quadrato rosso che cresce.
-          right/width/height/border-radius derivano tutti da var(--p2). */}
+      {/* Il pannello È il punto: cresce da esso (fase 2) e poi copre tutto
+          lo schermo (fase 3). Ogni misura deriva da --p2/--p3. */}
       <div className="cr-panel">
-        {/* Layer testo: dimensione piena del pannello, centrato. Il testo non
-            è mai stirato (non eredita scale). Emerge nella seconda metà di
-            --p2, quando il pannello ha abbastanza area. */}
         <div className="cr-textwrap">
           <p className="cr-text">
-            so, what do we do
-            <span className="cr-dot" aria-hidden="true" />
+            <span className="cr-sink">
+              {LETTERS.map((l, i) =>
+                l === " " ? (
+                  " "
+                ) : (
+                  <span key={i} className="cr-letter" style={sinkVars(l)}>
+                    {l.ch}
+                  </span>
+                )
+              )}
+              {/* "?" normale: affonda come le altre lettere. */}
+              <span
+                className="cr-letter"
+                style={sinkVars({
+                  ch: "?",
+                  st: "0.28",
+                  sx: "0.11em",
+                  sy: "0.37em",
+                  sr: "6deg",
+                })}
+              >
+                ?
+              </span>
+            </span>
           </p>
         </div>
       </div>

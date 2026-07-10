@@ -3,6 +3,8 @@ import HeroArt from "@/components/HeroArt";
 import ScrollDirector from "@/components/ScrollDirector";
 import Tagline from "@/components/Tagline";
 import CtaReveal from "@/components/CtaReveal";
+import InvertedScene from "@/components/InvertedScene";
+import BlackHoleFx from "@/components/BlackHoleFx";
 
 export default function Home() {
   return (
@@ -24,11 +26,16 @@ export default function Home() {
         <Logo className="logo-fly" />
       </main>
 
+      {/* Fase 4: scena a colori invertiti, rivelata dal dissolversi del
+          pannello CTA (sta dietro, z 55) */}
+      <InvertedScene />
+
       {/* Fase 2: il punto di sycomo cresce in un pannello CTA a tutto schermo */}
       <CtaReveal />
 
-      {/* Spazio placeholder: dà corsa allo scroll (fase 1 + fase 2) */}
-      <section aria-hidden="true" className="h-[220vh]" />
+      {/* Gran finale: buco nero quadrato che risucchia tutto ed esplode nel
+          cielo stellato (a tempo, scroll bloccato) */}
+      <BlackHoleFx />
     </>
   );
 }
