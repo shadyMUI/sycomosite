@@ -14,28 +14,30 @@ export default function Home() {
       {/* Barra header: appare mentre il logo ci vola dentro */}
       <div className="site-header" aria-hidden="true" />
 
-      <main className="relative flex min-h-svh w-full flex-1 flex-col justify-center py-32">
-        {/* Canvas decorativo a tutta hero, dietro al logo */}
-        <HeroArt />
-
-        {/* Claim sulla destra: appare quando il cluster è atterrato */}
-        <Tagline />
-
-        {/* Il logo vive fuori dal flusso: parte grande e centrato nella hero,
-            allo scroll vola in alto a sinistra e diventa la header */}
-        <Logo className="logo-fly" />
-      </main>
-
-      {/* Fase 4: scena a colori invertiti, rivelata dal dissolversi del
-          pannello CTA (sta dietro, z 55) */}
-      <InvertedScene />
-
-      {/* Fase 2: il punto di sycomo cresce in un pannello CTA a tutto schermo */}
+      {/* Livelli visuai fissi (non scrollano, guidati da --p/--p2/--p3/--p4) */}
+      <HeroArt />
+      <Tagline />
+      <Logo className="logo-fly" />
       <CtaReveal />
-
-      {/* Gran finale: buco nero quadrato che risucchia tutto ed esplode nel
-          cielo stellato (a tempo, scroll bloccato) */}
+      <InvertedScene />
       <BlackHoleFx />
+
+      {/* ── Spaziatore di scroll ──────────────────────────────────────
+          Queste sezioni danno ALTEZZA alla pagina per permettere lo
+          scroll nativo. Sono invisibili: servono solo come "binari"
+          su cui ScrollDirector mappa i progressi --p/--p2/--p3/--p4.
+          Ogni sezione è alta 100vh (= 1 schermata di scroll).       */}
+      <div className="scroll-track" aria-hidden="true">
+        <div className="scroll-section" data-label="hero" />
+        <div className="scroll-section" data-label="logo-flight" />
+        <div className="scroll-section" data-label="tagline" />
+        <div className="scroll-section" data-label="cta-grow" />
+        <div className="scroll-section" data-label="sink-inverted" />
+        <div className="scroll-section" data-label="scene-title" />
+        <div className="scroll-section" data-label="finale" />
+        <div className="scroll-section" data-label="archivio" />
+        <div className="scroll-section" data-label="lancio-spazio" />
+      </div>
     </>
   );
 }
