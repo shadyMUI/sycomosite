@@ -34,12 +34,13 @@ const STARS = Array.from({ length: 110 }, (_, i) => ({
 
 /* I quattro pianeti-social. `d` è il diametro dell'orbita in vmin, `t` il
    periodo: più lontano = più lento, come nel vero sistema solare.
-   NOTA: gli href sono segnaposto — vanno sostituiti coi profili veri. */
+   TikTok e Instagram puntano ai profili veri; Facebook ed Email sono ancora
+   segnaposto (#) in attesa dell'indirizzo. */
 const PLANETS = [
   {
     id: "tiktok",
     label: "TikTok",
-    href: "#",
+    href: "https://www.tiktok.com/@sycomo.digital",
     d: 40,
     t: 18,
     size: 5.6,
@@ -50,7 +51,7 @@ const PLANETS = [
   {
     id: "instagram",
     label: "Instagram",
-    href: "#",
+    href: "https://www.instagram.com/sycomo.digital",
     d: 64,
     t: 27,
     size: 7,
@@ -241,6 +242,9 @@ export default function SpaceScene() {
                   p.moon ? " sp-has-moon" : ""
                 }`}
                 href={p.href}
+                {...(p.href.startsWith("http")
+                  ? { target: "_blank", rel: "noopener noreferrer" }
+                  : {})}
                 style={{ "--ps": `${p.size}vmin` } as React.CSSProperties}
                 aria-label={p.label}
               >
