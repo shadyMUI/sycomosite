@@ -22,8 +22,10 @@ import { useEffect } from "react";
  */
 
 /* Quanta parte della distanza si copre a ogni fotogramma. Più è basso,
-   più lungo è il rallentamento: 0.5 è quasi secco, 0.05 è melassa. */
-const AVVICINAMENTO = 0.11;
+   più lungo è il rallentamento: 0.5 è quasi secco, 0.05 è melassa.
+   0.075 fa durare la frenata circa mezzo secondo — abbastanza da vederla
+   senza che la pagina sembri inseguire il gesto in ritardo. */
+const AVVICINAMENTO = 0.075;
 
 export default function ScorrimentoFluido() {
   useEffect(() => {
