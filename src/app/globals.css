@@ -507,10 +507,10 @@ body {
 .chi {
   position: fixed;
   inset: 0;
-  /* SOTTO i fondi delle sezioni che arrivano dopo (30): resta ferma dov'è
-     e il rosso le passa semplicemente sopra, come un foglio appoggiato.
-     Non svanisce: viene coperta. */
-  z-index: 29;
+  /* SOPRA le figure di vetro (31): il testo non deve avere lastre che gli
+     passano davanti. Resta comunque sotto il fondo rosso (33), che le
+     passa sopra come un foglio appoggiato — non svanisce, viene coperta. */
+  z-index: 32;
   pointer-events: none;
 }
 
@@ -534,7 +534,7 @@ body {
   /* una riga sola, distesa: la misura in vw fa sì che la riga resti
      intera a ogni larghezza invece di spezzarsi a metà frase */
   white-space: nowrap;
-  font-size: clamp(26px, 6.2vw, 118px);
+  font-size: clamp(30px, 7.1vw, 136px);
   color: var(--ink-soft);
   translate: 0 calc((1 - var(--p)) * 30px);
 }
@@ -543,12 +543,15 @@ body {
    è qui che cade l'accento, e si vede prima ancora di leggere */
 .chi-due {
   right: 6vw;
-  /* Ancorata a metà schermata invece che al fondo: il -50% nella
-     translate la centra esattamente su quella quota, così resta lì
-     qualunque sia l'altezza della finestra e il corpo del testo. */
-  top: 51.5vh;
+  /* Ancorata sotto la metà schermata: il -50% nella translate la centra
+     esattamente su quella quota, così resta lì qualunque sia l'altezza
+     della finestra e il corpo del testo. Più in basso del centro perché
+     fra le due frasi restava un vuoto che non diceva niente — abbassando
+     la seconda, lo spazio si sposta sotto e diventa margine invece che
+     buco. */
+  top: 64vh;
   white-space: nowrap;
-  font-size: clamp(30px, 7.1vw, 136px);
+  font-size: clamp(34px, 8.2vw, 158px);
   color: var(--ink);
   text-align: right;
   /* Il -50% è il centraggio sulla quota qui sopra; i 52px sono la salita
@@ -877,7 +880,7 @@ body::after {
      attraverso di loro, con una fascia di colore ibrido nel mezzo.
      Il fondo di CARTA invece resta sotto (30), perché lì le figure
      devono vedersi. */
-  z-index: 32;
+  z-index: 33;
   background: var(--rosso-fondo);
 }
 
@@ -918,7 +921,7 @@ body::after {
 /* ── schermata 2: i servizi ── */
 .srv-voci {
   position: relative;
-  z-index: 34;
+  z-index: 35;
   /* Meno di una schermata piena: il contenuto è centrato, quindi l'aria
      avanzata si somma a quella della sezione seguente e fra l'ultima voce
      di una schermata e la prima della successiva si apriva un vuoto
@@ -995,7 +998,7 @@ body::after {
 .rosso-blend {
   position: absolute;
   inset: 0;
-  z-index: 33; /* sopra il fondo rosso, sotto i testi */
+  z-index: 34; /* sopra il fondo rosso, sotto i testi */
   isolation: isolate;
   pointer-events: none;
 }
@@ -1162,7 +1165,7 @@ body::after {
 /* il contenuto sopra le figure */
 .cnt > * {
   position: relative;
-  z-index: 34;
+  z-index: 35;
 }
 
 .cnt-occhiello {
@@ -1662,4 +1665,176 @@ body::after {
   .pie-alto {
     grid-template-columns: 1fr;
   }
+}
+
+/* ── "chi siamo" si toglie di mezzo quando il rosso l'ha coperta ─────────
+   Sta sopra le figure, quindi il fondo di carta dei contatti — che invece
+   sta SOTTO le figure perché lì devono vedersi — non basterebbe a
+   coprirla, e riapparirebbe in fondo alla pagina.
+
+   Si spegne di netto (`steps(1)`, nessuna dissolvenza) nell'istante in cui
+   il rosso ha finito di coprire lo schermo: il cambio avviene mentre è già
+   invisibile, quindi non si vede accadere. Ed essendo agganciato alla
+   posizione, risalendo torna da sé. ──────────────────────────────────── */
+@supports (animation-timeline: view()) {
+  .chi {
+    animation: chi-spegni steps(1) both;
+    animation-timeline: --sale-rosso;
+    animation-range: entry 99% entry 100%;
+  }
+}
+@keyframes chi-spegni {
+  from {
+    visibility: visible;
+  }
+  to {
+    visibility: hidden;
+  }
+}
+
+/* ══ PAGINE DI DOCUMENTO (privacy) ════════════════════════════════════════
+   Impaginazione da lettura, non da scenografia: qui non ci sono scene
+   fisse né figure di vetro. La misura di riga è stretta di proposito —
+   un testo di legge lungo una schermata intera non lo finisce nessuno. */
+.doc-testa {
+  padding: clamp(22px, 3vh, 34px) 6vw;
+  border-bottom: 1px solid var(--hair);
+}
+.doc-testa a {
+  display: inline-block;
+  font-size: clamp(22px, 2.2vw, 32px);
+  text-decoration: none;
+}
+
+.doc {
+  /* misura assoluta: `ch` si calcolerebbe sul font di questo contenitore
+     (16px) e non su quello del testo dentro, lasciando righe troppo corte */
+  /* Il margine interno rientra nel limite di larghezza (box-sizing è
+     border-box), quindi va tenuto stretto: con 6vw per lato la colonna di
+     testo restava di 511px anche su un monitor largo. */
+  max-width: 740px;
+  margin: 0 auto;
+  padding: clamp(48px, 8vh, 96px) clamp(20px, 5vw, 32px)
+    clamp(60px, 10vh, 120px);
+  color: var(--ink);
+}
+
+.doc-occhiello {
+  margin: 0 0 clamp(12px, 1.6vh, 20px);
+  font-family: var(--font-title);
+  font-weight: 700;
+  font-size: clamp(11px, 0.8vw, 14px);
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--red-deep);
+}
+.doc-titolo {
+  margin: 0 0 clamp(20px, 3vh, 36px);
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: clamp(36px, 5vw, 76px);
+  letter-spacing: -0.04em;
+  line-height: 0.98;
+}
+.doc-dot {
+  display: inline-block;
+  width: 0.15em;
+  height: 0.15em;
+  margin-left: 0.1em;
+  background: var(--red);
+}
+
+/* il sommario in apertura: chi non legge tutto deve comunque capire */
+.doc-guida {
+  margin: 0 0 clamp(32px, 5vh, 60px);
+  padding-left: clamp(14px, 1.4vw, 22px);
+  border-left: 3px solid var(--red);
+  font-family: var(--font-title);
+  font-weight: 500;
+  font-size: clamp(16px, 1.3vw, 21px);
+  line-height: 1.6;
+  color: var(--ink);
+}
+
+.doc section {
+  margin-bottom: clamp(30px, 4.5vh, 54px);
+}
+.doc h2 {
+  margin: 0 0 0.6em;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: clamp(20px, 1.9vw, 30px);
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+}
+.doc h3 {
+  margin: 1.4em 0 0.4em;
+  font-family: var(--font-title);
+  font-weight: 700;
+  font-size: clamp(14px, 1.1vw, 18px);
+  letter-spacing: 0.02em;
+  color: var(--ink);
+}
+.doc p,
+.doc li {
+  font-family: var(--font-title);
+  font-weight: 500;
+  font-size: clamp(15px, 1.15vw, 18px);
+  /* interlinea ampia: è testo denso, va fatto respirare */
+  line-height: 1.72;
+  color: var(--ink-soft);
+}
+.doc p {
+  margin: 0 0 0.9em;
+}
+.doc ul {
+  margin: 0 0 0.9em;
+  padding-left: 1.4em;
+}
+.doc li {
+  margin-bottom: 0.5em;
+}
+.doc li::marker {
+  color: var(--red);
+}
+.doc strong {
+  color: var(--ink);
+  font-weight: 700;
+}
+.doc a {
+  color: var(--ink);
+  text-decoration: none;
+  border-bottom: 1px solid var(--red);
+  transition: color 0.2s ease;
+}
+.doc a:hover,
+.doc a:focus-visible {
+  color: var(--red-deep);
+}
+.doc-data {
+  margin-top: 1.4em;
+  font-size: clamp(13px, 0.95vw, 15px);
+  color: var(--muted);
+}
+
+.doc-torna {
+  display: inline-block;
+  margin-top: clamp(20px, 3vh, 40px);
+  font-family: var(--font-title);
+  font-weight: 700;
+  font-size: clamp(12px, 0.95vw, 15px);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--paper);
+  background: var(--red);
+  border-radius: 4px;
+  padding: 0.85em 1.5em;
+  text-decoration: none;
+  border: 0;
+  transition: background 0.25s ease;
+}
+.doc-torna:hover,
+.doc-torna:focus-visible {
+  background: var(--red-deep);
+  color: var(--paper);
 }
