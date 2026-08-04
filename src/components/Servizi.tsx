@@ -1,0 +1,112 @@
+/**
+ * Parte 3 — la sezione rossa, in due schermate.
+ *
+ * Prima il titolo da solo, poi i servizi: due blocchi alti quanto la
+ * finestra, che arrivano scorrendo come su qualsiasi sito.
+ *
+ * Il titolo e le lastre bianche stanno DENTRO LO STESSO gruppo isolato
+ * (`.rosso-blend`). Serve perché il titolo si fonde per differenza: dentro
+ * quel gruppo lo sfondo è trasparente, quindi sul rosso resta bianco, e
+ * dove incontra una lastra bianca la differenza fra bianco e bianco fa
+ * nero. Il fondo rosso sta fuori dal gruppo apposta — se ci fosse dentro,
+ * il titolo diventerebbe ciano invece che bianco.
+ *
+ * Il gruppo scorre con la sezione, le lastre dentro sono `sticky` e
+ * restano ferme: è così che il titolo scorre sopra figure immobili senza
+ * bisogno di animazioni — e senza animazioni la fusione continua a
+ * funzionare, cosa che invece si rompe appena l'elemento viene promosso a
+ * un livello composito a sé.
+ */
+
+const SERVIZI = [
+  {
+    n: "01",
+    nome: "Parliamone",
+    testo:
+      "Prima di preventivi e schermate: una chiamata per capire cosa vi serve davvero. A volte è meno di quello che pensavate, e ve lo diciamo.",
+  },
+  {
+    n: "02",
+    nome: "Il sito",
+    testo:
+      "Disegnato e scritto da zero attorno alla vostra attività. Veloce, curato nei dettagli, e vostro: codice, dominio e accessi restano intestati a voi.",
+  },
+  {
+    n: "03",
+    nome: "Farsi trovare",
+    testo:
+      "Un sito che nessuno trova è un volantino chiuso nel cassetto. Lo mettiamo in condizione di uscire su Google per le ricerche che contano per voi.",
+  },
+  {
+    n: "04",
+    nome: "Restare online",
+    testo:
+      "Aggiornamenti, backup e assistenza. Quando qualcosa va storto rispondiamo noi, senza rimbalzarvi a un modulo di supporto.",
+  },
+];
+
+const LASTRE = ["ml-fondo", "ml-ancora", "ml-quadro", "ml-tondo", "ml-scheggia"];
+
+export default function Servizi() {
+  return (
+    <div className="rosso">
+      {/* Sensore per il ritaglio delle lastre bianche: alto esattamente una
+          schermata, quindi il suo ingresso nella finestra coincide al pixel
+          con la salita del bordo rosso da 100vh a 0. Sulla sezione intera
+          non funziona: essendo più alta della finestra, il suo "ingresso"
+          finisce molto prima che il rosso arrivi in cima. */}
+      <span className="rosso-sensore" aria-hidden="true" />
+
+      {/* Gruppo isolato: lastre bianche + titolo, e nient'altro. */}
+      <div className="rosso-blend">
+        {/* Due ritagli annidati, uno per estremo: il primo scopre le lastre
+            man mano che il rosso sale, il secondo le ricopre man mano che
+            il rosso esce dal fondo. Servono due elementi perché una sola
+            proprietà non può portare due animazioni diverse. */}
+        <div className="taglio-alto">
+          <div className="taglio-basso">
+            {/* ferme mentre il titolo ci scorre sopra */}
+            <div className="rosso-massa" aria-hidden="true">
+              {LASTRE.map((c) => (
+                <span key={c} className={`ml sml ${c}`} />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <h2 className="srv-titolo">
+          che cosa facciamo
+          {/* il punto del marchio: quadrato, non tondo */}
+          <span className="srv-dot" aria-hidden="true" />
+        </h2>
+      </div>
+
+      {/* schermata 1: dà l'altezza al titolo, che è disegnato nel gruppo */}
+      <section className="srv-apre" aria-label="Che cosa facciamo" />
+
+      {/* Due schermate, due servizi ciascuna: a quattro per volta la
+          pagina era una lista da scorrere, a due si leggono. */}
+      {[SERVIZI.slice(0, 2), SERVIZI.slice(2)].map((gruppo, i) => (
+        <section
+          key={i}
+          className="srv-voci"
+          aria-label={`I nostri servizi, parte ${i + 1} di 2`}
+        >
+          <div className="srv-colonne">
+            {gruppo.map((s) => (
+              <article key={s.n} className="srv-voce">
+                <h3 className="srv-nome">{s.nome}</h3>
+                <p className="srv-testo">{s.testo}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+      ))}
+
+      {/* Secondo sensore, in fondo: segna quando il rosso esce dal basso.
+          Serve a ricoprire le lastre bianche, così sotto — dove il fondo
+          torna carta — si rivedono quelle rosse. */}
+      <span className="rosso-sensore rosso-sensore--fine" aria-hidden="true" />
+    </div>
+  );
+}

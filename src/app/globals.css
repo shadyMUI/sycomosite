@@ -1,6 +1,9 @@
 @import "tailwindcss";
 
-/* ── Sycomo Digital · Design Tokens v1.0 ── */
+/* ── Sycomo Digital · Design Tokens ──────────────────────────────────────
+   Palette e stile fissi: vedi .design/design-system.md per la ricetta
+   completa del liquid-glass. Questi non cambiano quando si rifà il resto
+   del sito. ─────────────────────────────────────────────────────────── */
 :root {
   /* Superfici */
   --paper: #f7f4ed;
@@ -49,52 +52,12 @@ body {
   color: var(--paper);
 }
 
-/* ── Spaziatore di scroll: dà alla pagina altezza reale per lo scroll nativo ── */
-.scroll-track {
-  position: relative;
-  z-index: 0;
-  pointer-events: none;
-}
-.scroll-section {
-  height: 100vh;
-}
-
-/* Progresso della transizione hero → header (0 = hero, 1 = header) e
-   progresso della fase 2 (--p2: 0 = punto, 1 = pannello CTA aperto).
-   Scritti da ScrollDirector con inseguimento smorzato. */
-
-/* Registrare --p2 come <number> lo rende robusto in calc(): viene sempre
-   trattato come numero puro (non stringa), quindi (var(--p2) - 0.55)/0.45 e
-   simili sono validi anche quando la property non è ancora stata scritta. */
-@property --p2 {
-  syntax: "<number>";
-  inherits: true;
-  initial-value: 0;
-}
-@property --p3 {
-  syntax: "<number>";
-  inherits: true;
-  initial-value: 0;
-}
-@property --p4 {
-  syntax: "<number>";
-  inherits: true;
-  initial-value: 0;
-}
-
-:root {
-  --p: 0;
-  --p2: 0;
-  --p3: 0;
-  --p4: 0;
-}
-
 /* ── Logo Sycomo Digital ── */
 .logo-lockup {
   display: inline-flex;
   flex-direction: column;
   align-items: flex-start;
-  align-self: flex-start; /* non stirarsi nel flex-column del genitore */
+  align-self: flex-start;
   line-height: 1;
 }
 .logo-word {
@@ -125,156 +88,290 @@ body {
   text-transform: uppercase;
   color: var(--ink);
   margin-top: 0.16em;
-  /* em qui si risolve sul font-size del sottotitolo (0.24em del lockup):
-     4.2em ≈ 1.0em del lockup → la D cade tra la "y" e la "c" di sycomo. */
   margin-left: 4.2em;
 }
 
-/* ── Volo del logo: da centro-hero a header (guidato da --p) ──
-   left resta 0.45em: siccome l'em segue il font-size interpolato, il
-   margine sinistro scala da "una lettera del logo" a un padding da header. */
-.logo-fly {
+/* ── Sipario d'apertura · il liquido che cala ────────────────────────────
+   Schermo pieno del rosso del brand che defluisce verso il basso e scopre
+   il sito. Il logo sotto è già al suo posto: quando il liquido finisce di
+   colare deve trovarsi lì, non comparire dopo.
+
+   Il pannello si sposta con `translate` (compositor, zero layout per
+   fotogramma), NON animando l'altezza. L'accelerazione della curva fa il
+   peso: parte lento, poi cade. ─────────────────────────────────────── */
+.intro {
   position: fixed;
-  left: 0;
-  top: calc((1 - var(--p)) * 50vh + var(--p) * 10px);
-  translate: 0 calc(-50% * (1 - var(--p)));
-  margin-left: 0.45em;
-  font-size: calc((1 - var(--p)) * clamp(72px, 17vw, 240px) + var(--p) * 34px);
-  z-index: 50;
+  inset: 0;
+  z-index: 100;
+  overflow: hidden;
+  pointer-events: none;
+  /* A fine corsa smette di esistere per il browser: niente strato fisso
+     che resta a coprire il sito o a mangiare eventi.
+     1.4s = 0.22 di attesa + 1.15 di caduta, cioè l'istante esatto in cui
+     il liquido è uscito: prima restava appeso 380ms a vuoto, con le onde
+     che continuavano a girare per nulla.
+     `display` toglie anche quelle dal lavoro del compositor; `visibility`
+     resta come rete per i browser che non animano display. */
+  animation: intro-done 0s linear 1.4s forwards;
+}
+@keyframes intro-done {
+  to {
+    visibility: hidden;
+    display: none;
+  }
 }
 
-/* Barra della header: appare mentre il logo ci vola dentro */
+.intro-sheet {
+  position: absolute;
+  inset: 0;
+  /* altezza della cresta: la usano sia le onde sia la corsa di caduta,
+     che deve portarle fuori schermo tutte e due (vedi intro-fall) */
+  --onda: clamp(26px, 4.5vw, 58px);
+  /* gradiente verticale: la massa è più densa in fondo, come un liquido
+     vero visto di taglio */
+  background: linear-gradient(
+    to bottom,
+    var(--red) 0%,
+    var(--red) 42%,
+    color-mix(in srgb, var(--red) 82%, var(--red-deep)) 100%
+  );
+  /* Breve pausa a schermo pieno, poi cala.
+     La curva parte decisa (con un ease-in vero sembrava ferma per metà
+     animazione) e NON frena in fondo: la pendenza finale è la più ripida,
+     così il liquido esce di scena accelerando. Frenando sul finale, lo
+     stacco si vedeva. */
+  animation: intro-fall 1.15s cubic-bezier(0.5, 0.15, 0.78, 0.72) 0.22s both;
+}
+@keyframes intro-fall {
+  from {
+    translate: 0 0;
+  }
+  to {
+    /* Deve uscire di schermo il pannello E le creste, che gli stanno
+       sopra: fermandosi a 101% le onde sporgevano ancora dentro e la fine
+       dell'intro le tagliava di netto — era quello il micro scatto.
+       Il 4% (invece del minimo 101%) è margine voluto: l'ultima cresta
+       sparisce ~40ms prima che l'animazione finisca, così anche perdendo
+       un fotogramma su una macchina lenta non si vede saltare nulla. */
+    translate: 0 calc(104% + var(--onda));
+  }
+}
+
+/* ── la superficie ──
+   Le onde stanno SOPRA il bordo del pannello (translate -100%) e scendono
+   insieme a lui. Larghe il doppio, scorrono in orizzontale in loop. */
+.intro-wave {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 200%;
+  height: var(--onda);
+  translate: 0 -99%; /* -99% invece di -100%: si sovrappone di un filo al
+                        pannello, così tra onda e massa non passa luce */
+  display: block;
+}
+.intro-wave path {
+  fill: var(--red);
+}
+.intro-wave--back {
+  /* più chiara e più lenta: è la cresta lontana.
+     `left` negativo la sfasa rispetto all'altra: sovrapposte in fase le
+     due onde sembravano una riga sola. */
+  left: -9%;
+  opacity: 0.5;
+  animation: intro-swell 3.1s linear infinite;
+}
+.intro-wave--back path {
+  fill: color-mix(in srgb, var(--red) 78%, var(--lift));
+}
+.intro-wave--front {
+  animation: intro-swell 2.15s linear infinite reverse;
+}
+@keyframes intro-swell {
+  from {
+    /* la traslazione verticale va ripetuta: `translate` è una proprietà
+       sola, se la riscrivo nei keyframe devo riportare anche la Y */
+    translate: 0 -99%;
+  }
+  to {
+    translate: -50% -99%;
+  }
+}
+
+/* Chi ha chiesto meno movimento non deve subire un'apertura di un secondo
+   e mezzo: il sito è semplicemente già lì. */
+@media (prefers-reduced-motion: reduce) {
+  .intro {
+    display: none;
+  }
+}
+
+/* ══ PRIMA SCHERMATA ═════════════════════════════════════════════════════
+   Il logo comincia grande al centro e, mentre si scorre, vola in alto a
+   sinistra dentro la header. Tutto è funzione di --p (0 = fermo al centro,
+   1 = arrivato nella barra), che ScrollDirector aggiorna a ogni fotogramma.
+
+   --p è registrata come <number>: senza, il browser la tratta come stringa
+   e i calc() qui sotto sarebbero invalidi finché non viene scritta la prima
+   volta. ─────────────────────────────────────────────────────────────── */
+@property --p {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+:root {
+  --p: 0;
+  /* Il volo NON insegue la barra di scorrimento: basta un gesto e --p
+     passa da 0 a 1 da sola, qui. Poter mettere una transition su una
+     custom property è esattamente il motivo per cui è registrata con
+     @property: senza, il browser la tratta come stringa e salterebbe di
+     colpo al valore finale.
+     La curva parte decisa e arriva morbida — il logo si posa nella barra,
+     non ci sbatte contro. */
+  transition: --p 1.25s cubic-bezier(0.62, 0.02, 0.2, 1);
+}
+
+/* la pagina deve avere altezza vera perché ci sia qualcosa da scorrere */
+.scroll-track {
+  position: relative;
+  z-index: 0;
+  pointer-events: none;
+
+  /* Sotto le voci dei servizi il vetro è bianco e il testo pure: senza
+     arretrare, la terza voce finiva per il 69% sopra le lastre e non si
+     leggeva. Questo valore vale ovunque; dove le view-timeline esistono
+     viene alzato a 1 e abbassato solo quando le voci entrano davvero. */
+  opacity: 0.4;
+}
+
+.scroll-section {
+  height: 100vh;
+}
+/* La schermata di "chi siamo" non ha bisogno di una corsa propria: il
+   testo è già tutto lì dal primo gesto, quindi ogni pixel di binario qui
+   è solo attesa prima che cominci il rosso. Ne resta quel tanto che
+   basta a leggere le due frasi senza essere subito coperti. */
+.scroll-section[data-label="chi-siamo"] {
+  height: 45vh;
+}
+/* Anche l'apertura: il logo vola via al primo gesto, non serve tenere
+   una schermata intera di binario per una scena che dura un secondo. */
+.scroll-section[data-label="apertura"] {
+  height: 85vh;
+}
+
+/* ── la header di vetro ──
+   Non un pannello opaco: velo di carta + sfocatura forte e satura, così
+   quello che le passa sotto si intuisce e resta vivo (liquid glass). */
 .site-header {
   position: fixed;
   inset: 0 0 auto 0;
   height: 64px;
   z-index: 40;
-  /* più trasparente, ma vetro più deciso: meno velo e più sfocatura+satura
-     (liquid glass) — quello che passa sotto si intuisce e resta vivo */
-  background: color-mix(in srgb, var(--paper) 64%, transparent);
-  -webkit-backdrop-filter: blur(20px) saturate(1.5);
-  backdrop-filter: blur(20px) saturate(1.5);
-  border-bottom: 1px solid color-mix(in srgb, var(--hair) 72%, transparent);
+  background: color-mix(in srgb, var(--paper) 60%, transparent);
+  -webkit-backdrop-filter: blur(20px) saturate(1.6);
+  backdrop-filter: blur(20px) saturate(1.6);
+  border-bottom: 1px solid color-mix(in srgb, var(--hair) 65%, transparent);
+  /* compare insieme al logo che ci sta entrando */
   opacity: var(--p);
   pointer-events: none;
 }
 
-/* ── Sipario d'apertura (drain liquido) ── */
-.intro-root {
+/* ── il volo del logo ──
+   Una sola proprietà comanda tutto: il font-size. Le misure interne del
+   lockup sono in `em`, quindi rimpicciolendo il testo si rimpicciolisce
+   anche il quadratino, in proporzione esatta.
+
+   `left` resta 0.45em: siccome l'em segue il font-size interpolato, il
+   margine sinistro passa da "una lettera del logo" a un padding da header
+   senza bisogno di animarlo a parte. */
+.logo-fly {
   position: fixed;
-  inset: 0;
-  z-index: 999;
-  pointer-events: none;
-  overflow: hidden;
-}
-.intro-curtain {
-  position: absolute;
-  inset: 0;
-  background: var(--red);
-  will-change: transform;
-  animation: intro-drain 2s cubic-bezier(0.6, 0, 0.35, 1) 0.25s forwards;
-}
-.intro-wave {
-  position: absolute;
   left: 0;
-  right: 0;
-  bottom: 100%;
-  width: 100%;
-  height: 170px;
-  margin-bottom: -1px;
-  display: block;
-  fill: var(--red);
-}
-.intro-drop {
-  position: absolute;
-  bottom: 100%;
-  border-radius: 50%;
-  background: var(--red);
-  transform: translateY(0) scale(0);
-  animation-name: intro-splash;
-  animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
-  animation-iteration-count: infinite;
-}
-@keyframes intro-drain {
-  0% {
-    transform: translateY(0);
-  }
-  100% {
-    transform: translateY(130vh);
-  }
-}
-@keyframes intro-splash {
-  0% {
-    transform: translateY(28px) scale(0.4);
-    opacity: 0;
-  }
-  25% {
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(-64px) scale(1);
-    opacity: 0;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .intro-drop {
-    display: none;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .intro-curtain {
-    animation-duration: 0.01ms;
-    animation-delay: 0ms;
-  }
+  top: calc((1 - var(--p)) * 50vh + var(--p) * 12px);
+  translate: 0 calc(-50% * (1 - var(--p)));
+  margin-left: calc(
+    (1 - var(--p)) * 8vw + var(--p) * 22px
+  ); /* centrato in basso a sinistra → filo della header */
+  font-size: calc((1 - var(--p)) * clamp(84px, 19vw, 300px) + var(--p) * 30px);
+  z-index: 50;
 }
 
-/* ── Hero Art · "Massa di Vetro" — cluster + contrappeso ──────────────────
-   Solo cerchi e quadrati, fermi e riconoscibili. Liquid glass opaco stile
-   HyperOS: riempimenti a gradiente tra i due rossi (color-mix, alpha alta),
-   bordo-luce e riflessi in --lift, ombra calda in --red-deep.
-   Il vetro "vero" nasce nelle sovrapposizioni: le lastre .cl-glass hanno
-   backdrop-filter e sfocano i bordi di quelle sottostanti (3 sovrapposizioni
-   deliberate nel cluster).
-   Movimento: derive/respiri 9–18s su `translate`/`scale` individuali, in
-   pixel fissi così tutta la composizione ha lo stesso respiro a ogni taglia;
-   le rotazioni statiche vivono su `rotate` e compongono senza conflitti.
-   Tutto su compositor, niente layout. ─────────────────────────────────── */
+/* ── La massa di vetro ───────────────────────────────────────────────────
+   Un ammasso solo, denso, nell'angolo in basso a sinistra e tagliato dai
+   bordi: la scena continua fuori dallo schermo invece di finire dentro.
 
+   Ricetta liquid glass del marchio (vedi .design/design-system.md):
+   riempimento a gradiente fra i due rossi, filo di luce sul taglio, ombre
+   SEMPRE calde — mai grigie — e sfocatura attiva solo sulle lastre in
+   primo piano, perché il vetro nasce dal contrasto fra chi smeriglia e
+   chi no. ────────────────────────────────────────────────────────────── */
 .hero-art {
-  /* fondale fisso: le forme non seguono lo scroll della pagina,
-     si muovono solo con la coreografia guidata da --p */
   position: fixed;
   inset: 0;
-  pointer-events: none;
+  /* Sopra i FONDI di tutte le sezioni (30) ma sotto i testi (33): così
+     le figure attraversano l'intera pagina invece di sparire quando
+     arriva una sezione nuova. Dove il fondo è rosso ci passa sopra la
+     copia bianca (32), ed è quello a farle cambiare colore. */
+  z-index: 31;
   overflow: hidden;
+  pointer-events: none;
 }
 
-/* base condivisa delle lastre di vetro; --edge regola il filo di luce */
-.hero-art--cluster .cl-shape {
-  --edge: color-mix(in srgb, var(--lift) 52%, transparent);
+
+.massa {
+  /* misure esplicite invece di aspect-ratio: --h serve al calcolo del
+     ritaglio della copia bianca, e un rapporto d'aspetto non è un numero
+     che si possa usare dentro un calc() */
+  --w: min(52vw, 780px);
+  --h: calc(var(--w) * 0.82);
+
+  position: absolute;
+  z-index: 5; /* dietro al contenuto, e sotto al pannello rosso */
+  /* ancorata all'angolo e debordante: niente cornice d'aria attorno */
+  left: -7vw;
+  bottom: -12vh;
+  width: var(--w);
+  height: var(--h);
+  /* entra scivolando dall'angolo; torna indietro se si risale */
+  translate: calc((1 - var(--p)) * -14%) calc((1 - var(--p)) * 16%);
+  opacity: calc(0.25 + var(--p) * 0.75);
+  transition:
+    translate 1.4s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 1.4s ease;
+}
+
+/* base condivisa delle lastre */
+.ml {
   position: absolute;
   display: block;
-  border: 1px solid var(--edge);
+  border: 1px solid color-mix(in srgb, var(--lift) 52%, transparent);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--red) 72%, transparent) 0%,
+    color-mix(in srgb, var(--red) 66%, transparent) 38%,
+    color-mix(in srgb, var(--red-deep) 58%, transparent) 100%
+  );
   box-shadow:
-    /* filo di luce sul bordo superiore: il taglio della lastra */
+    /* filo di luce sul bordo alto: il taglio della lastra */
     inset 0 1px 0 0 color-mix(in srgb, var(--lift) 62%, transparent),
-    /* luce interna che scende dall'alto: vetro smerigliato spesso */
+    /* luce interna dall'alto: vetro smerigliato spesso */
     inset 0 26px 52px -22px color-mix(in srgb, var(--lift) 24%, transparent),
-    /* fondo della lastra leggermente più denso: spessore */
+    /* fondo più denso: spessore */
     inset 0 -18px 36px -24px color-mix(in srgb, var(--red-deep) 46%, transparent),
-    /* ombra calda a contatto + alone soffuso */
+    /* ombre calde: contatto + alone */
     0 10px 24px -14px color-mix(in srgb, var(--red-deep) 34%, transparent),
     0 34px 80px -32px color-mix(in srgb, var(--red-deep) 40%, transparent);
+  animation:
+    ml-deriva var(--d, 16s) ease-in-out infinite,
+    ml-respiro var(--r, 13s) ease-in-out infinite;
+  animation-play-state: paused;
 }
-
-/* vetro attivo: solo le lastre superiori smerigliano ciò che hanno sotto */
-.hero-art--cluster .cl-glass {
-  -webkit-backdrop-filter: blur(var(--glass-blur, 16px)) saturate(1.1);
-  backdrop-filter: blur(var(--glass-blur, 16px)) saturate(1.1);
+.figs-on .ml {
+  animation-play-state: running;
 }
-
-/* sheen: riflesso morbido in alto-sinistra, luce unica e coerente su tutte le lastre */
-.hero-art--cluster .cl-shape::before {
+/* sheen: una sola sorgente di luce per tutta la massa */
+.ml::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -286,369 +383,89 @@ body {
     transparent 58%
   );
 }
-
-/* ── Massa principale · destra-centro, sanguina oltre il bordo destro ── */
-.cl-mass {
-  --w: clamp(360px, 46vw, 760px);
-  position: absolute;
-  top: 50%;
-  right: -8%;
-  width: var(--w);
-  aspect-ratio: 1 / 0.94;
-  translate: 0 -52%;
+/* solo le lastre in primo piano smerigliano quelle sotto */
+.ml-vetro {
+  -webkit-backdrop-filter: blur(16px) saturate(1.1);
+  backdrop-filter: blur(16px) saturate(1.1);
 }
 
-/* 1 · cerchio-eroe: l'ancora della massa, il vetro più grande */
-.cl-circle-hero {
-  left: 18%;
-  top: 7%;
-  width: 62%;
+/* la più lontana: chiara e senza peso, fa da fondo all'ammasso */
+.ml-fondo {
+  left: 34%;
+  top: 2%;
+  width: 54%;
   aspect-ratio: 1;
   border-radius: 50%;
   background: linear-gradient(
     135deg,
-    color-mix(in srgb, var(--red) 72%, transparent) 0%,
-    color-mix(in srgb, var(--red) 66%, transparent) 38%,
-    color-mix(in srgb, var(--red-deep) 58%, transparent) 100%
+    color-mix(in srgb, var(--red) 34%, transparent) 0%,
+    color-mix(in srgb, var(--red-deep) 26%, transparent) 100%
   );
-  --in: 1.15s;
-  animation:
-    cl-drift-a 18s ease-in-out -6s infinite,
-    cl-breathe 14s ease-in-out -3s infinite,
-    cl-enter 1s cubic-bezier(0.22, 1, 0.36, 1) var(--in) backwards;
+  box-shadow: none;
+  --d: 19s;
+  --r: 15s;
 }
 
-/* arco speculare sul bordo alto del cerchio-eroe: curvatura del vetro */
-.cl-circle-hero::after {
-  content: "";
-  position: absolute;
-  inset: 4.5%;
+/* l'ancora: la lastra grande, esce dal bordo sinistro */
+.ml-ancora {
+  left: -6%;
+  top: 20%;
+  width: 66%;
+  aspect-ratio: 1;
   border-radius: 50%;
-  border: 2px solid transparent;
-  border-top-color: color-mix(in srgb, var(--lift) 42%, transparent);
-  rotate: -24deg;
+  --d: 16s;
+  --r: 13s;
 }
 
-/* 2 · quadrato maggiore: sopra il cerchio, ne sfoca il bordo → profondità */
-.cl-square-major {
-  --glass-blur: 22px;
-  left: 1%;
-  top: 43%;
-  width: 44%;
+/* interseca l'ancora sull'angolo alto-destro */
+.ml-quadro {
+  left: 42%;
+  top: 30%;
+  width: 40%;
   aspect-ratio: 1;
-  rotate: -8deg;
-  border-radius: 13%;
-  background: linear-gradient(
-    150deg,
-    color-mix(in srgb, var(--red-deep) 80%, transparent) 0%,
-    color-mix(in srgb, var(--red) 62%, transparent) 100%
-  );
-  --in: 1.4s;
-  animation:
-    cl-drift-b 15s ease-in-out -4s infinite,
-    cl-enter 1s cubic-bezier(0.22, 1, 0.36, 1) var(--in) backwards;
+  border-radius: 20%;
+  rotate: -12deg;
+  --d: 14s;
+  --r: 17s;
 }
 
-/* 3 · quadrato minore: tocca il bordo alto del cerchio, vetro più chiaro */
-.cl-square-minor {
-  --glass-blur: 16px;
-  left: 62%;
-  top: 1%;
-  width: 27%;
+/* passa sopra ancora e quadrato: è qui che il vetro si vede di più */
+.ml-tondo {
+  left: 26%;
+  top: 52%;
+  width: 34%;
   aspect-ratio: 1;
-  rotate: 12deg;
-  border-radius: 14%;
-  background: linear-gradient(
-    130deg,
-    color-mix(in srgb, var(--red) 58%, transparent) 0%,
-    color-mix(in srgb, var(--red-deep) 46%, transparent) 100%
-  );
-  --in: 0.95s;
-  animation:
-    cl-drift-a 12s ease-in-out -8s infinite reverse,
-    cl-enter 1s cubic-bezier(0.22, 1, 0.36, 1) var(--in) backwards;
+  border-radius: 50%;
+  --d: 18s;
+  --r: 11s;
 }
 
-/* 4 · cerchio-perno: piccolo e denso, aggancia l'angolo del quadrato maggiore */
-.cl-circle-pin {
-  --glass-blur: 14px;
-  left: 33%;
-  top: 72%;
+/* piccola, appoggiata sul bordo dell'ancora */
+.ml-scheggia {
+  left: 8%;
+  top: 6%;
   width: 17%;
   aspect-ratio: 1;
-  border-radius: 50%;
-  background: linear-gradient(
-    140deg,
-    color-mix(in srgb, var(--red-deep) 86%, transparent) 0%,
-    color-mix(in srgb, var(--red) 70%, transparent) 100%
-  );
-  --in: 1.6s;
-  animation:
-    cl-drift-b 10s ease-in-out -2s infinite reverse,
-    cl-breathe 9s ease-in-out -5s infinite,
-    cl-enter 1s cubic-bezier(0.22, 1, 0.36, 1) var(--in) backwards;
+  border-radius: 26%;
+  rotate: 14deg;
+  --d: 13s;
+  --r: 19s;
 }
 
-/* ── Contrappesi · eco piccole, vetro più leggero ── */
-.hero-art--cluster .cl-echo {
-  --edge: color-mix(in srgb, var(--lift) 42%, transparent);
-  box-shadow:
-    inset 0 1px 0 0 color-mix(in srgb, var(--lift) 48%, transparent),
-    inset 0 -10px 22px -14px color-mix(in srgb, var(--red-deep) 36%, transparent),
-    0 14px 34px -18px color-mix(in srgb, var(--red-deep) 30%, transparent);
-}
-
-/* quadratino alto-sinistra: sopra il logo, fuori dalla safe-zone */
-.cl-echo-nw {
-  left: 7%;
-  top: 9%;
-  width: clamp(44px, 5vw, 76px);
-  aspect-ratio: 1;
-  rotate: -14deg;
-  border-radius: 16%;
-  background: linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--red) 46%, transparent) 0%,
-    color-mix(in srgb, var(--red-deep) 34%, transparent) 100%
-  );
-  --in: 0.65s;
-  animation:
-    cl-breathe 16s ease-in-out -7s infinite,
-    cl-enter 1s cubic-bezier(0.22, 1, 0.36, 1) var(--in) backwards;
-}
-
-/* cerchio basso-centro: sanguina oltre il bordo inferiore */
-.cl-echo-s {
-  left: 38%;
-  bottom: -3%;
-  width: clamp(64px, 7.5vw, 116px);
-  aspect-ratio: 1;
-  border-radius: 50%;
-  background: linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--red-deep) 44%, transparent) 0%,
-    color-mix(in srgb, var(--red) 30%, transparent) 100%
-  );
-  --in: 1.95s;
-  animation:
-    cl-drift-a 14s ease-in-out -10s infinite,
-    cl-enter 1s cubic-bezier(0.22, 1, 0.36, 1) var(--in) backwards;
-}
-
-/* ── Eco aggiuntive: riempiono i vuoti tra logo, massa e bordi ── */
-
-/* quadratino alto-centro, tra logo e massa */
-.cl-echo-n {
-  --in: 0.7s;
-  left: 45%;
-  top: 6%;
-  width: clamp(36px, 3.6vw, 58px);
-  aspect-ratio: 1;
-  rotate: 22deg;
-  border-radius: 16%;
-  background: linear-gradient(
-    140deg,
-    color-mix(in srgb, var(--red) 44%, transparent) 0%,
-    color-mix(in srgb, var(--red-deep) 32%, transparent) 100%
-  );
-  animation:
-    cl-drift-b 13s ease-in-out -7s infinite,
-    cl-enter 1s cubic-bezier(0.22, 1, 0.36, 1) var(--in) backwards;
-}
-
-/* cerchio medio in alto, nel canale tra logo e cluster */
-.cl-echo-mid {
-  --in: 0.85s;
-  left: 53%;
-  top: 15%;
-  width: clamp(48px, 5.5vw, 88px);
-  aspect-ratio: 1;
-  border-radius: 50%;
-  background: linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--red) 52%, transparent) 0%,
-    color-mix(in srgb, var(--red-deep) 40%, transparent) 100%
-  );
-  animation:
-    cl-breathe 13s ease-in-out -4s infinite,
-    cl-enter 1s cubic-bezier(0.22, 1, 0.36, 1) var(--in) backwards;
-}
-
-/* cerchietto basso-sinistra, sotto la zona del logo */
-.cl-echo-w {
-  --in: 1.7s;
-  left: 20%;
-  top: 77%;
-  width: clamp(30px, 3.2vw, 52px);
-  aspect-ratio: 1;
-  border-radius: 50%;
-  background: linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--red-deep) 40%, transparent) 0%,
-    color-mix(in srgb, var(--red) 28%, transparent) 100%
-  );
-  animation:
-    cl-breathe 15s ease-in-out -9s infinite,
-    cl-enter 1s cubic-bezier(0.22, 1, 0.36, 1) var(--in) backwards;
-}
-
-/* quadratino basso, tra il perno e il cerchio che sanguina */
-.cl-echo-se {
-  --in: 1.8s;
-  left: 67%;
-  top: 79%;
-  width: clamp(40px, 4.4vw, 72px);
-  aspect-ratio: 1;
-  rotate: -16deg;
-  border-radius: 15%;
-  background: linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--red) 50%, transparent) 0%,
-    color-mix(in srgb, var(--red-deep) 38%, transparent) 100%
-  );
-  animation:
-    cl-drift-b 12s ease-in-out -8s infinite,
-    cl-enter 1s cubic-bezier(0.22, 1, 0.36, 1) var(--in) backwards;
-}
-
-/* su schermi stretti la massa si stringe al bordo destro, dietro al logo */
-@media (max-width: 640px) {
-  .cl-mass {
-    --w: min(88vw, 420px);
-    right: -22%;
-    width: var(--w);
-  }
-}
-
-/* ── Viaggio allo scroll (guidato da --p) ──────────────────────────────
-   Ogni forma dichiara la propria rotta (--tx/--ty) e il delta di scala
-   (--ds). Il viaggio vive sulla proprietà `transform`, che si COMPONE con
-   le proprietà individuali translate/scale animate da derive e respiri:
-   niente conflitti, le forme continuano a vivere mentre viaggiano. */
-/* Solo figli diretti del canvas (massa ed eco): le lastre DENTRO la massa
-   erediterebbero il suo --tx e lo applicherebbero una seconda volta. */
-.cl-mass,
-.hero-art--cluster > .cl-shape {
-  transform: translate3d(
-      calc(var(--tx, 0px) * var(--p)),
-      calc(var(--ty, 0px) * var(--p)),
-      0
-    )
-    scale(calc(1 + var(--ds, 0) * var(--p)));
-}
-
-/* Il cluster migra in blocco, intatto, da destra a sinistra: la posizione
-   d'arrivo è lo specchio di quella di partenza (bordo che sanguina a
-   sinistra come all'inizio sanguinava a destra). Nessun cambio di taglia. */
-.cl-mass {
-  /* partenza: right:-8% (di viewport) → left = 1.08*100vw - W.
-     arrivo speculare: left = -8% di viewport → tx = W - 1.16*100vw. */
-  --tx: calc(var(--w) - 116vw);
-  --ty: -2vh;
-}
-
-/* Dentro la massa: all'arrivo la composizione è la STESSA dell'inizio ma
-   ruotata di 180° (riflessione puntuale: specchiata su X E ribaltata
-   sopra/sotto su Y). Per ogni forma:
-     --tx = (100 - 2L - S)% di --w           (specchio orizzontale)
-     --ty = (100 - 2T - Sy)% dell'altezza     (ribaltamento verticale)
-   Le rotazioni tornano all'ORIGINALE: mirror-X + mirror-Y = giro di 180°,
-   che sui quadrati preserva l'inclinazione (--dr resta 0).
-   L'altezza della massa è 0.94·--w (aspect-ratio 1/0.94), quindi le quote
-   verticali sono già scalate per quel fattore. Il reset di --tx/--ty/--ds
-   è OBBLIGATORIO: senza, le lastre erediterebbero la rotta della massa. */
-.cl-mass > .cl-shape {
-  --tx: 0px;
-  --ty: 0px;
-  --ds: 0;
-  --dr: 0deg;
-  transform: translate3d(
-      calc(var(--tx) * var(--p)),
-      calc(var(--ty) * var(--p)),
-      0
-    )
-    scale(calc(1 + var(--ds) * var(--p)))
-    rotate(calc(var(--dr) * var(--p)));
-}
-/* hero: L18 T7 W62 → X a 20%, Y in basso (~+19% di --w) */
-.cl-mass > .cl-circle-hero {
-  --tx: calc(0.02 * var(--w));
-  --ty: calc(0.188 * var(--w));
-}
-/* major: spostato in basso-sinistra sul cerchio (come indicato) */
-.cl-mass > .cl-square-major {
-  --tx: calc(0.35 * var(--w));
-  --ty: calc(0.24 * var(--w));
-}
-/* minor: L62 T1 W27 → X a 11% (sinistra), Y in basso */
-.cl-mass > .cl-square-minor {
-  --tx: calc(-0.51 * var(--w));
-  --ty: calc(0.651 * var(--w));
-}
-/* pin: L33 T72 W17 → X a 50%, Y in alto */
-.cl-mass > .cl-circle-pin {
-  --tx: calc(0.17 * var(--w));
-  --ty: calc(-0.584 * var(--w));
-}
-
-/* Le eco viaggiano con lo scroll come il resto, ma con rotte che le
-   portano nella metà destra e sui bordi: mai sopra il cluster arrivato
-   a sinistra (che occupa ~x 0–33%, y 18–73%). Le piccole crescono. */
-.cl-echo-nw {
-  --tx: 18vw;
-  --ty: -2vh;
-  --ds: 0.6;
-}
-.cl-echo-n {
-  --tx: 14vw;
-  --ty: 2vh;
-  --ds: 0.4;
-}
-.cl-echo-mid {
-  --tx: 18vw;
-  --ty: 10vh;
-  --ds: 0.9;
-}
-.cl-echo-w {
-  --tx: 30vw;
-  --ty: 4vh;
-  --ds: 0.8;
-}
-.cl-echo-se {
-  --tx: 8vw;
-  --ty: -4vh;
-  --ds: 0.5;
-}
-.cl-echo-s {
-  --tx: 28vw;
-  --ty: -6vh;
-  --ds: 0.3;
-}
-
-/* ── Alive, ma con calma: derive e respiri lentissimi (pixel fissi:
-     stesso respiro controllato per ogni forma, grande o piccola) ── */
-@keyframes cl-drift-a {
+/* derive in pixel fissi: la massa respira uguale a ogni taglia di schermo */
+@keyframes ml-deriva {
   0%,
   100% {
     translate: 0 0;
   }
-  50% {
-    translate: 10px -8px;
+  33% {
+    translate: 13px -16px;
+  }
+  66% {
+    translate: -10px 11px;
   }
 }
-@keyframes cl-drift-b {
-  0%,
-  100% {
-    translate: 0 0;
-  }
-  38% {
-    translate: -9px 6px;
-  }
-  72% {
-    translate: 5px 9px;
-  }
-}
-@keyframes cl-breathe {
+@keyframes ml-respiro {
   0%,
   100% {
     scale: 1;
@@ -658,3443 +475,1191 @@ body {
   }
 }
 
-/* Comparsa: ogni forma sboccia inseguendo il sipario liquido che scende
-   (delay --in scalati per posizione verticale). Fill `backwards`: prima del
-   proprio turno la forma è invisibile; a fine corsa l'animazione si sgancia
-   e restituisce scale/opacity a respiri e derive (mai `forwards`, che
-   congelerebbe la scale per sempre). */
-@keyframes cl-enter {
-  0% {
-    opacity: 0;
-    scale: 0.5;
-  }
-  55% {
-    opacity: 1;
-  }
-  72% {
-    scale: 1.05;
-  }
-  100% {
-    opacity: 1;
-    scale: 1;
+@media (max-width: 860px) {
+  .massa {
+    width: 92vw;
+    left: -18vw;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hero-art--cluster .cl-shape {
-    animation: none;
+  .massa {
+    translate: 0 0;
+    transition: none;
+  }
+  .ml {
+    animation: none !important;
   }
 }
 
-/* ── Tagline "WE ARE sycomo." ──────────────────────────────────────────
-   Fissa sulla destra, visibile quando il cluster è atterrato
-   (html.hero-landed). "WE ARE" in Manrope (come DIGITAL) in dissolvenza;
-   "sycomo" in Geist composto da uno sciame di quadratini glass che volano
-   al loro posto e si dissolvono nella parola; punto quadrato che nasce da
-   una bolla che scoppia. */
-.tagline {
+/* ── Parte 2 · le due frasi ──────────────────────────────────────────────
+   Entrano mentre il logo si ritira nella header. Nessun timer: dipendono
+   dalla stessa --p del volo, quindi non possono sfasarsi.
+
+   La formula (--p - 0.55) / 0.45 rimappa l'ultimo 45% della corsa su 0→1:
+   compaiono solo quando il logo ha lasciato la scena. Su `opacity` non
+   serve limitare gli estremi — il browser scarta da sé i valori fuori da
+   0–1.
+
+   Stanno agli angoli opposti: la prima in alto a sinistra, la seconda in
+   basso a destra. Sono una frase sola in due tempi e la diagonale obbliga
+   lo sguardo ad attraversare la schermata per chiuderla. ───────────── */
+.chi {
   position: fixed;
-  top: 50%;
-  right: 13vw;
-  translate: 0 -50%;
-  z-index: 10;
+  inset: 0;
+  /* SOTTO i fondi delle sezioni che arrivano dopo (30): resta ferma dov'è
+     e il rosso le passa semplicemente sopra, come un foglio appoggiato.
+     Non svanisce: viene coperta. */
+  z-index: 29;
   pointer-events: none;
 }
-.tagline-we {
-  display: block;
-  font-family: var(--font-title); /* Manrope, come DIGITAL */
-  font-weight: 600;
-  font-size: clamp(18px, 2.2vw, 34px);
-  letter-spacing: 0.34em;
-  text-transform: uppercase;
-  color: var(--ink);
-  margin: 0 0 0.9em 0.15em;
-  opacity: 0;
-}
-.tagline-word {
-  position: relative;
-  display: inline-flex;
-  align-items: baseline; /* il punto (vuoto) poggia sulla baseline */
-  font-family: var(--font-sans); /* Geist, come il logo */
-  font-weight: 700;
-  font-size: clamp(64px, 13vw, 200px);
-  letter-spacing: -0.045em;
-  line-height: 0.9;
-  color: var(--ink);
-}
-.tagline-sycomo {
-  opacity: 0;
-}
-.tagline-dot {
-  width: 0.17em;
-  height: 0.17em;
-  margin-left: 0.12em;
-  flex-shrink: 0;
-  position: relative;
-  background: var(--red);
-  opacity: 0;
-}
-/* anello dello scoppio */
-.tagline-dot::after {
-  content: "";
+
+/* base comune: il carattere del marchio, stretto e pesante */
+.chi-uno,
+.chi-due {
   position: absolute;
-  inset: -45%;
-  border-radius: 50%;
-  border: 2px solid var(--red);
-  opacity: 0;
+  margin: 0;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1.02;
+  opacity: calc((var(--p) - 0.55) / 0.45);
 }
 
-/* sciame: quadratini glass in miniatura, come quelli di sfondo */
-.tagline-frags {
-  position: absolute;
-  inset: 0;
+/* IL PROBLEMA — in alto a sinistra, in inchiostro attenuato: è la
+   premessa, non deve pesare quanto la risposta */
+.chi-uno {
+  left: 6vw;
+  top: 17vh;
+  /* una riga sola, distesa: la misura in vw fa sì che la riga resti
+     intera a ogni larghezza invece di spezzarsi a metà frase */
+  white-space: nowrap;
+  font-size: clamp(26px, 6.2vw, 118px);
+  color: var(--ink-soft);
+  translate: 0 calc((1 - var(--p)) * 30px);
 }
-.tagline-frag {
+
+/* LA RISPOSTA — in basso a destra, inchiostro pieno e corpo maggiore:
+   è qui che cade l'accento, e si vede prima ancora di leggere */
+.chi-due {
+  right: 6vw;
+  /* Ancorata a metà schermata invece che al fondo: il -50% nella
+     translate la centra esattamente su quella quota, così resta lì
+     qualunque sia l'altezza della finestra e il corpo del testo. */
+  top: 51.5vh;
+  white-space: nowrap;
+  font-size: clamp(30px, 7.1vw, 136px);
+  color: var(--ink);
+  text-align: right;
+  /* Il -50% è il centraggio sulla quota qui sopra; i 52px sono la salita
+     d'ingresso, un filo più marcata di quella della prima frase così le
+     due arrivano sfalsate invece che come un blocco unico. */
+  translate: 0 calc(-50% + (1 - var(--p)) * 52px);
+}
+
+/* il punto del marchio è un quadrato, e chiude la seconda frase */
+.chi-dot {
+  display: inline-block;
+  width: 0.15em;
+  height: 0.15em;
+  margin-left: 0.1em;
+  background: var(--red);
+}
+
+/* Schermi stretti: la diagonale non ci sta. Le due frasi si impilano al
+   centro e tornano entrambe a bandiera sinistra. */
+@media (max-width: 860px) {
+  .chi {
+    display: grid;
+    place-content: center;
+    gap: clamp(20px, 4vh, 40px);
+    padding: 0 7vw;
+  }
+  .chi-uno,
+  .chi-due {
+    position: static;
+    width: auto;
+    max-width: 100%;
+    text-align: left;
+    /* qui la riga intera non ci starebbe: meglio spezzata che tagliata */
+    white-space: normal;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chi {
+    translate: 0 0;
+  }
+}
+
+/* ── La polaroid, in alto a destra ───────────────────────────────────────
+   Cornice vera: sottile sui tre lati, spessa in basso dove sta la
+   didascalia — è quella proporzione a farla leggere come una stampa e non
+   come una card qualsiasi. Il formato però è 16:9, non il quadrato
+   classico.
+
+   Appena storta e con ombra calda (mai grigia, come tutto il resto del
+   sito): sembra appoggiata sul tavolo, non incollata allo schermo. ──── */
+.pol {
   position: absolute;
-  aspect-ratio: 1;
-  border-radius: 20%;
-  border: 1px solid color-mix(in srgb, var(--lift) 45%, transparent);
+  right: 6vw;
+  /* alzata rispetto a prima: crescendo di larghezza cresce anche in
+     altezza, e più in basso finirebbe addosso alla seconda frase */
+  top: 9vh;
+  width: min(32vw, 600px);
+  margin: 0;
+  padding: 0.85rem 0.85rem 0; /* il bordo basso lo fa la didascalia */
+  background: var(--lift);
+  border-radius: 3px;
+  rotate: -3deg;
+  box-shadow:
+    /* contatto ravvicinato: dà l'appoggio */
+    0 2px 6px -2px color-mix(in srgb, var(--red-deep) 26%, transparent),
+    /* alone lungo e morbido: dà l'altezza da terra */
+    0 26px 50px -20px color-mix(in srgb, var(--red-deep) 32%, transparent);
+  opacity: calc((var(--p) - 0.6) / 0.4);
+  /* entra scendendo e si raddrizza appena: una stampa che si posa */
+  translate: 0 calc((1 - var(--p)) * -38px);
+  transition: rotate 1.25s cubic-bezier(0.62, 0.02, 0.2, 1);
+}
+
+.pol-scatto {
+  /* serve come riferimento a ciò che sta dentro (video sopra, scena in
+     codice sotto): senza, gli strati non si sovrappongono e il video
+     finisce spinto fuori dal riquadro */
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: var(--paper-2);
+  border-radius: 1px;
+}
+.pol-scatto img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* ── Dentro la polaroid: un sito che si costruisce ───────────────────────
+   Ogni pezzo entra dal basso con un filo di overshoot, resta il tempo di
+   farsi vedere, poi tutto sfuma e il ciclo riparte. Un solo giro dura 7s:
+   abbastanza lento da non agitare la schermata, abbastanza corto da
+   vederlo intero mentre si legge la frase accanto.
+
+   I ritardi sono scaglionati di 0.35s l'uno dall'altro — è quello a farlo
+   leggere come una costruzione invece che come un'apparizione. ─────── */
+.pa {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: var(--paper);
+  overflow: hidden;
+}
+
+/* base comune: tutti i pezzi entrano dal basso, tutti tornano indietro */
+.pa > span {
+  position: absolute;
+  border-radius: 2px;
   opacity: 0;
+  /* il ritardo arriva da --d: messo nelle regole dei singoli pezzi
+     verrebbe azzerato da questa shorthand, che ha specificità maggiore */
+  animation: pa-entra 7s cubic-bezier(0.22, 1.2, 0.36, 1) var(--d, 0s) infinite;
+  /* ferma finché la scena non è in gioco: non gira a vuoto dietro
+     l'apertura, e riparte da sola quando serve */
+  animation-play-state: paused;
 }
-.tagline-frag:nth-child(odd) {
+.figs-on .pa > span {
+  animation-play-state: running;
+}
+
+/* la barra in alto, con il quadratino del marchio */
+.pa-barra {
+  left: 6%;
+  top: 9%;
+  width: 88%;
+  height: 8%;
+  background: color-mix(in srgb, var(--ink) 10%, transparent);
+  --d: 0.2s;
+}
+.pa-punto {
+  position: absolute;
+  left: 4%;
+  top: 50%;
+  translate: 0 -50%;
+  width: 7%;
+  aspect-ratio: 1;
+  background: var(--red);
+}
+
+/* il blocco grande di apertura: vetro rosso, come le figure fuori */
+.pa-hero {
+  left: 6%;
+  top: 24%;
+  width: 44%;
+  height: 52%;
+  border-radius: 3px;
   background: linear-gradient(
     135deg,
-    color-mix(in srgb, var(--red) 62%, transparent) 0%,
-    color-mix(in srgb, var(--red-deep) 48%, transparent) 100%
-  );
-}
-.tagline-frag:nth-child(even) {
-  background: linear-gradient(
-    150deg,
-    color-mix(in srgb, var(--red-deep) 60%, transparent) 0%,
-    color-mix(in srgb, var(--red) 44%, transparent) 100%
-  );
-}
-
-/* ── Coreografia all'atterraggio ── */
-.hero-landed .tagline-we {
-  animation: tag-fade 0.7s ease 0.1s forwards;
-}
-.hero-landed .tagline-frag {
-  animation:
-    tag-frag-in 0.5s cubic-bezier(0.2, 0.8, 0.3, 1) var(--fd) both,
-    tag-frag-out 0.4s ease-in calc(var(--fd) + 0.72s) forwards;
-}
-.hero-landed .tagline-sycomo {
-  animation: tag-fade 0.8s ease 0.95s forwards;
-}
-.hero-landed .tagline-dot {
-  animation: tag-dot-pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 1.45s forwards;
-}
-.hero-landed .tagline-dot::after {
-  animation: tag-dot-burst 0.5s ease-out 1.78s forwards;
-}
-
-@keyframes tag-fade {
-  to {
-    opacity: 1;
-  }
-}
-@keyframes tag-frag-in {
-  from {
-    opacity: 0;
-    transform: translate(var(--fx), var(--fy)) scale(0.3) rotate(25deg);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-@keyframes tag-frag-out {
-  from {
-    opacity: 1;
-    transform: none;
-  }
-  to {
-    opacity: 0;
-    transform: scale(0.45);
-  }
-}
-/* bolla: si gonfia tonda e traslucida, scoppia e resta il quadrato */
-@keyframes tag-dot-pop {
-  0% {
-    opacity: 0;
-    scale: 0;
-    border-radius: 50%;
-  }
-  55% {
-    opacity: 0.85;
-    scale: 1.35;
-    border-radius: 50%;
-  }
-  70% {
-    scale: 0.7;
-    border-radius: 40%;
-  }
-  100% {
-    opacity: 1;
-    scale: 1;
-    border-radius: 0;
-  }
-}
-@keyframes tag-dot-burst {
-  0% {
-    opacity: 0.8;
-    scale: 0.4;
-  }
-  100% {
-    opacity: 0;
-    scale: 2.2;
-  }
-}
-
-/* ── Coreografia inversa (scroll verso l'alto) ──
-   Il contrario dell'entrata, in ordine inverso: prima il punto torna bolla
-   e si sgonfia, poi "sycomo" si sgretola in quadratini che rivolano via,
-   infine "WE ARE" svanisce. */
-.hero-leaving .tagline-dot {
-  animation: tag-dot-unpop 0.5s ease-in forwards;
-}
-.hero-leaving .tagline-sycomo {
-  animation: tag-fade-out 0.45s ease 0.12s forwards;
-}
-.hero-leaving .tagline-frag {
-  animation: tag-frag-exit 0.55s cubic-bezier(0.5, 0, 0.75, 0)
-    calc(var(--fd) + 0.15s) forwards;
-}
-.hero-leaving .tagline-we {
-  animation: tag-fade-out 0.5s ease 0.4s forwards;
-}
-
-@keyframes tag-fade-out {
-  from {
-    opacity: 1;
-  }
-  to {
-    opacity: 0;
-  }
-}
-/* punto → torna bolla tonda gonfia e si sgonfia fino a sparire */
-@keyframes tag-dot-unpop {
-  0% {
-    opacity: 1;
-    scale: 1;
-    border-radius: 0;
-  }
-  40% {
-    opacity: 0.85;
-    scale: 1.35;
-    border-radius: 50%;
-  }
-  100% {
-    opacity: 0;
-    scale: 0;
-    border-radius: 50%;
-  }
-}
-/* la parola si sgretola: i quadratini riappaiono e rivolano all'origine */
-@keyframes tag-frag-exit {
-  0% {
-    opacity: 0;
-    transform: none;
-  }
-  20% {
-    opacity: 1;
-    transform: none;
-  }
-  100% {
-    opacity: 0;
-    transform: translate(var(--fx), var(--fy)) scale(0.3) rotate(-25deg);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .tagline-frag {
-    display: none;
-  }
-  .hero-landed .tagline-we,
-  .hero-landed .tagline-sycomo,
-  .hero-landed .tagline-dot {
-    animation: none;
-    opacity: 1;
-  }
-  .hero-leaving .tagline-we,
-  .hero-leaving .tagline-sycomo,
-  .hero-leaving .tagline-dot {
-    animation: none;
-    opacity: 0;
-  }
-}
-
-/* ── CTA "so, what do we do." · il punto che invade (fase --p2) ──────────
-   Secondo atto guidato dallo scroll: il PUNTO QUADRATO ROSSO in coda a
-   "sycomo" cresce, ancorato al lato destro e al centro verticale, fino a un
-   pannello rosso con margine di 3cm (inset:3cm). Tutto è funzione continua
-   di --p2 via calc()/clamp(): reveal "scrubby", reversibile scrollando.
-   (@property --p2 è registrato più in alto in questo file.) */
-
-/* Radice: copre tutto, sopra il resto, trasparente agli eventi. */
-.cta-reveal {
-  position: fixed;
-  inset: 0;
-  z-index: 60;
-  pointer-events: none;
-}
-
-/* Il pannello È il punto e cresce ESATTAMENTE da esso. L'ancora
-   (--dot-cx / --dot-cy / --dot-size) è misurata dal vivo da ScrollDirector
-   sul vero punto di "sycomo." → niente "secondo punto", parte da lì.
-   Fallback usati prima che il JS scriva le vars (o a JS spento). */
-.cta-reveal--iris-corner .cr-panel {
-  /* Fase 3: il margine di 3cm si riassorbe (smoothstep su --p3) finché il
-     pannello copre tutto lo schermo — in contemporanea con l'affondo. */
-  --t3: clamp(0, var(--p3), 1);
-  --g3: calc(var(--t3) * var(--t3) * (3 - 2 * var(--t3)));
-  --gap: calc(3cm * (1 - var(--g3)));
-  /* smoothstep: crescita con ease-in-out (parte e si posa in modo morbido,
-     non meccanico) invece che lineare. t²(3−2t). */
-  --t: clamp(0, var(--p2), 1);
-  --grow: calc(var(--t) * var(--t) * (3 - 2 * var(--t)));
-  --seed: var(--dot-size, 32px);
-  --ax: var(--dot-cx, 84vw); /* centro X del punto (px, viewport) */
-  --ay: var(--dot-cy, 46vh); /* centro Y del punto (px, viewport) */
-
-  position: absolute;
-
-  /* left/top: dal bordo del punto (centro − mezzo lato) fino a 3cm.
-     width/height: dal lato del punto fino a viewport − 2·3cm.
-     A --grow=1 ⇒ left/top = 3cm e width/height = 100vw−6cm / 100svh−6cm,
-     cioè esattamente inset:3cm. */
-  left: calc(
-    (var(--ax) - var(--seed) / 2) +
-      (var(--gap) - (var(--ax) - var(--seed) / 2)) * var(--grow)
-  );
-  top: calc(
-    (var(--ay) - var(--seed) / 2) +
-      (var(--gap) - (var(--ay) - var(--seed) / 2)) * var(--grow)
-  );
-  width: calc(var(--seed) + (100vw - 2 * var(--gap) - var(--seed)) * var(--grow));
-  height: calc(var(--seed) + (100svh - 2 * var(--gap) - var(--seed)) * var(--grow));
-
-  /* rosso pieno + sheen radiale morbido in alto-sinistra: profondità, non
-     un rosso piatto (coerente col linguaggio glass del sito) */
-  background:
-    radial-gradient(
-      130% 110% at 28% 18%,
-      color-mix(in srgb, var(--lift) 14%, transparent),
-      transparent 55%
-    ),
-    var(--red);
-
-  /* squadrato, come il punto del brand: nessun angolo arrotondato */
-  border-radius: 0;
-
-  /* invisibile a --p2=0 (durante la fase 1 non deve comparire nessun
-     quadrato vagante); appare appena la fase 2 inizia, sovrapposto al punto.
-     In fase 4 si DISSOLVE (× 1−smoothstep(--p4)) rivelando la scena invertita. */
-  --fade4: calc(var(--p4) * var(--p4) * (3 - 2 * var(--p4)));
-  opacity: calc(clamp(0, calc(var(--p2) * 24), 1) * (1 - var(--fade4)));
-
-  /* profondità coerente col linguaggio glass del sito (monta con --p2) */
-  box-shadow:
-    0 24px 60px -30px
-      color-mix(in srgb, var(--red-deep) calc(60% * var(--grow)), transparent),
-    0 6px 18px -12px
-      color-mix(in srgb, var(--red-deep) calc(50% * var(--grow)), transparent);
-}
-
-/* Layer testo: dimensione piena del pannello, centrato. Il testo non è mai
-   stirato perché non eredita alcuno scale. */
-.cta-reveal--iris-corner .cr-textwrap {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  padding: 0 6vw;
-}
-
-/* Il testo emerge nell'ultima parte (0.6→1), con progresso addolcito da
-   smoothstep: sale e appare in modo morbido, mai a scatto. */
-.cta-reveal--iris-corner .cr-text {
-  --raw: clamp(0, calc((var(--p2) - 0.6) / 0.4), 1);
-  --show: calc(var(--raw) * var(--raw) * (3 - 2 * var(--raw)));
-
-  margin: 0;
-  font-family: var(--font-sans); /* Geist */
-  font-weight: 600;
-  font-size: clamp(34px, 6.2vw, 92px);
-  letter-spacing: -0.03em;
-  line-height: 1;
-  text-align: center;
-  color: var(--paper); /* risalta sul rosso */
-
-  display: inline-flex;
-  align-items: baseline; /* il punto quadrato poggia sulla baseline */
-  justify-content: center;
-
-  opacity: var(--show);
-  /* salita morbida dal basso mentre appare, derivata dal progresso addolcito */
-  translate: 0 calc((1 - var(--show)) * 0.6em);
-  will-change: opacity, translate;
-}
-
-/* ── Affondo delle lettere (animazione A TEMPO, non legata allo scroll) ──
-   Il PANNELLO resta scrubby su --p3 (vedi .cr-panel), ma le lettere no: una
-   volta superata la soglia (html.sink-live) affondano con la loro corsa,
-   indipendente da quanto in fretta si scorre. Ogni lettera ha il suo profilo
-   (--st ritardo, --sx/--sy deriva, --sr rotazione). Sono TRANSIZIONI, non
-   keyframes: togliendo la classe (risalendo) l'affondo si riavvolge da solo. */
-.cta-reveal--iris-corner .cr-sink {
-  display: inline;
-}
-.cta-reveal--iris-corner .cr-letter {
-  /* il vecchio "start" nello spazio di --p3 diventa un RITARDO nel tempo */
-  --sd: calc(var(--st, 0) * 1.4s);
-
-  display: inline-block;
-  opacity: 1;
-  translate: 0 0;
-  scale: 1;
-  rotate: 0deg;
-  filter: blur(0);
-  color: var(--paper);
-
-  transition:
-    /* la bezier parte NEGATIVA: un soffio verso l'alto (galleggiamento),
-       poi giù sempre più veloce — la gravità in acqua */
-    translate 1.25s cubic-bezier(0.32, -0.3, 0.72, 0.36) var(--sd),
-    scale 1.25s cubic-bezier(0.32, -0.14, 0.72, 0.36) var(--sd),
-    rotate 1.25s ease-in var(--sd),
-    /* resta visibile a lungo, svanisce tardi */
-    opacity 1s cubic-bezier(0.7, 0, 0.9, 0.4) var(--sd),
-    filter 1.15s ease-in var(--sd),
-    color 1.15s ease-in var(--sd);
-
-  will-change: opacity, translate, scale, filter;
-}
-/* stato affondato: la soglia è passata */
-.sink-live .cta-reveal--iris-corner .cr-letter {
-  opacity: 0;
-  translate: calc(var(--sx, 0em) * 2) calc(var(--sy, 0.3em) * 2.6);
-  scale: 0.38;
-  rotate: calc(var(--sr, 0deg) * 1.7);
-  filter: blur(13px);
-  /* assorbita dall'acqua: perde il bianco, prende il colore del fondo */
-  color: color-mix(in srgb, var(--paper) 38%, var(--red-deep));
-}
-@media (prefers-reduced-motion: reduce) {
-  .cta-reveal--iris-corner .cr-letter {
-    transition: none;
-  }
-}
-
-
-/* Motion ridotto: nessun override necessario. ScrollDirector scrive --p2
-   direttamente (senza lerp), quindi il reveal segue comunque lo scroll, solo
-   in modo più netto invece che smorzato. */
-
-/* Root condiviso: fondo ROSSO solido appena la fase 4 inizia (×16), z 55.
-   Invisibile a --p4≈0 → fasi precedenti intatte, ma pieno sotto il pannello
-   CTA (z 60) che si dissolve sopra. Velo caldo per profondità (mai piatto). */
-.inverted-scene {
-  position: fixed;
-  inset: 0;
-  z-index: 55;
-  pointer-events: none;
-  overflow: hidden;
-  /* rosso CHIARO: il tono che avevano le figure glass rosse sulla carta
-     (red al ~72% su paper), non il rosso pieno del pannello */
-  background: color-mix(in srgb, var(--red) 72%, var(--paper));
-  opacity: clamp(0, calc(var(--p4) * 16), 1);
-  background-image:
-    radial-gradient(
-      140% 120% at 22% 14%,
-      color-mix(in srgb, var(--lift) 10%, transparent),
-      transparent 52%
-    ),
-    radial-gradient(
-      120% 120% at 88% 96%,
-      color-mix(in srgb, var(--red-deep) 46%, transparent),
-      transparent 60%
-    );
-}
-
-/* Alive: derive e respiri lentissimi (8–18s), SOLO translate/scale individuali
-   → sul compositor, niente layout, nessun conflitto con l'opacità su --p4. */
-@keyframes is-drift-a {
-  0%,
-  100% {
-    translate: 0 0;
-  }
-  50% {
-    translate: -9px 8px;
-  }
-}
-@keyframes is-drift-b {
-  0%,
-  100% {
-    translate: 0 0;
-  }
-  38% {
-    translate: 8px -6px;
-  }
-  72% {
-    translate: -5px -9px;
-  }
-}
-@keyframes is-breathe {
-  0%,
-  100% {
-    scale: 1;
-  }
-  50% {
-    scale: 1.03;
-  }
-}
-
-/* ─────────────────────────────────────────────────────────────────────────
-   VARIANTE "massa in ALTO-DESTRA" — contrappeso opposto alle fasi precedenti.
-   Tutto scoping sotto .inverted-scene--mass-right-top → coesiste/rimpiazza
-   altre varianti senza collisioni. */
-
-/* ── Base condivisa delle lastre panna · liquid glass INVERTITO ──
-   Gradiente morbido tra --paper e --lift (con un filo di --paper-2),
-   bordo-luce chiaro in --lift, ombra soffusa in --red-deep. Materiche. */
-.inverted-scene--mass-right-top .is-shape {
-  --edge: color-mix(in srgb, var(--lift) 78%, transparent);
-  position: absolute;
-  display: block;
-  border: 1px solid var(--edge);
-  background: linear-gradient(
-    150deg,
-    color-mix(in srgb, var(--lift) 92%, var(--paper)) 0%,
-    var(--paper) 52%,
-    color-mix(in srgb, var(--paper-2) 88%, var(--lift)) 100%
+    color-mix(in srgb, var(--red) 74%, transparent) 0%,
+    color-mix(in srgb, var(--red-deep) 62%, transparent) 100%
   );
   box-shadow:
-    /* filo di luce sul bordo superiore: il taglio chiaro della lastra */
-    inset 0 1px 0 0 color-mix(in srgb, var(--lift) 90%, transparent),
-    /* luce interna dall'alto: vetro smerigliato spesso */
-    inset 0 26px 54px -24px color-mix(in srgb, var(--lift) 70%, transparent),
-    /* fondo più denso (paper-2): spessore della lastra */
-    inset 0 -20px 40px -26px color-mix(in srgb, var(--paper-2) 82%, transparent),
-    /* ombra calda a contatto + alone soffuso, in red-deep sul fondo rosso */
-    0 12px 28px -16px color-mix(in srgb, var(--red-deep) 50%, transparent),
-    0 40px 90px -36px color-mix(in srgb, var(--red-deep) 46%, transparent);
-  will-change: transform, opacity;
+    inset 0 1px 0 0 color-mix(in srgb, var(--lift) 55%, transparent),
+    0 4px 10px -4px color-mix(in srgb, var(--red-deep) 34%, transparent);
+  --d: 0.55s;
 }
 
-/* vetro attivo: solo le lastre superiori smerigliano ciò che hanno sotto
-   (backdrop-filter dove due figure si sovrappongono → profondità) */
-.inverted-scene--mass-right-top .is-glass {
-  -webkit-backdrop-filter: blur(var(--glass-blur, 16px)) saturate(1.05);
-  backdrop-filter: blur(var(--glass-blur, 16px)) saturate(1.05);
+/* le righe di testo accanto */
+.pa-riga {
+  left: 55%;
+  height: 6%;
+  background: color-mix(in srgb, var(--ink) 14%, transparent);
+}
+.pa-riga--1 {
+  top: 26%;
+  width: 39%;
+  --d: 0.9s;
+}
+.pa-riga--2 {
+  top: 37%;
+  width: 33%;
+  --d: 1.25s;
+}
+.pa-riga--3 {
+  top: 48%;
+  width: 36%;
+  --d: 1.6s;
 }
 
-/* sheen: riflesso morbido in alto-sinistra, luce unica e coerente su tutte */
-.inverted-scene--mass-right-top .is-shape::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: radial-gradient(
-    120% 88% at 26% 16%,
-    color-mix(in srgb, var(--lift) 60%, transparent) 0%,
-    color-mix(in srgb, var(--lift) 22%, transparent) 34%,
-    transparent 58%
-  );
-}
-
-/* eco più leggere: meno spessore, ombra più tenue */
-.inverted-scene--mass-right-top .is-echo {
-  --edge: color-mix(in srgb, var(--lift) 64%, transparent);
-  box-shadow:
-    inset 0 1px 0 0 color-mix(in srgb, var(--lift) 76%, transparent),
-    inset 0 -12px 26px -18px color-mix(in srgb, var(--paper-2) 70%, transparent),
-    0 16px 38px -20px color-mix(in srgb, var(--red-deep) 40%, transparent);
-}
-
-/* ── Opacità delle figure mappata su --p4, con stagger ──
-   Ogni figura ha soglia (--o0) e ampiezza (--ow): emergono in sequenza —
-   prima la massa alto-destra, poi le eco verso basso-sinistra — mentre il
-   rosso del pannello si scioglie. Vale anche per le lastre DENTRO la massa
-   (sono .is-shape a loro volta). */
-.inverted-scene--mass-right-top .is-shape {
-  /* A riposo: FUORI dal campo (--fx/--fy) e invisibili. Quando la scena è
-     viva (html.scene-live) ognuna entra con una `transition` a tempo e un
-     ease-OUT marcato: parte VELOCE e RALLENTA molto arrivando al suo posto,
-     scaglionata da --sd. La transition sul `transform` si compone con
-     translate/scale delle derive senza conflitti. */
-  opacity: 0;
-  transform: translate(var(--fx, 16vw), var(--fy, 0vh));
-  transition:
-    transform 1.25s cubic-bezier(0.16, 0.86, 0.26, 1) var(--sd, 0s),
-    opacity 0.55s ease var(--sd, 0s);
-}
-.scene-live .inverted-scene--mass-right-top .is-shape {
-  opacity: 1;
-  transform: translate(0, 0);
-}
-
-/* ── Massa principale · ALTO-DESTRA, sanguina oltre l'angolo ──
-   Contenitore posizionato: le 4 lastre vivono in % al suo interno e derivano
-   come un blocco. NON è una .is-shape → nessun vetro/opacità propri: solo
-   geometria. Le lastre figlie portano vetro e opacità. */
-.inverted-scene--mass-right-top .is-mass {
-  --w: clamp(380px, 48vw, 800px);
-  position: absolute;
-  top: -14%;
-  right: -10%;
-  width: var(--w);
-  aspect-ratio: 1 / 0.96;
-}
-
-/* 1 · cerchio-eroe: l'ancora, la panna più grande, sanguina dall'angolo
-   alto-destro. Emerge per primo (soglia bassa). */
-.inverted-scene--mass-right-top .is-circle-hero {
-  --o0: 0.06;
-  --ow: 0.5;
-  --fx: 15vw;
-  --fy: -11vh;
-  --sd: 0s;
-  right: 4%;
-  top: 6%;
-  width: 66%;
-  aspect-ratio: 1;
-  border-radius: 50%;
-  animation:
-    is-drift-a 18s ease-in-out -6s infinite,
-    is-breathe 15s ease-in-out -3s infinite;
-}
-/* arco speculare chiaro sul bordo alto: curvatura del vetro */
-.inverted-scene--mass-right-top .is-circle-hero::after {
-  content: "";
-  position: absolute;
-  inset: 5%;
-  border-radius: 50%;
-  border: 2px solid transparent;
-  border-top-color: color-mix(in srgb, var(--lift) 70%, transparent);
-  rotate: -24deg;
-}
-
-/* 2 · quadrato maggiore: interseca il cerchio dal basso-sinistra, ne sfoca il
-   bordo → profondità. Vetro spesso (blur 22px). */
-.inverted-scene--mass-right-top .is-square-major {
-  --o0: 0.16;
-  --ow: 0.54;
-  --fx: 20vw;
-  --fy: 7vh;
-  --sd: 0.1s;
-  --glass-blur: 22px;
-  right: 40%;
-  top: 46%;
-  width: 46%;
-  aspect-ratio: 1;
-  rotate: 9deg;
-  border-radius: 13%;
-  animation:
-    is-drift-b 15s ease-in-out -4s infinite,
-    is-breathe 17s ease-in-out -9s infinite;
-}
-
-/* 3 · quadrato minore: tocca il bordo alto-sinistra del cerchio, vetro chiaro */
-.inverted-scene--mass-right-top .is-square-minor {
-  --o0: 0.24;
-  --ow: 0.5;
-  --fx: 9vw;
-  --fy: -15vh;
-  --sd: 0.17s;
-  --glass-blur: 16px;
-  right: 60%;
-  top: 4%;
-  width: 28%;
-  aspect-ratio: 1;
-  rotate: -12deg;
-  border-radius: 14%;
-  animation: is-drift-a 12s ease-in-out -8s infinite reverse;
-}
-
-/* 4 · cerchio-perno: piccolo e denso, aggancia la base della massa. */
-.inverted-scene--mass-right-top .is-circle-pin {
-  --o0: 0.3;
-  --ow: 0.5;
-  --fx: 13vw;
-  --fy: 11vh;
-  --sd: 0.24s;
-  --glass-blur: 14px;
-  right: 24%;
-  top: 74%;
-  width: 18%;
-  aspect-ratio: 1;
-  border-radius: 50%;
-  animation:
-    is-drift-b 10s ease-in-out -2s infinite reverse,
-    is-breathe 9s ease-in-out -5s infinite;
-}
-
-/* ── Contrappesi · eco ridistribuite in basso-SINISTRA e centro ── */
-
-/* 5 · quadrato basso-sinistra: il contrappeso maggiore alla massa alto-destra */
-.inverted-scene--mass-right-top .is-echo-sw {
-  --o0: 0.22;
-  --ow: 0.56;
-  --fx: -17vw;
-  --fy: 13vh;
-  --sd: 0.12s;
-  left: 7%;
-  bottom: 9%;
-  width: clamp(72px, 9vw, 152px);
-  aspect-ratio: 1;
-  rotate: -11deg;
-  border-radius: 15%;
-  animation:
-    is-breathe 16s ease-in-out -7s infinite,
-    is-drift-a 17s ease-in-out -9s infinite;
-}
-
-/* 6 · cerchio medio-sinistra, sopra il quadrato basso: sale il canale sinistro */
-.inverted-scene--mass-right-top .is-echo-w {
-  --o0: 0.34;
-  --ow: 0.5;
-  --fx: -19vw;
-  --fy: 5vh;
-  --sd: 0.28s;
-  left: 15%;
-  top: 40%;
-  width: clamp(52px, 6vw, 104px);
-  aspect-ratio: 1;
-  border-radius: 50%;
-  animation: is-drift-b 13s ease-in-out -5s infinite;
-}
-
-/* 7 · cerchio al centro, fluttuante: cuce la massa alto-destra col vuoto sx */
-.inverted-scene--mass-right-top .is-echo-c {
-  --o0: 0.4;
-  --ow: 0.5;
-  --fx: -9vw;
-  --fy: 11vh;
-  --sd: 0.32s;
-  left: 46%;
-  top: 55%;
-  width: clamp(46px, 5.2vw, 88px);
-  aspect-ratio: 1;
-  border-radius: 50%;
-  animation:
-    is-breathe 13s ease-in-out -4s infinite,
-    is-drift-a 15s ease-in-out -11s infinite;
-}
-
-/* 8 · quadratino basso-centro: sanguina oltre il bordo inferiore, ancora il fondo */
-.inverted-scene--mass-right-top .is-echo-s {
-  --o0: 0.46;
-  --ow: 0.5;
-  --fx: 7vw;
-  --fy: 17vh;
-  --sd: 0.38s;
-  left: 33%;
-  bottom: -4%;
-  width: clamp(40px, 4.6vw, 78px);
-  aspect-ratio: 1;
-  rotate: 16deg;
-  border-radius: 16%;
-  animation: is-drift-b 12s ease-in-out -8s infinite;
-}
-
-/* su schermi stretti la massa si stringe all'angolo alto-destro; le eco
-   restano ariose senza affollarsi */
-@media (max-width: 640px) {
-  .inverted-scene--mass-right-top .is-mass {
-    --w: min(92vw, 460px);
-    right: -20%;
-    top: -10%;
-  }
-  .inverted-scene--mass-right-top .is-echo-c {
-    left: 40%;
-  }
-}
-
-/* Motion ridotto: ferma derive e respiri; la composizione statica resta bella
-   (posizioni, taglie e opacità mappate su --p4 restano intatte). */
-@media (prefers-reduced-motion: reduce) {
-  .inverted-scene--mass-right-top .is-shape {
-    animation: none;
-  }
-}
-
-/* ── Headline della scena invertita · salita dal "portale" (A TEMPO) ──
-   Quando la scena è rivelata (html.scene-live, da ScrollDirector), ogni
-   lettera SALE dal portale sotto i suoi piedi (cella overflow:hidden) con
-   un'animazione a tempo, in sequenza da sinistra — non segue lo scroll.
-   Chiude il classico punto quadrato, qui BIANCO, che nasce da una bolla
-   che si gonfia e scoppia (stesso effetto della tagline). */
-.inverted-scene--mass-right-top .is-title {
-  position: absolute;
-  left: 7vw;
-  top: 50%;
-  translate: 0 -50%;
-  margin: 0;
-  font-family: var(--font-sans); /* Geist */
-  font-weight: 700;
-  font-size: clamp(44px, 6.5vw, 110px);
-  letter-spacing: -0.04em;
-  line-height: 1.08;
-  color: var(--ink); /* grigio scuro sul rosso */
-}
-.inverted-scene--mass-right-top .is-word {
-  display: inline-block;
-  white-space: nowrap;
-}
-/* la cella È il portale: taglia tutto ciò che sta sotto il suo bordo */
-.inverted-scene--mass-right-top .is-cell {
-  display: inline-block;
-  overflow: hidden;
-  vertical-align: bottom;
-}
-/* a riposo il glifo sta sotto il portale, invisibile */
-.inverted-scene--mass-right-top .is-glyph {
-  /* transition (non keyframe) → sale con scene-live e TORNA GIÙ da solo
-     quando scene-live viene tolto: la salita è reversibile all'indietro.
-     La bezier con y>1 dà il piccolo rimbalzo d'arrivo. */
-  display: inline-block;
-  translate: 0 115%;
-  transition: translate 0.72s cubic-bezier(0.2, 1.12, 0.32, 1) var(--gd, 0s);
-  will-change: translate;
-}
-/* punto finale quadrato BIANCO: nasce dalla bolla, a riposo invisibile */
-.inverted-scene--mass-right-top .is-title-dot {
-  display: inline-block;
-  width: 0.17em;
-  height: 0.17em;
-  margin-left: 0.12em;
-  background: var(--lift);
-  opacity: 0;
-  position: relative;
-}
-.inverted-scene--mass-right-top .is-title-dot::after {
-  content: "";
-  position: absolute;
-  inset: -45%;
-  border-radius: 50%;
-  border: 2px solid var(--lift);
-  opacity: 0;
-}
-
-/* scena rivelata → il titolo sale al suo posto (transition sopra) */
-.scene-live .inverted-scene--mass-right-top .is-glyph {
-  translate: 0 0;
-}
-.scene-live .inverted-scene--mass-right-top .is-title-dot {
-  animation: is-dot-pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 1.5s forwards;
-}
-.scene-live .inverted-scene--mass-right-top .is-title-dot::after {
-  animation: is-dot-burst 0.5s ease-out 1.83s forwards;
-}
-
-@keyframes is-glyph-rise {
-  0% {
-    translate: 0 115%;
-  }
-  72% {
-    translate: 0 -4%;
-  }
-  100% {
-    translate: 0 0%;
-  }
-}
-/* bolla: si gonfia tonda e traslucida, scoppia e resta il quadrato bianco */
-@keyframes is-dot-pop {
-  0% {
-    opacity: 0;
-    scale: 0;
-    border-radius: 50%;
-  }
-  55% {
-    opacity: 0.85;
-    scale: 1.35;
-    border-radius: 50%;
-  }
-  70% {
-    scale: 0.7;
-    border-radius: 40%;
-  }
-  100% {
-    opacity: 1;
-    scale: 1;
-    border-radius: 0;
-  }
-}
-@keyframes is-dot-burst {
-  0% {
-    opacity: 0.8;
-    scale: 0.4;
-  }
-  100% {
-    opacity: 0;
-    scale: 2.2;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .scene-live .inverted-scene--mass-right-top .is-glyph {
-    animation: none;
-    translate: 0 0%;
-  }
-  .scene-live .inverted-scene--mass-right-top .is-title-dot {
-    animation: none;
-    opacity: 1;
-  }
-}
-
-
-/* ── BlackHoleFx · il gran finale (a tempo, scroll bloccato) ──────────────
-   Regia: ScrollDirector accende html.bh-live (e a fine corsa html.bh-done).
-   Tutta la sequenza è CSS con delay assoluti dal trigger:
-   volo 0–0.9 · lettere 0.8–2.2 · figure 2.1–4.0 · bianco 3.9–4.5 ·
-   arrossamento continuo 0.6–4.4 · fermo 4.5–5.5 · esplosione 5.5–6.2. */
-
-.bh {
-  position: fixed;
-  inset: 0;
-  z-index: 70;
-  pointer-events: none;
-  visibility: hidden;
-}
-.bh-live .bh {
-  visibility: visible;
-}
-
-/* bianco che resta quando il colore viene risucchiato */
-.bh-white {
-  position: absolute;
-  inset: 0;
-  background: var(--lift);
-  opacity: 0;
-}
-.bh-live .bh-white {
-  animation: bh-white-in 0.6s ease 3.9s forwards;
-}
-@keyframes bh-white-in {
-  to {
-    opacity: 1;
-  }
-}
-
-/* ── SCENA FINALE post-esplosione: torna il bianco dell'inizio (paper),
-   blob rosso frastagliato a sinistra col titolo, testo a destra, figure
-   glass di forme nuove. Compare al momento dell'esplosione. ── */
-.bh-finale {
-  position: absolute;
-  inset: 0;
-  background: var(--paper); /* il bianco che c'è dall'inizio */
-  opacity: 0;
-  /* clip, NON hidden: hidden è comunque scrollabile via focus/JS — quando
-     un bottone dell'archivio prende focus il browser lo "scrollerebbe in
-     vista" spostando tutta la scena (la ruota a 98vw crea overflow). */
-  overflow: clip;
-}
-.bh-live .bh-finale {
-  animation: bh-finale-in 0.5s ease 5.6s forwards;
-}
-@keyframes bh-finale-in {
-  to {
-    opacity: 1;
-  }
-}
-
-/* ── La header nella scena finale ──────────────────────────────────────────
-   Identica a quella d'inizio sito (.site-header + .logo-fly a --p=1), ma
-   ricreata QUI dentro: la scena finale sta a z 70 e coprirebbe la barra
-   vera. Sono figli di .bh-finale, quindi entrano con lei. */
-.fs-header {
-  position: absolute;
-  inset: 0 0 auto 0;
-  height: 64px;
-  z-index: 30;
-  /* stessi valori della .site-header d'inizio sito: le due restano gemelle */
-  background: color-mix(in srgb, var(--paper) 64%, transparent);
-  -webkit-backdrop-filter: blur(20px) saturate(1.5);
-  backdrop-filter: blur(20px) saturate(1.5);
-  border-bottom: 1px solid color-mix(in srgb, var(--hair) 72%, transparent);
-  pointer-events: none;
-}
-.fs-logo {
-  position: absolute;
-  left: 0;
-  top: 10px;
-  margin-left: 0.45em;
-  font-size: 34px; /* la misura del logo "atterrato" nella header */
-  z-index: 31;
-  pointer-events: none;
-}
-
-/* ruota rossa frastagliata: sanguina dal bordo sinistro, punte ammorbidite */
-.fs-blob {
-  /* ancorato per CENTRO (49.2%/50% del viewBox quadrato) a --blob-x:
-     2vw a riposo, 98vw quando l'archivio è in scena (html.arch-live) —
-     la ruota migra da sinistra a destra continuando a girare. */
-  position: absolute;
-  left: var(--blob-x, 2vw);
-  top: 50%;
-  translate: -49.2% -50%;
-  transition: left 1.5s cubic-bezier(0.65, 0.05, 0.35, 1);
-  height: 132vh;
-  width: auto;
-  aspect-ratio: 1;
-  filter: drop-shadow(0 24px 70px color-mix(in srgb, var(--red-deep) 32%, transparent));
-  /* gira piano su se stesso (centro del blob = 49.2% 50% del viewBox);
-     `rotate` compone con la `translate` di centraggio senza conflitti */
-  transform-origin: 49.2% 50%;
-  animation: fs-spin 70s linear infinite;
-}
-@keyframes fs-spin {
-  from {
-    rotate: 0deg;
-  }
-  to {
-    rotate: 360deg;
-  }
-}
-
-/* titolo sul blob: ink, Geist, typewriting */
-.fs-title {
-  position: absolute;
-  left: 2vw;
-  top: 50%;
-  translate: 0 -50%;
-  width: min(38vw, 600px);
-  margin: 0;
-  text-align: center;
-  font-family: var(--font-sans);
-  font-weight: 700;
-  font-size: clamp(40px, 4.6vw, 84px);
-  letter-spacing: -0.03em;
-  line-height: 1.15;
-  color: var(--ink); /* grigio scuro sul blob rosso */
-}
-
-/* testo di risposta a destra */
-.fs-copy {
-  position: absolute;
-  left: 54vw;
-  right: 7vw;
-  top: 50%;
-  translate: 0 -50%;
-  margin: 0;
-  font-family: var(--font-sans);
-  font-weight: 500;
-  font-size: clamp(20px, 1.9vw, 34px);
-  line-height: 1.55;
-  color: var(--ink-soft);
-}
-
-/* typewriting: ogni carattere appare quando ScrollDirector gli mette .is-on
-   (typewriter pilotato in JS via rAF → preciso e senza il limite delle
-   ~60 animazioni CSS ritardate che si congelavano). */
-.fs-ch {
-  opacity: 0;
-  transition: opacity 0.05s linear;
-}
-.fs-ch.is-on {
-  opacity: 1;
-}
-/* caret: stanghetta arancione che lampeggia e segue la battitura (dimensione
-   e posizione le mette JS). Il blink parte con la classe .on. */
-.fs-caret {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 3px;
-  height: 12px;
-  background: var(--red);
-  border-radius: 1px;
-  opacity: 0;
-  pointer-events: none;
-  will-change: left, top;
-}
-.fs-caret.on {
-  animation: fs-blink 1.05s steps(1, end) infinite;
-}
-@keyframes fs-blink {
-  0%,
-  55% {
-    opacity: 1;
-  }
-  55.01%,
-  100% {
-    opacity: 0;
-  }
-}
-
-/* punto quadrato finale: compare quando il testo ha finito (un po' piccolo) */
-.fs-dot {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 10px;
-  height: 10px;
-  background: var(--red);
-  opacity: 0;
-  pointer-events: none;
-}
-.fs-dot.on {
-  animation: fs-dot-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-}
-@keyframes fs-dot-pop {
-  0% {
-    opacity: 0;
-    scale: 0.2;
-  }
-  100% {
-    opacity: 1;
-    scale: 1;
-  }
-}
-
-/* figure glass di forme NUOVE (bordi tondeggianti), liquid glass di sempre */
-/* figure di sottofondo in stile 3D: shading sferico (luce alto-sinistra,
-   nucleo d'ombra in basso-destra), riflesso speculare e ombra a contatto */
-.fs-fig {
-  /* posizionate per angolo alto-sinistra via --gx/--gy: così nell'atto
-     dell'accordo possono migrare a sinistra sparse, con la stessa curva
-     del disco (le derive animano `translate`/`scale`: non collidono) */
-  position: absolute;
-  left: var(--gx);
-  top: var(--gy);
-  transition:
-    left 1.5s cubic-bezier(0.65, 0.05, 0.35, 1),
-    top 1.5s cubic-bezier(0.65, 0.05, 0.35, 1);
-  box-shadow:
-    inset -10px -16px 30px -8px color-mix(in srgb, var(--red-deep) 34%, transparent),
-    inset 8px 12px 22px -6px color-mix(in srgb, var(--lift) 55%, transparent),
-    0 22px 34px -16px color-mix(in srgb, var(--red-deep) 42%, transparent);
-}
-/* riflesso speculare: puntino di luce in alto-sinistra */
-.fs-fig::before {
-  content: "";
-  position: absolute;
-  left: 18%;
-  top: 14%;
-  width: 26%;
-  height: 20%;
-  border-radius: 50%;
-  background: radial-gradient(
-    closest-side,
-    color-mix(in srgb, var(--lift) 85%, transparent),
-    transparent
-  );
-  rotate: -22deg;
-}
-/* pillola inclinata, alto-destra */
-.fs-pill {
-  --gx: 75vw;
-  --gy: 12%;
-  width: clamp(150px, 15vw, 250px);
-  height: clamp(62px, 6.2vw, 104px);
-  rotate: -18deg;
-  border-radius: 999px;
-  background: radial-gradient(
-    circle at 30% 26%,
-    color-mix(in srgb, var(--red) 46%, var(--paper)) 0%,
-    color-mix(in srgb, var(--red) 66%, var(--paper)) 48%,
-    color-mix(in srgb, var(--red-deep) 62%, var(--paper)) 100%
-  );
-  animation:
-    is-drift-a 15s ease-in-out -4s infinite,
-    is-breathe 13s ease-in-out -6s infinite;
-}
-/* blob organico, basso-destra */
-.fs-blobby {
-  --gx: 62vw;
-  --gy: 70%;
-  width: clamp(110px, 12vw, 200px);
-  aspect-ratio: 1;
-  border-radius: 58% 42% 55% 45% / 52% 48% 60% 40%;
-  background: radial-gradient(
-    circle at 32% 24%,
-    color-mix(in srgb, var(--red) 40%, var(--paper)) 0%,
-    color-mix(in srgb, var(--red) 58%, var(--paper)) 50%,
-    color-mix(in srgb, var(--red-deep) 58%, var(--paper)) 100%
-  );
-  animation:
-    is-drift-b 14s ease-in-out -7s infinite,
-    is-breathe 16s ease-in-out -3s infinite;
-}
-/* anello (ciambella), centro-destra alto */
-.fs-ring {
-  --gx: 61.5vw;
-  --gy: 20%;
-  width: clamp(80px, 8.5vw, 140px);
-  aspect-ratio: 1;
-  border-radius: 50%;
-  /* toro: anello dipinto in radiale (foro vero al centro) con shading 3D */
-  background:
-    radial-gradient(
-      circle at 32% 26%,
-      color-mix(in srgb, var(--lift) 38%, transparent) 0%,
-      transparent 55%
-    ),
-    radial-gradient(
-      circle,
-      transparent 52%,
-      color-mix(in srgb, var(--red) 62%, var(--paper)) 56%,
-      color-mix(in srgb, var(--red-deep) 60%, var(--paper)) 82%,
-      transparent 86%
-    );
-  box-shadow: none;
-  filter: drop-shadow(0 18px 22px color-mix(in srgb, var(--red-deep) 38%, transparent));
-  animation:
-    is-drift-a 17s ease-in-out -9s infinite reverse,
-    is-breathe 12s ease-in-out -5s infinite;
-}
-.fs-ring::before {
-  display: none; /* il toro ha già la sua luce nel primo layer radiale */
-}
-/* goccia/foglia, basso a destra del disco */
-.fs-drop {
-  --gx: 85vw;
-  --gy: 63%;
-  width: clamp(66px, 7vw, 116px);
-  aspect-ratio: 1;
-  rotate: 24deg;
-  border-radius: 62% 38% 60% 40% / 40% 62% 38% 60%;
-  background: radial-gradient(
-    circle at 30% 26%,
-    color-mix(in srgb, var(--red) 44%, var(--paper)) 0%,
-    color-mix(in srgb, var(--red) 62%, var(--paper)) 52%,
-    color-mix(in srgb, var(--red-deep) 60%, var(--paper)) 100%
-  );
-  animation:
-    is-drift-b 12s ease-in-out -2s infinite reverse,
-    is-breathe 10s ease-in-out -8s infinite;
-}
-
-/* anello d'urto dell'esplosione */
-.bh-ring {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 90px;
-  height: 90px;
-  translate: -50% -50%;
-  border: 3px solid var(--red);
-  border-radius: 50%;
-  opacity: 0;
-}
-.bh-live .bh-ring {
-  animation: bh-ring-burst 0.7s cubic-bezier(0.2, 0.7, 0.3, 1) 5.55s forwards;
-}
-@keyframes bh-ring-burst {
-  0% {
-    opacity: 0.9;
-    scale: 0.3;
-  }
-  100% {
-    opacity: 0;
-    scale: 14;
-  }
-}
-
-/* IL quadrato-buco-nero: parte dal punto del titolo (vettore misurato dal
-   JS: --bh-dx0/--bh-dy0/--bh-s0), vola al centro, poi mangia e arrossisce
-   (bianco → rosso), infine esplode. Tre animazioni SEQUENZIALI su transform
-   (volo → crescita/rotazione → esplosione): ognuna parte quando la
-   precedente ha finito e vince essendo dopo nella lista. */
-.bh-square {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 46px;
-  height: 46px;
-  background: var(--lift);
-  transform: translate(calc(-50% + var(--bh-dx0, 30vw)), calc(-50% + var(--bh-dy0, -5vh)))
-    scale(var(--bh-s0, 0.4));
-  opacity: 0;
-  box-shadow: 0 0 40px -6px color-mix(in srgb, var(--red-deep) 40%, transparent);
-}
-.bh-live .bh-square {
-  opacity: 1;
-  animation:
-    bh-fly 0.9s cubic-bezier(0.3, 0.8, 0.3, 1) 0s forwards,
-    bh-feed 3.6s ease-in-out 0.9s forwards,
-    bh-explode 0.65s cubic-bezier(0.6, 0, 0.9, 0.4) 5.5s forwards,
-    bh-redden 0.7s ease 3.9s forwards;
-}
-@keyframes bh-fly {
-  from {
-    transform: translate(
-        calc(-50% + var(--bh-dx0, 30vw)),
-        calc(-50% + var(--bh-dy0, -5vh))
-      )
-      scale(var(--bh-s0, 0.4));
-  }
-  to {
-    transform: translate(-50%, -50%) scale(1);
-  }
-}
-/* mentre mangia: cresce piano e ruota, come una macina */
-@keyframes bh-feed {
-  from {
-    transform: translate(-50%, -50%) scale(1) rotate(0deg);
-  }
-  to {
-    transform: translate(-50%, -50%) scale(1.55) rotate(135deg);
-  }
-}
-/* esplosione: gonfia di colpo e collassa nel nulla */
-@keyframes bh-explode {
-  0% {
-    transform: translate(-50%, -50%) scale(1.55) rotate(135deg);
-    opacity: 1;
-  }
-  45% {
-    transform: translate(-50%, -50%) scale(2.1) rotate(150deg);
-    opacity: 1;
-  }
-  100% {
-    transform: translate(-50%, -50%) scale(0) rotate(200deg);
-    opacity: 0;
-  }
-}
-/* pasto dopo pasto, sempre più rosso */
-@keyframes bh-redden {
-  0% {
-    background: var(--lift);
-  }
-  30% {
-    background: color-mix(in srgb, var(--red) 38%, var(--lift));
-  }
-  70% {
-    background: color-mix(in srgb, var(--red) 78%, var(--lift));
-  }
-  100% {
-    background: var(--red);
-  }
-}
-
-/* ── Risucchio: lettere e figure spiralano nel centro ──
-   Il JS scrive su ogni bersaglio il vettore verso il centro (--sdx/--sdy)
-   e il proprio ritardo (--sd). La keyframe è unica: accelerazione da buco
-   nero (ease-in forte), avvitamento e collasso a zero. `transform` compone
-   con translate/scale delle derive → nessun conflitto. */
-.bh-live .inverted-scene--mass-right-top .is-cell,
-.bh-live .inverted-scene--mass-right-top .is-shape {
-  animation: bh-suck 0.65s cubic-bezier(0.65, 0, 0.95, 0.5) var(--sd, 1s)
-    forwards;
-}
-/* le lettere continuano anche le loro animazioni base? no: il risucchio
-   vince su transform; opacità/translate di scena restano ma il collasso a
-   scale(0.01) le rende irrilevanti. */
-@keyframes bh-suck {
-  0% {
-    transform: translate(0, 0) scale(1) rotate(0deg);
-    opacity: 1;
-  }
-  85% {
-    opacity: 1;
-  }
-  100% {
-    transform: translate(var(--sdx, 0px), var(--sdy, 0px)) scale(0.01)
-      rotate(170deg);
-    opacity: 0;
-  }
-}
-
-/* il punto del titolo sparisce nell'istante in cui il buco nero "parte da lì" */
-.bh-live .inverted-scene--mass-right-top .is-title-dot {
-  animation: none;
-  opacity: 0;
-}
-
-/* dopo il finale, il cielo resta e copre tutto */
-.bh-done .bh-finale {
-  opacity: 1;
-}
-.bh-done .fs-ch {
-  opacity: 1;
-}
-.bh-done .bh {
-  visibility: visible;
-}
-
-/* Motion ridotto: niente cinematica — subito il cielo stellato */
-@media (prefers-reduced-motion: reduce) {
-  .bh-live .bh-square,
-  .bh-live .bh-ring,
-  .bh-live .inverted-scene--mass-right-top .is-cell,
-  .bh-live .inverted-scene--mass-right-top .is-shape {
-    animation: none;
-  }
-  .bh-live .bh-square {
-    opacity: 0;
-  }
-  .bh-live .bh-white,
-  .bh-live .bh-finale {
-    animation: none;
-    opacity: 1;
-  }
-  .bh-live .fs-ch {
-    animation: none;
-    opacity: 1;
-  }
-  .fs-fig,
-  .fs-blob {
-    animation: none;
-  }
-}
-
-/* ── Rewind · acqua bianca che riempte e si svuota (onda liquida) ──────────
-   Attivo con html.bh-rewind (da ScrollDirector, tornando su dopo il finale).
-   Riempie dal basso (rise) fino a coprire, tiene un istante, poi si svuota
-   verso il basso — la superficie ondeggia come nel sipario d'apertura. */
-.bh-flood {
-  position: fixed;
-  inset: 0;
-  z-index: 80; /* sopra il cielo stellato (z 70) */
-  pointer-events: none;
-  overflow: hidden;
-  visibility: hidden;
-}
-.bh-rewind .bh-flood {
-  visibility: visible;
-}
-.bh-flood-body {
-  position: absolute;
-  inset: 0;
-  background: var(--lift);
-  transform: translateY(100%); /* a riposo: vuoto, sotto lo schermo */
-  will-change: transform;
-}
-.bh-rewind .bh-flood-body {
-  animation: bh-flood 2s cubic-bezier(0.65, 0, 0.35, 1) forwards;
-}
-/* superficie liquida: onda sul bordo superiore del blocco */
-.bh-flood-wave {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 100%;
-  width: 100%;
-  height: 90px;
-  margin-bottom: -1px;
-  display: block;
-  fill: var(--lift);
-}
-@keyframes bh-flood {
-  0% {
-    transform: translateY(100%);
-  }
-  38% {
-    transform: translateY(0);
-  }
-  56% {
-    transform: translateY(0);
-  }
-  100% {
-    transform: translateY(112%);
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .bh-rewind .bh-flood-body {
-    animation: none;
-    transform: translateY(112%);
-  }
-}
-
-/* ── Atto dell'ARCHIVIO (html.arch-live) ──────────────────────────────────
-   La ruota migra a destra (via --blob-x), titolo e testo sfumano, e la
-   scena diventa l'archivio dei progetti: a sinistra uno SCHEDARIO scuro
-   con cartelle liquid-glass che sporgono, a destra una CARTELLINA di
-   vetro semi-trasparente aperta, coi fogli di un case study che salgono
-   in scena. Il vetro rifrange davvero: backdrop-filter, e sotto passa
-   la ruota rossa. */
-.arch-live {
-  --blob-x: 98vw;
-}
-.fs-title,
-.fs-copy {
-  transition: opacity 0.5s ease;
-}
-.arch-live .fs-title,
-.arch-live .fs-copy {
-  opacity: 0;
-}
-.arch-live .fs-caret,
-.arch-live .fs-dot {
-  visibility: hidden;
-}
-
-/* le figure di sottofondo fanno il viaggio opposto alla ruota: migrano a
-   SINISTRA, sparse a quote diverse — dietro allo schedario */
-.arch-live .fs-pill {
-  --gx: 3vw;
-  --gy: 8%;
-}
-.arch-live .fs-ring {
-  --gx: 34vw;
-  --gy: 13%;
-}
-.arch-live .fs-drop {
-  --gx: 8vw;
-  --gy: 74%;
-}
-.arch-live .fs-blobby {
-  --gx: 29vw;
-  --gy: 78%;
-}
-
-/* Contenitore dell'archivio: NESSUNA dissolvenza. I pezzi (cassetto,
-   dossier) vivono fuori dallo schermo e ci entrano/escono fisicamente —
-   se il contenitore sfumasse, taglierebbe a metà la loro corsa. Resta
-   solo la visibility, tenuta accesa fino a uscita conclusa (1.2s: il
-   cassetto ne impiega 1.1 a ridiscendere). */
-.fs-arch {
-  position: absolute;
-  inset: 0;
-  visibility: hidden;
-  pointer-events: none;
-  transition: visibility 0s 1.2s;
-}
-.arch-live .fs-arch {
-  visibility: visible;
-  transition: visibility 0s 0s;
-}
-
-/* ── Cassetto (sinistra): charcoal, coperchio e pomello come da schizzo.
-   POGGIA SULLA BASE dello schermo (ancorato in basso, non fluttua): sale
-   da sotto il bordo del viewport e si ferma radicato a terra. ── */
-.fa-cabinet {
-  position: absolute;
-  left: 5vw;
-  bottom: 0;
-  width: clamp(200px, 17vw, 300px);
-  height: 76vh;
-  translate: 0 110vh;
-  pointer-events: auto;
-  transition: translate 1.1s cubic-bezier(0.22, 0.9, 0.3, 1);
-}
-.arch-live .fa-cabinet {
-  translate: 0 0;
-  transition-delay: 1s;
-}
-.fa-body {
-  position: absolute;
-  inset: 0;
-  border-radius: 16px 16px 0 0; /* radicato: niente curve alla base */
-  background: linear-gradient(
-    165deg,
-    color-mix(in srgb, var(--ink) 84%, var(--lift)) 0%,
-    var(--ink) 58%,
-    color-mix(in srgb, var(--ink) 92%, var(--red-deep)) 100%
-  );
-  box-shadow:
-    inset 1px 1px 0 color-mix(in srgb, var(--lift) 22%, transparent),
-    0 30px 60px -18px color-mix(in srgb, var(--ink) 55%, transparent);
-}
-.fa-lid {
-  position: absolute;
-  left: -5%;
-  top: -2.4vh;
-  width: 110%;
-  height: 2.6vh;
-  border-radius: 8px;
-  background: linear-gradient(
-    165deg,
-    color-mix(in srgb, var(--ink) 74%, var(--lift)) 0%,
-    color-mix(in srgb, var(--ink) 94%, var(--lift)) 100%
-  );
-  box-shadow: 0 10px 22px -8px color-mix(in srgb, var(--ink) 50%, transparent);
-}
-.fa-knob {
-  position: absolute;
-  left: 50%;
-  top: -4.1vh;
-  translate: -50%;
+/* l'ultimo pezzo: il bottone, quello che fa lavorare il sito */
+.pa-cta {
+  left: 55%;
+  top: 62%;
   width: 22%;
-  height: 1.9vh;
-  border-radius: 6px 6px 0 0;
-  background: color-mix(in srgb, var(--ink) 88%, var(--lift));
+  height: 10%;
+  border-radius: 3px;
+  background: var(--red);
+  --d: 1.95s;
 }
 
-/* dentro il cassetto: le cartelle dei progetti, IMPILATE. Il contenitore
-   clippa in basso (stanno davvero dentro) e ogni cartella ha un gradiente
-   chiaro in alto → scuro in basso: l'ombra della pila, una sopra l'altra. */
-.pa-drawer {
-  position: absolute;
-  inset: 3% 7% 0 7%;
-  border-radius: 14px;
-  overflow: hidden;
-}
-/* Il POSTO nel cassetto non è fisso: --slot dice in quale scomparto sta ORA
-   la cartella. Prendendone una, le altre restano dove sono e quella che
-   rientra prende il posto libero (in fondo) → col tempo si mischiano come in
-   un cassetto vero. `top` è in transizione, quindi lo spostamento si vede. */
-@property --slot {
-  syntax: "<integer>";
-  inherits: false;
-  initial-value: 0;
-}
-.pa-folder {
-  position: absolute;
-  left: 0;
-  width: 100%;
-  height: 42%;
-  padding: 0;
-  border: 0;
-  background: none;
-  cursor: pointer;
-  top: calc(10% + var(--slot) * 19%);
-  z-index: calc(var(--slot) + 1);
-  /* niente dissolvenza: stanno DENTRO il cassetto e viaggiano con lui —
-     all'ingresso si assestano scorrendo su, in uscita ridiscendono */
-  translate: 0 6vh;
-  transition:
-    translate 0.65s cubic-bezier(0.16, 0.86, 0.26, 1),
-    top 0.55s cubic-bezier(0.22, 0.9, 0.28, 1);
-}
-.arch-live .pa-folder {
-  translate: 0 0;
-}
-/* ingresso a scaletta: il ritardo segue il posto occupato */
-.arch-live .pa-folder {
-  transition-delay: calc(1.3s + var(--slot) * 0.1s), 0s;
-}
-
-/* PRESA: sfila verso il basso e sparisce dentro il cassetto (che clippa),
-   come se l'avessi tirata fuori davvero */
-.arch-live .pa-folder.is-taken {
-  translate: 0 130%;
-  transition-delay: 0s, 0s;
-  pointer-events: none;
-}
-
-/* la "pelle" della cartella: il lift dell'hover vive qui, così non
-   litiga con i delay d'ingresso del bottone */
-.pa-skin {
-  position: absolute;
-  inset: 0;
-  display: block;
-  border-radius: 10px 10px 0 0;
-  box-shadow: 0 -10px 20px -12px color-mix(in srgb, var(--ink) 75%, transparent);
-  transition: translate 0.25s ease;
-}
-/* il colore appartiene alla CARTELLA, non al posto: spostandosi nel cassetto
-   se lo porta dietro (strategy e build chiare, design e motion rosse) */
-.pa-tone-light .pa-skin {
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--lift) 65%, var(--paper)) 0%,
-    var(--paper-2) 34%,
-    color-mix(in srgb, var(--ink) 52%, var(--paper-2)) 100%
-  );
-}
-.pa-tone-red .pa-skin {
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--red) 70%, var(--lift)) 0%,
-    var(--red) 36%,
-    color-mix(in srgb, var(--ink) 48%, var(--red-deep)) 100%
-  );
-}
-.pa-folder:hover .pa-skin,
-.pa-folder:focus-visible .pa-skin {
-  translate: 0 -0.7vh;
-}
-.pa-folder.is-sel .pa-skin {
-  translate: 0 -1.1vh;
-}
-
-/* linguetta col titolo (segnaposto), posizioni alternate come in un
-   vero cassetto */
-.pa-tab {
-  position: absolute;
-  top: 0;
-  translate: 0 -100%;
-  padding: 0.5em 1em 0.35em;
-  border-radius: 9px 9px 0 0;
-  font-family: var(--font-title);
-  font-weight: 700;
-  font-size: clamp(9px, 0.66vw, 13px);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-/* anche la linguetta è della CARTELLA: lato e colore restano suoi ovunque
-   finisca nel cassetto (chiare a sinistra, rosse a destra) */
-.pa-side-left .pa-tab {
-  left: 8%;
-}
-.pa-side-right .pa-tab {
-  right: 8%;
-}
-.pa-tone-light .pa-tab {
-  background: color-mix(in srgb, var(--lift) 65%, var(--paper));
-  color: var(--ink-soft);
-}
-.pa-tone-red .pa-tab {
-  background: color-mix(in srgb, var(--red) 70%, var(--lift));
-  color: var(--lift);
-}
-/* spia sulla cartella selezionata: il punto quadrato del brand */
-.pa-folder.is-sel .pa-tab::after {
-  content: "";
-  display: inline-block;
-  width: 0.55em;
-  height: 0.55em;
-  margin-left: 0.55em;
-  background: currentColor;
-}
-
-/* fronte del cassetto: copre la base delle cartelle, con la maniglia */
-.pa-drawer-front {
-  position: absolute;
-  left: -2%;
-  right: -2%;
-  bottom: 0;
-  height: 26%;
-  z-index: 6;
-  border-radius: 10px 10px 0 0;
-  background: linear-gradient(
-    170deg,
-    color-mix(in srgb, var(--ink) 78%, var(--lift)) 0%,
-    var(--ink) 55%
-  );
-  box-shadow: 0 -14px 26px -12px color-mix(in srgb, var(--ink) 80%, transparent);
-  pointer-events: none;
-}
-.pa-drawer-front::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  top: 34%;
-  translate: -50%;
-  width: 34%;
-  height: 1.6vh;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--lift) 26%, var(--ink));
-  box-shadow: inset 0 2px 4px color-mix(in srgb, var(--ink) 80%, transparent);
-}
-
-/* ── Dossier (destra): compare SOLO cliccando una cartella nel cassetto.
-   Regia: sale dal basso chiuso → la copertina si apre da sinistra come un
-   libro → dentro la pila di fogli che respira e la foto-reperto.
-   Tutte animazioni (non transition): il key di React rimonta il dossier a
-   ogni cambio cartella e la regia riparte da capo. ── */
-.pa-dossier {
-  /* GRANDE, e la copertina si apre verso DESTRA: cerniera sul bordo
-     destro delle pagine, il risvolto atterra su 78vw→114vw — esce in
-     parte dallo schermo, va bene così (.bh-finale clippa). Il cassetto
-     a sinistra resta sempre libero. */
-  position: absolute;
-  left: 42vw;
-  top: 50%;
-  width: 36vw;
-  height: 76vh;
-  translate: 0 -50%;
-  perspective: 1600px;
-  pointer-events: auto;
-  animation: pa-rise 0.7s cubic-bezier(0.16, 0.86, 0.26, 1) both;
-}
-/* FISICA, non dissolvenza: la cartella è solida fin dal primo fotogramma e
-   sale da sotto il bordo dello schermo (.bh-finale la clippa) */
-@keyframes pa-rise {
-  from {
-    translate: 0 calc(-50% + 100vh);
+@keyframes pa-entra {
+  0% {
+    opacity: 0;
+    translate: 0 14px;
+    scale: 0.96;
   }
-  to {
-    translate: 0 -50%;
+  /* si posa */
+  9%,
+  62% {
+    opacity: 1;
+    translate: 0 0;
+    scale: 1;
   }
-}
-
-/* retro della cartella: vetro rosso DENSO (da aperta è più opaca), tiene
-   i fogli */
-.pa-doss-back {
-  position: absolute;
-  inset: 0;
-  border-radius: 18px;
-  background: color-mix(in srgb, var(--red) 46%, transparent);
-  -webkit-backdrop-filter: blur(18px) saturate(1.2);
-  backdrop-filter: blur(18px) saturate(1.2);
-  border: 1px solid color-mix(in srgb, var(--lift) 45%, transparent);
-  box-shadow: 0 30px 60px -20px color-mix(in srgb, var(--red-deep) 40%, transparent);
-}
-
-/* linguetta del dossier: sporge dal bordo ALTO col titolo. Vetro rosso
-   più denso del retro (così il bianco del testo si legge) e angoli alti
-   arrotondati, come la linguetta di una cartella d'archivio. Sta dietro
-   ai fogli: sporge solo la parte sopra il bordo. */
-.pa-doss-tab {
-  position: absolute;
-  left: 8%;
-  top: -3.4vh;
-  z-index: 0;
-  padding: 0.55em 1.6em 1.6vh;
-  border-radius: 12px 12px 0 0;
-  background: color-mix(in srgb, var(--red-deep) 62%, transparent);
-  -webkit-backdrop-filter: blur(18px) saturate(1.2);
-  backdrop-filter: blur(18px) saturate(1.2);
-  border: 1px solid color-mix(in srgb, var(--lift) 40%, transparent);
-  border-bottom: none;
-  font-family: var(--font-title);
-  font-weight: 700;
-  font-size: clamp(11px, 0.95vw, 19px);
-  letter-spacing: 0.1em;
-  color: var(--lift);
-  white-space: nowrap;
-}
-
-/* copertina: chiusa all'inizio, si apre verso DESTRA (cerniera sul bordo
-   destro). Due facce con backface-visibility: fuori rosso pieno, dentro
-   carta. */
-.pa-cover {
-  position: absolute;
-  inset: 0;
-  z-index: 5;
-  transform-style: preserve-3d;
-  transform-origin: right center;
-  pointer-events: none;
-  animation: pa-open 0.85s cubic-bezier(0.6, 0.05, 0.25, 1) 0.75s both;
-}
-@keyframes pa-open {
-  from {
-    transform: rotateY(0deg);
-  }
-  to {
-    transform: rotateY(176deg);
-  }
-}
-.pa-cover::before,
-.pa-cover::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: 18px;
-  backface-visibility: hidden;
-}
-.pa-cover::before {
-  background: linear-gradient(
-    160deg,
-    color-mix(in srgb, var(--red) 88%, var(--lift)) 0%,
-    var(--red) 45%,
-    color-mix(in srgb, var(--red-deep) 80%, var(--red)) 100%
-  );
-  box-shadow:
-    0 24px 48px -18px color-mix(in srgb, var(--red-deep) 45%, transparent),
-    inset 0 1px 0 color-mix(in srgb, var(--lift) 35%, transparent);
-}
-.pa-cover::after {
-  transform: rotateY(180deg);
-  background: linear-gradient(
-    200deg,
-    color-mix(in srgb, var(--red) 42%, var(--paper)) 0%,
-    color-mix(in srgb, var(--red) 22%, var(--paper)) 60%
-  );
-  box-shadow: 0 24px 48px -20px color-mix(in srgb, var(--red-deep) 35%, transparent);
-}
-
-/* ── Dossier CHIARO (strategy, build): stesso colore della loro cartella nel
-   cassetto. Stessa struttura, solo i toni cambiano. ── */
-.pa-dossier.pa-tone-light .pa-doss-back {
-  background: color-mix(in srgb, var(--paper) 62%, transparent);
-  border-color: color-mix(in srgb, var(--lift) 70%, transparent);
-  box-shadow: 0 30px 60px -20px color-mix(in srgb, var(--ink) 30%, transparent);
-}
-.pa-dossier.pa-tone-light .pa-doss-tab {
-  background: color-mix(in srgb, var(--paper-2) 78%, transparent);
-  border-color: color-mix(in srgb, var(--lift) 75%, transparent);
-  color: var(--ink-soft);
-}
-.pa-dossier.pa-tone-light .pa-cover::before {
-  background: linear-gradient(
-    160deg,
-    color-mix(in srgb, var(--lift) 82%, var(--paper)) 0%,
-    var(--paper-2) 45%,
-    color-mix(in srgb, var(--ink) 26%, var(--paper-2)) 100%
-  );
-  box-shadow:
-    0 24px 48px -18px color-mix(in srgb, var(--ink) 32%, transparent),
-    inset 0 1px 0 color-mix(in srgb, var(--lift) 70%, transparent);
-}
-.pa-dossier.pa-tone-light .pa-cover::after {
-  background: linear-gradient(
-    200deg,
-    color-mix(in srgb, var(--lift) 88%, var(--paper)) 0%,
-    var(--paper) 60%
-  );
-  box-shadow: 0 24px 48px -20px color-mix(in srgb, var(--ink) 24%, transparent);
-}
-
-/* fogli: stanno DENTRO la cartella da sempre (niente comparsa: è la
-   copertina che, aprendosi, li scopre). RESPIRANO — ognuno oscilla di
-   qualche decimo di grado col suo periodo: si sente che sono in tanti. */
-.pa-sheet {
-  position: absolute;
-  width: 90%;
-  height: 90%;
-  border-radius: 10px;
-  background: var(--lift);
-  box-shadow: 0 16px 36px -14px color-mix(in srgb, var(--ink) 35%, transparent);
-}
-.pa-sheet-3 {
-  left: 7%;
-  top: 6.5%;
-  rotate: 3.5deg;
-  background: color-mix(in srgb, var(--lift) 86%, var(--paper-2));
-  animation: pa-sway-3 5.6s ease-in-out 1.6s infinite;
-}
-.pa-sheet-2 {
-  left: 3%;
-  top: 5.5%;
-  rotate: -2deg;
-  background: color-mix(in srgb, var(--lift) 94%, var(--paper-2));
-  animation: pa-sway-2 6.8s ease-in-out 1.8s infinite;
-}
-.pa-sheet-1 {
-  left: 5%;
-  top: 5%;
-  rotate: 0.6deg;
-  padding: 3.2vh 1.8vw;
-  overflow: hidden;
-  animation: pa-sway-1 6.2s ease-in-out 2s infinite;
-}
-@keyframes pa-sway-3 {
-  0%,
+  /* il progetto è finito: la scena si svuota e si ricomincia */
+  76%,
   100% {
-    rotate: 3.5deg;
-  }
-  50% {
-    rotate: 2.6deg;
-  }
-}
-@keyframes pa-sway-2 {
-  0%,
-  100% {
-    rotate: -2deg;
-  }
-  50% {
-    rotate: -1.1deg;
-  }
-}
-@keyframes pa-sway-1 {
-  0%,
-  100% {
-    rotate: 0.6deg;
-  }
-  50% {
-    rotate: 1.3deg;
+    opacity: 0;
+    translate: 0 -8px;
+    scale: 0.98;
   }
 }
 
-/* il foglio in cima è un case study con testo VERO (demo). Il testo vive
-   nella colonna sinistra (~55%), la foto occupa la colonna destra: mai
-   sovrapposti. */
-.pa-title {
-  margin: 0;
-  max-width: 56%;
-  font-family: var(--font-sans);
-  font-weight: 700;
-  font-size: clamp(24px, 2.5vw, 52px);
-  letter-spacing: -0.03em;
-  line-height: 1.05;
-  color: var(--ink);
+/* Meno movimento: la scena resta montata, ferma sul risultato finito. */
+@media (prefers-reduced-motion: reduce) {
+  .pa > span {
+    animation: none !important;
+    opacity: 1;
+  }
 }
-.pa-sub {
-  margin: 0.6vh 0 0;
-  max-width: 56%;
+
+/* il bordo spesso in basso: è lì che una polaroid si riconosce */
+.pol-dida {
+  padding: 0.85rem 0.15rem 1rem;
   font-family: var(--font-title);
   font-weight: 600;
-  font-size: clamp(11px, 0.95vw, 18px);
-  color: var(--muted);
-}
-.pa-p {
-  margin: 2.2vh 0 0;
-  max-width: 56%;
-  font-family: var(--font-sans);
-  font-weight: 500;
-  font-size: clamp(11px, 0.88vw, 17px);
-  line-height: 1.62;
+  font-size: clamp(9px, 0.62vw, 12px);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
   color: var(--ink-soft);
+  text-align: center;
 }
 
-/* la foto-reperto: polaroid appoggiata sui fogli. Il POSTO (slot) tiene la
-   posizione e l'inclinazione nella cartella; la foto lo riempie. Così, in
-   esame, la foto se ne va sul palco e lo slot resta a riservare lo spazio
-   (e a farsi misurare per il volo di ritorno). */
-.pa-photo-slot {
-  position: absolute;
-  right: 6%;
-  top: 12%;
-  width: 30%;
-  aspect-ratio: 3 / 3.55;
-  rotate: 3deg;
-  animation: pa-sway-p 7s ease-in-out 2.2s infinite;
+/* schermi stretti: sparisce, non c'è spazio per tenerla senza schiacciare
+   le due frasi, che vengono prima */
+@media (max-width: 860px) {
+  .pol {
+    display: none;
+  }
 }
-/* durante l'esame lo slot è fermo a 3° esatti: bersaglio stabile per il
-   rientro, così la foto ci atterra con lo stesso angolo (niente scatto) */
-.pa-photo-slot.is-parked {
-  animation: none;
-  rotate: 3deg;
+
+@media (prefers-reduced-motion: reduce) {
+  .pol {
+    translate: 0 0;
+    transition: none;
+  }
 }
-.pa-photo {
+
+/* il video dentro la polaroid, con la scena in codice come fondo */
+.pol-sotto {
   position: absolute;
   inset: 0;
-  padding: 0;
-  border: 0;
-  border-radius: 6px;
-  background: var(--lift);
-  cursor: pointer;
-  box-shadow: 0 14px 30px -12px color-mix(in srgb, var(--ink) 45%, transparent);
-  transition:
-    scale 0.25s ease,
-    box-shadow 0.25s ease;
+  display: block;
 }
-.pa-photo:hover,
-.pa-photo:focus-visible {
-  scale: 1.04;
-  box-shadow: 0 22px 44px -14px color-mix(in srgb, var(--ink) 60%, transparent);
-}
-@keyframes pa-sway-p {
-  0%,
-  100% {
-    rotate: 3deg;
-  }
-  50% {
-    rotate: 4.3deg;
-  }
+.pol-video {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
-/* ── ESAME: la foto (STESSO elemento) sul palco in cima ── */
-.pa-stage {
+/* ── Grana di carta ──────────────────────────────────────────────────────
+   Un velo di rumore finissimo sopra tutto: toglie al fondo l'aria di
+   "bianco di schermo" e lo fa somigliare a un foglio stampato. È il
+   motivo per cui il colore di fondo si chiama --paper.
+
+   Il rumore è generato da un filtro SVG scritto qui dentro (data URI):
+   nessun file da scaricare, nessuna immagine che si sgrana ingrandendo.
+
+   `mix-blend-mode: multiply` invece di sovrapporre e basta: così la grana
+   SCURISCE il fondo caldo invece di stenderci sopra un velo grigio, e la
+   carta resta calda.
+
+   `background-size` fisso in px, non in %: senza, sugli schermi ad alta
+   densità la trama si rimpicciolirebbe fino a sparire, e la grana si
+   vedrebbe solo sui monitor scadenti. ──────────────────────────────── */
+body::after {
+  content: "";
   position: fixed;
   inset: 0;
-  z-index: 200;
-  display: grid;
-  place-items: center;
-  cursor: zoom-out;
+  z-index: 200; /* sopra ogni scena, sipario d'apertura compreso */
+  pointer-events: none; /* non deve mai intercettare un clic */
+  opacity: 0.17;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.68' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23g)'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
 }
-/* lo sfondo scuro è uno strato a sé: così in chiusura sfuma mentre la foto
-   resta piena e rivola a posto */
-.pa-stage::before {
+
+/* Chi ha chiesto meno movimento non c'entra: la grana è ferma. Ma su
+   stampa non serve e sporcherebbe. */
+@media print {
+  body::after {
+    display: none;
+  }
+}
+
+/* ══ PARTE 3 · CHE COSA FACCIAMO ══════════════════════════════════════════
+   Due schermate rosse, una col titolo e una coi servizi. Sono blocchi
+   NORMALI nel flusso: arrivano scorrendo e coprono le scene fisse che
+   stanno dietro. Da qui in avanti il sito si legge, non si guarda.
+
+   Il rosso è più profondo di quello del marchio: a schermo pieno il --red
+   puro vibra e leggerci sopra diventa faticoso. ─────────────────────── */
+:root {
+  --rosso-fondo: color-mix(in srgb, var(--red) 62%, var(--red-deep));
+}
+
+/* Il contenitore NON ha z-index: deve lasciar passare tre livelli
+   distinti — il suo fondo (30), il vetro bianco che ci appoggia sopra
+   (31) e il testo che deve restare leggibile sopra entrambi (32). Con un
+   contesto di impilamento qui, tutto il contenuto resterebbe schiacciato
+   sotto la massa. */
+.rosso {
+  position: relative;
+}
+.rosso::before {
   content: "";
   position: absolute;
   inset: 0;
-  background: color-mix(in srgb, var(--ink) 78%, transparent);
-  animation: pa-stage-in 0.4s ease both;
+  /* Sopra la copia rossa delle figure (31), non sotto: le lastre bianche
+     sono semi-trasparenti e senza questo si vedeva la copia rossa
+     attraverso di loro, con una fascia di colore ibrido nel mezzo.
+     Il fondo di CARTA invece resta sotto (30), perché lì le figure
+     devono vedersi. */
+  z-index: 32;
+  background: var(--rosso-fondo);
 }
-.pa-stage.is-closing::before {
-  animation: pa-stage-out 0.5s ease forwards;
+
+/* le lastre su fondo rosso: vetro bianco */
+.sml {
+  border-color: color-mix(in srgb, var(--lift) 62%, transparent);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--lift) 82%, transparent) 0%,
+    color-mix(in srgb, var(--lift) 68%, transparent) 42%,
+    color-mix(in srgb, var(--paper-2) 52%, transparent) 100%
+  );
+  box-shadow:
+    inset 0 1px 0 0 color-mix(in srgb, var(--lift) 88%, transparent),
+    inset 0 26px 52px -22px color-mix(in srgb, var(--lift) 60%, transparent),
+    /* ombre sempre calde, anche sotto una lastra bianca */
+    inset 0 -18px 36px -24px color-mix(in srgb, var(--red-deep) 20%, transparent),
+    0 10px 24px -14px color-mix(in srgb, var(--red-deep) 46%, transparent),
+    0 34px 80px -32px color-mix(in srgb, var(--red-deep) 52%, transparent);
 }
-@keyframes pa-stage-in {
-  from {
-    opacity: 0;
-  }
+/* la più lontana resta trasparente: se fosse bianca piena l'ammasso
+   diventerebbe una macchia sola invece che lastre distinte */
+.sml.ml-fondo {
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--lift) 30%, transparent) 0%,
+    color-mix(in srgb, var(--lift) 16%, transparent) 100%
+  );
 }
-@keyframes pa-stage-out {
-  to {
-    opacity: 0;
-  }
-}
-/* la foto in esame: grande, centrata, dritta, con tilt 3D al cursore. La
-   FLIP (translate/scale, in JS) la porta dalla cartella al centro e ritorno;
-   `transform` resta libero per il tilt. */
-.pa-photo.is-exam {
+
+/* ── schermata 1: il titolo ── */
+.srv-apre {
   position: relative;
-  inset: auto;
-  width: min(30vw, 46vh);
-  height: auto;
-  aspect-ratio: 3 / 3.55;
-  border-radius: 8px;
-  box-shadow: 0 34px 70px -28px color-mix(in srgb, var(--ink) 62%, transparent);
-  transform: perspective(1200px) rotateY(calc(var(--mx, 0) * 10deg))
-    rotateX(calc(var(--my, 0) * -10deg));
-  transition:
-    scale 0.54s cubic-bezier(0.22, 0.9, 0.28, 1),
-    translate 0.54s cubic-bezier(0.22, 0.9, 0.28, 1),
-    rotate 0.54s cubic-bezier(0.22, 0.9, 0.28, 1),
-    box-shadow 0.54s cubic-bezier(0.22, 0.9, 0.28, 1),
-    transform 0.12s ease-out;
-}
-.pa-photo.is-exam:hover {
-  scale: 1; /* niente lift dell'hover in esame: comanda la FLIP */
-}
-/* riflesso di vetro che insegue il cursore sulla foto in esame */
-.pa-photo-glass {
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  background: radial-gradient(
-    circle at calc(50% + var(--mx, 0) * 42%) calc(50% + var(--my, 0) * 42%),
-    color-mix(in srgb, var(--lift) 26%, transparent) 0%,
-    color-mix(in srgb, var(--lift) 6%, transparent) 30%,
-    transparent 58%
-  );
-  mix-blend-mode: soft-light;
-}
-@media (prefers-reduced-motion: reduce) {
-  .pa-photo-slot {
-    animation: none;
-  }
-  .pa-stage::before {
-    animation: none;
-  }
-  .pa-photo.is-exam {
-    transition: none;
-  }
-}
-.pa-photo-img {
-  position: absolute;
-  inset: 4.5% 4.5% 18% 4.5%;
-  border-radius: 4px;
-  background: radial-gradient(
-    circle at 30% 26%,
-    color-mix(in srgb, var(--red) 46%, var(--paper)) 0%,
-    color-mix(in srgb, var(--red) 66%, var(--paper)) 48%,
-    color-mix(in srgb, var(--red-deep) 62%, var(--paper)) 100%
-  );
-  box-shadow: inset 5px 7px 14px -6px color-mix(in srgb, var(--lift) 55%, transparent);
+  z-index: 32;
+  min-height: 100vh;
 }
 
-/* ── reperto ANIMATO di MOTION: scena cinematica a livelli ─────────────────
-   Markup in ProjectArchive.tsx (MotionReperto). Qui vivono i movimenti:
-   ogni layer trasla/scala/pulsa su un proprio ritmo. Le trasformazioni su
-   elementi SVG usano transform-box: view-box (coordinate del viewBox). */
-.pa-motion {
-  overflow: hidden;
-  background: var(--ink);
-}
-.pm-svg {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  display: block;
-}
-.pm-svg * {
-  transform-box: view-box;
-}
-
-/* 2 · AURORA — masse di luce liquida che derivano e respirano */
-.pm-blob {
-  mix-blend-mode: screen;
-  will-change: transform;
-}
-.pm-blob-a {
-  transform-origin: 70px 70px;
-  animation: pm-drift-a 13s ease-in-out infinite;
-}
-.pm-blob-b {
-  transform-origin: 132px 128px;
-  animation: pm-drift-b 17s ease-in-out infinite;
-}
-.pm-blob-c {
-  transform-origin: 104px 96px;
-  animation: pm-drift-c 11s ease-in-out infinite;
-}
-@keyframes pm-drift-a {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(22px, 16px) scale(1.16); }
-}
-@keyframes pm-drift-b {
-  0%, 100% { transform: translate(0, 0) scale(1.05); }
-  50% { transform: translate(-20px, -14px) scale(0.86); }
-}
-@keyframes pm-drift-c {
-  0%, 100% { transform: translate(0, 0) scale(0.9); }
-  50% { transform: translate(10px, -18px) scale(1.25); }
-}
-
-/* 4 · NUCLEO — sfera di vetro che respira, alone che pulsa, riflesso mobile */
-.pm-core {
-  transform-origin: 100px 100px;
-  animation: pm-breathe 3.8s ease-in-out infinite;
-}
-.pm-core-glow {
-  transform-origin: 100px 100px;
-  mix-blend-mode: screen;
-  animation: pm-pulse 3.8s ease-in-out infinite;
-}
-.pm-core-spec {
-  transform-box: fill-box;
-  animation: pm-spec 6s ease-in-out infinite;
-}
-@keyframes pm-breathe {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.09); }
-}
-@keyframes pm-pulse {
-  0%, 100% { transform: scale(1); opacity: 0.75; }
-  50% { transform: scale(1.22); opacity: 1; }
-}
-@keyframes pm-spec {
-  0%, 100% { transform: translate(0, 0); }
-  50% { transform: translate(5px, 4px); }
-}
-
-/* 5 · POLVERE — deriva verticale lenta (lo scintillìo è in SMIL) */
-.pm-live g circle[style] {
-  transform-box: fill-box;
-  animation: pm-dust 6s ease-in-out infinite alternate;
-}
-@keyframes pm-dust {
-  from { transform: translateY(0); }
-  to { transform: translateY(var(--pm-drift, 0)); }
-}
-
-/* 6 · SWEEP — lama di luce che attraversa il vetro, poi pausa */
-.pm-sweep {
-  mix-blend-mode: screen;
-  animation: pm-sweep 6.5s cubic-bezier(0.5, 0, 0.5, 1) infinite;
-}
-@keyframes pm-sweep {
-  0% { transform: translateX(0); }
-  42%, 100% { transform: translateX(320px); }
-}
-
-/* reduced-motion: solo un fotogramma fermo (nucleo + aurora) */
-.pm-static {
-  display: none;
-}
-@media (prefers-reduced-motion: reduce) {
-  .pm-live {
-    display: none;
-  }
-  .pm-static {
-    display: block;
-  }
-  .pm-blob-a,
-  .pm-blob-b,
-  .pm-blob-c {
-    animation: none;
-  }
-}
-
-/* ── reperto DESIGN: la penna vettoriale che disegna una curva Bézier ──────
-   Markup in ProjectArchive.tsx (DesignReperto). Loop 6s: la curva si traccia
-   (stroke-dashoffset), spuntano ancoraggi e maniglie, poi si cancella. */
-.pa-design {
-  overflow: hidden;
-  background: radial-gradient(
-    circle at 50% 40%,
-    var(--lift) 0%,
-    var(--paper) 78%
-  );
-}
-.pd-svg {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  display: block;
-}
-.pd-svg * {
-  transform-box: view-box;
-}
-
-/* la curva: si disegna, tiene, si cancella (dall'inizio) → loop continuo */
-.pd-curve {
-  stroke-dasharray: 100;
-  stroke-dashoffset: 100;
-  animation: pd-draw 6s ease-in-out infinite;
-}
-@keyframes pd-draw {
-  0%,
-  6% {
-    stroke-dashoffset: 100;
-  }
-  42%,
-  70% {
-    stroke-dashoffset: 0;
-  }
-  90%,
-  100% {
-    stroke-dashoffset: -100;
-  }
-}
-
-/* la punta rossa: visibile solo mentre traccia (il moto è in SMIL) */
-.pd-pen {
-  animation: pd-pen 6s linear infinite;
-}
-@keyframes pd-pen {
-  0%,
-  4% {
-    opacity: 0;
-  }
-  9%,
-  40% {
-    opacity: 1;
-  }
-  50%,
-  100% {
-    opacity: 0;
-  }
-}
-
-/* ancoraggi: spuntano a uno a uno mentre la penna passa, poi svaniscono */
-.pd-anchor {
-  transform-box: fill-box;
-  transform-origin: center;
-}
-.pd-a0 {
-  animation: pd-a0 6s ease-out infinite;
-}
-.pd-a1 {
-  animation: pd-a1 6s ease-out infinite;
-}
-.pd-a2 {
-  animation: pd-a2 6s ease-out infinite;
-}
-@keyframes pd-a0 {
-  0%,
-  3% {
-    opacity: 0;
-    scale: 0.2;
-  }
-  9%,
-  84% {
-    opacity: 1;
-    scale: 1;
-  }
-  92%,
-  100% {
-    opacity: 0;
-    scale: 0.5;
-  }
-}
-@keyframes pd-a1 {
-  0%,
-  21% {
-    opacity: 0;
-    scale: 0.2;
-  }
-  27%,
-  84% {
-    opacity: 1;
-    scale: 1;
-  }
-  92%,
-  100% {
-    opacity: 0;
-    scale: 0.5;
-  }
-}
-@keyframes pd-a2 {
-  0%,
-  37% {
-    opacity: 0;
-    scale: 0.2;
-  }
-  43%,
-  84% {
-    opacity: 1;
-    scale: 1;
-  }
-  92%,
-  100% {
-    opacity: 0;
-    scale: 0.5;
-  }
-}
-
-/* maniglie di controllo: compaiono a curva tracciata, respiro lieve, via */
-.pd-handles {
-  animation: pd-handles 6s ease-in-out infinite;
-}
-@keyframes pd-handles {
-  0%,
-  44% {
-    opacity: 0;
-  }
-  54%,
-  82% {
-    opacity: 1;
-  }
-  90%,
-  100% {
-    opacity: 0;
-  }
-}
-
-.pd-static {
-  display: none;
-}
-@media (prefers-reduced-motion: reduce) {
-  .pd-live {
-    display: none;
-  }
-  .pd-static {
-    display: block;
-  }
-}
-
-/* ── reperto STRATEGY: radar di posizionamento ─────────────────────────────
-   Markup in ProjectArchive.tsx (StrategyReperto). Giro del fascio: 5s. I blip
-   si accendono in fase col fascio (ritardo = angolo/360 del giro). */
-.pa-strategy {
-  overflow: hidden;
-  background: radial-gradient(
-    circle at 50% 45%,
-    var(--lift) 0%,
-    var(--paper) 80%
-  );
-}
-.ps-svg {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  display: block;
-}
-.ps-svg * {
-  transform-box: view-box;
-}
-
-/* il fascio gira senza sosta: loop naturale, nessuno stacco */
-.ps-sweep {
-  transform-origin: 100px 100px;
-  animation: ps-scan 5s linear infinite;
-}
-@keyframes ps-scan {
-  to {
-    rotate: 360deg;
-  }
-}
-
-/* i blip si accendono quando il fascio li attraversa: stessa durata del giro,
-   ognuno con la sua fase (baked nei keyframes per restare phase-lockabile) */
-.ps-blip {
-  opacity: 0.12;
-}
-.ps-blip-0 {
-  animation: ps-blip-0 5s linear infinite;
-}
-.ps-blip-1 {
-  animation: ps-blip-1 5s linear infinite;
-}
-.ps-blip-2 {
-  animation: ps-blip-2 5s linear infinite;
-}
-.ps-blip-3 {
-  animation: ps-blip-3 5s linear infinite;
-}
-@keyframes ps-blip-0 {
-  0%,
-  10% {
-    opacity: 0.12;
-  }
-  12% {
-    opacity: 1;
-  }
-  40%,
-  100% {
-    opacity: 0.12;
-  }
-}
-@keyframes ps-blip-1 {
-  0%,
-  58% {
-    opacity: 0.12;
-  }
-  61% {
-    opacity: 1;
-  }
-  88%,
-  100% {
-    opacity: 0.12;
-  }
-}
-@keyframes ps-blip-2 {
-  0%,
-  34% {
-    opacity: 0.12;
-  }
-  37% {
-    opacity: 1;
-  }
-  64%,
-  100% {
-    opacity: 0.12;
-  }
-}
-@keyframes ps-blip-3 {
-  0%,
-  84% {
-    opacity: 0.12;
-  }
-  87% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0.12;
-  }
-}
-
-/* il mirino si stringe sul blip principale poco dopo che si è acceso */
-.ps-lock {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: ps-lock 5s ease-out infinite;
-}
-@keyframes ps-lock {
-  0%,
-  11% {
-    opacity: 0;
-    scale: 1.5;
-  }
-  20%,
-  46% {
-    opacity: 1;
-    scale: 1;
-  }
-  56%,
-  100% {
-    opacity: 0;
-    scale: 1;
-  }
-}
-
-/* il punto del brand respira piano al centro */
-.ps-center {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: ps-center 5s ease-in-out infinite;
-}
-@keyframes ps-center {
-  0%,
-  100% {
-    scale: 1;
-  }
-  50% {
-    scale: 1.25;
-  }
-}
-
-.ps-static {
-  display: none;
-}
-@media (prefers-reduced-motion: reduce) {
-  .ps-live {
-    display: none;
-  }
-  .ps-static {
-    display: block;
-  }
-}
-
-/* ── reperto BUILD: l'editor che scrive codice ─────────────────────────────
-   Markup in ProjectArchive.tsx (BuildReperto). Loop 7s: le righe si scrivono
-   una a una (scaleX da sinistra), tengono, poi si cancellano. */
-.pa-build {
-  overflow: hidden;
-  background: var(--ink);
-}
-.pb-svg {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  display: block;
-}
-.pb-svg * {
-  transform-box: view-box;
-}
-
-/* toni del codice: rosso = parole chiave, chiaro = testo, tenue = commenti */
-.pb-key {
-  fill: var(--red);
-}
-.pb-txt {
-  fill: color-mix(in srgb, var(--lift) 72%, transparent);
-}
-.pb-dim {
-  fill: color-mix(in srgb, var(--lift) 34%, transparent);
-}
-
-/* ogni riga si "scrive" da sinistra: scaleX 0 → 1, sfalsata di riga in riga.
-   I tempi sono baked nei keyframes (non in animation-delay) così il
-   phase-lock può riallinearle tutte con un unico delay negativo. */
-.pb-line {
-  transform-box: fill-box;
-  transform-origin: left center;
-  scale: 0 1;
-}
-.pb-line-0 {
-  animation: pb-type-0 7s ease-out infinite;
-}
-.pb-line-1 {
-  animation: pb-type-1 7s ease-out infinite;
-}
-.pb-line-2 {
-  animation: pb-type-2 7s ease-out infinite;
-}
-.pb-line-3 {
-  animation: pb-type-3 7s ease-out infinite;
-}
-.pb-line-4 {
-  animation: pb-type-4 7s ease-out infinite;
-}
-.pb-line-5 {
-  animation: pb-type-5 7s ease-out infinite;
-}
-.pb-line-6 {
-  animation: pb-type-6 7s ease-out infinite;
-}
-@keyframes pb-type-0 {
-  0%,
-  2% {
-    scale: 0 1;
-  }
-  10%,
-  80% {
-    scale: 1 1;
-  }
-  88%,
-  100% {
-    scale: 0 1;
-  }
-}
-@keyframes pb-type-1 {
-  0%,
-  10% {
-    scale: 0 1;
-  }
-  18%,
-  80% {
-    scale: 1 1;
-  }
-  88%,
-  100% {
-    scale: 0 1;
-  }
-}
-@keyframes pb-type-2 {
-  0%,
-  18% {
-    scale: 0 1;
-  }
-  26%,
-  80% {
-    scale: 1 1;
-  }
-  88%,
-  100% {
-    scale: 0 1;
-  }
-}
-@keyframes pb-type-3 {
-  0%,
-  26% {
-    scale: 0 1;
-  }
-  34%,
-  80% {
-    scale: 1 1;
-  }
-  88%,
-  100% {
-    scale: 0 1;
-  }
-}
-@keyframes pb-type-4 {
-  0%,
-  34% {
-    scale: 0 1;
-  }
-  42%,
-  80% {
-    scale: 1 1;
-  }
-  88%,
-  100% {
-    scale: 0 1;
-  }
-}
-@keyframes pb-type-5 {
-  0%,
-  42% {
-    scale: 0 1;
-  }
-  50%,
-  80% {
-    scale: 1 1;
-  }
-  88%,
-  100% {
-    scale: 0 1;
-  }
-}
-@keyframes pb-type-6 {
-  0%,
-  50% {
-    scale: 0 1;
-  }
-  58%,
-  80% {
-    scale: 1 1;
-  }
-  88%,
-  100% {
-    scale: 0 1;
-  }
-}
-
-/* il cursore lampeggia sempre */
-.pb-caret {
-  animation: pb-caret 7s steps(1, end) infinite;
-}
-@keyframes pb-caret {
-  0%,
-  4%,
-  12%,
-  20%,
-  28%,
-  36%,
-  44%,
-  52%,
-  60%,
-  68%,
-  76%,
-  84%,
-  92% {
-    opacity: 1;
-  }
-  8%,
-  16%,
-  24%,
-  32%,
-  40%,
-  48%,
-  56%,
-  64%,
-  72%,
-  80%,
-  88%,
-  96% {
-    opacity: 0;
-  }
-}
-
-.pb-static {
-  display: none;
-}
-@media (prefers-reduced-motion: reduce) {
-  .pb-live {
-    display: none;
-  }
-  .pb-static {
-    display: block;
-  }
-}
-
-/* uscita rapida: la copertina si richiude e il dossier scivola giù.
-   I contenuti restano visibili (niente ri-regia sull'uscente). */
-.pa-dossier.is-leaving {
-  pointer-events: none;
-  animation: pa-drop 0.42s cubic-bezier(0.55, 0, 0.85, 0.4) 0.1s both;
-}
-@keyframes pa-drop {
-  from {
-    translate: 0 -50%;
-  }
-  to {
-    translate: 0 calc(-50% + 100vh);
-  }
-}
-.pa-dossier.is-leaving .pa-cover {
-  animation: pa-shut 0.3s cubic-bezier(0.6, 0.05, 0.25, 1) both;
-}
-@keyframes pa-shut {
-  from {
-    transform: rotateY(176deg);
-  }
-  to {
-    transform: rotateY(0deg);
-  }
-}
-.pa-dossier.is-leaving .pa-sheet,
-.pa-dossier.is-leaving .pa-photo {
-  animation: none;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .fs-blob,
-  .fs-fig,
-  .fs-arch,
-  .fa-cabinet,
-  .pa-folder,
-  .pa-skin {
-    transition: none;
-  }
-  .pa-dossier {
-    animation: none;
-  }
-  .pa-dossier.is-leaving {
-    display: none;
-  }
-  .pa-cover {
-    animation: none;
-    transform: rotateY(176deg);
-  }
-  .pa-sheet,
-  .pa-photo {
-    animation: none;
-  }
-}
-
-/* ═══════════════════════════════════════════════════════════════════════
-   ATTO DELLO SPAZIO (html.space-live)
-   Il cassetto mette naso e alette, accende il motore e PARTE; il cielo si
-   fa nero, si accendono le stelle e appare il sistema solare dei social.
-   Tutta la regia è a delay sulle TRANSIZIONI → risalendo si riavvolge.
-   ═══════════════════════════════════════════════════════════════════════ */
-
-/* ── 1 · il cassetto diventa razzo ────────────────────────────────────── */
-
-/* naso conico che spunta dal coperchio */
-.fa-nose {
-  position: absolute;
-  left: 50%;
-  top: 0;
-  translate: -50% 0;
-  width: 0;
-  height: 0;
-  border-left: clamp(100px, 8.5vw, 150px) solid transparent;
-  border-right: clamp(100px, 8.5vw, 150px) solid transparent;
-  border-bottom: 14vh solid var(--red);
-  filter: drop-shadow(0 -6px 18px color-mix(in srgb, var(--red-deep) 55%, transparent));
-  transform-origin: bottom center;
-  scale: 1 0;
-  opacity: 0;
-  transition:
-    scale 0.55s cubic-bezier(0.22, 1.1, 0.36, 1),
-    opacity 0.3s ease;
-}
-.space-live .fa-nose {
-  scale: 1 1;
-  opacity: 1;
-  translate: -50% -13.4vh;
-}
-
-/* alette laterali alla base */
-.fa-fin {
-  position: absolute;
-  bottom: 0;
-  width: 0;
-  height: 0;
-  border-bottom: 16vh solid var(--red-deep);
-  opacity: 0;
-  transition:
-    scale 0.5s cubic-bezier(0.22, 1.1, 0.36, 1) 0.12s,
-    opacity 0.3s ease 0.12s;
-}
-.fa-fin-l {
-  right: 100%;
-  border-left: clamp(34px, 3.4vw, 60px) solid transparent;
-  transform-origin: bottom right;
-  scale: 0 1;
-}
-.fa-fin-r {
-  left: 100%;
-  border-right: clamp(34px, 3.4vw, 60px) solid transparent;
-  transform-origin: bottom left;
-  scale: 0 1;
-}
-.space-live .fa-fin {
-  scale: 1 1;
-  opacity: 1;
-}
-
-/* motore: la fiamma sotto, che si allunga e sfarfalla */
-.fa-flame {
-  position: absolute;
-  left: 50%;
-  top: 100%;
-  translate: -50% 0;
-  width: 46%;
-  height: 26vh;
-  border-radius: 50% 50% 46% 46% / 22% 22% 78% 78%;
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--lift) 92%, var(--red)) 0%,
-    var(--red) 34%,
-    color-mix(in srgb, var(--red-deep) 88%, transparent) 78%,
-    transparent 100%
-  );
-  filter: blur(2px);
-  transform-origin: top center;
-  scale: 0.6 0;
-  opacity: 0;
-  transition:
-    scale 0.4s ease-out 0.6s,
-    opacity 0.3s ease 0.6s;
-}
-.fa-flame-core {
-  position: absolute;
-  left: 50%;
-  top: 0;
-  translate: -50% 0;
-  width: 52%;
-  height: 46%;
-  border-radius: 50% 50% 46% 46% / 26% 26% 74% 74%;
-  background: linear-gradient(
-    180deg,
-    var(--lift),
-    color-mix(in srgb, var(--lift) 20%, transparent)
-  );
-}
-.space-live .fa-flame {
-  scale: 1 1;
-  opacity: 1;
-  animation: fa-flicker 0.12s steps(2, end) infinite 1s;
-}
-@keyframes fa-flicker {
-  0%,
-  100% {
-    scale: 1 1;
-  }
-  50% {
-    scale: 0.92 1.12;
-  }
-}
-
-/* IL LANCIO: vibra sulla rampa, poi accelera e se ne va dallo schermo.
-   La z-index lo tiene SOPRA il cielo nero: lo attraversa. */
-.space-live .fa-cabinet {
-  z-index: 65;
-  animation: fa-shake 0.09s linear 0.7s 7;
-  transition: translate 1.5s cubic-bezier(0.7, 0, 0.9, 0.36) 1.3s;
-  translate: 0 -175vh;
-}
-@keyframes fa-shake {
-  0%,
-  100% {
-    margin-left: 0;
-  }
-  25% {
-    margin-left: -3px;
-  }
-  75% {
-    margin-left: 3px;
-  }
-}
-/* il dossier aperto se ne va subito: sulla rampa non resta niente */
-.space-live .pa-dossier {
-  opacity: 0;
-  transition: opacity 0.45s ease;
-}
-/* e la header di paper sparisce: il cielo dev'essere pulito */
-.space-live .fs-header,
-.space-live .fs-logo {
-  opacity: 0;
-  transition: opacity 0.6s ease 0.9s;
-}
-
-/* ── 2 · il cielo ─────────────────────────────────────────────────────── */
-.sp-scene {
-  position: absolute;
-  inset: 0;
-  z-index: 60;
-  pointer-events: none;
-  visibility: hidden;
-  transition: visibility 0s 2.2s;
-}
-.space-live .sp-scene {
-  visibility: visible;
-  transition: visibility 0s 0s;
-}
-.sp-sky {
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(
-      120% 90% at 50% 46%,
-      color-mix(in srgb, var(--red-deep) 26%, #05040a) 0%,
-      #05040a 62%
-    ),
-    #04030a;
-  opacity: 0;
-  transition: opacity 1.1s ease;
-}
-.space-live .sp-sky {
-  opacity: 1;
-  transition-delay: 1s;
-}
-
-/* stelle: entrano dopo il buio e scintillano ognuna col suo ritmo */
-.sp-stars {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0;
-  transition: opacity 1.2s ease;
-}
-.space-live .sp-stars {
-  opacity: 1;
-  transition-delay: 2.2s;
-}
-.sp-star {
-  position: absolute;
-  border-radius: 50%;
-  background: var(--lift);
-  opacity: var(--so, 0.5);
-  animation-name: sp-twinkle;
-  animation-iteration-count: infinite;
-  animation-timing-function: ease-in-out;
-}
-@keyframes sp-twinkle {
-  0%,
-  100% {
-    opacity: calc(var(--so, 0.5) * 0.35);
-  }
-  50% {
-    opacity: var(--so, 0.5);
-  }
-}
-
-/* ── 3 · il sistema solare ────────────────────────────────────────────── */
-.sp-system {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  translate: -50% -50%;
-  width: 0;
-  height: 0;
-  /* la camera: senza questa i piani inclinati resterebbero piatti */
-  perspective: 120vmin;
-  perspective-origin: 50% 42%;
-  transform-style: preserve-3d;
-  opacity: 0;
-  scale: 0.86;
-  transition:
-    opacity 0.9s ease,
-    scale 1.1s cubic-bezier(0.16, 0.86, 0.26, 1);
-}
-.space-live .sp-system {
-  opacity: 1;
-  scale: 1;
-  transition-delay: 2.8s;
-}
-
-/* il SOLE: neutro, nessun marchio — solo luce */
-.sp-sun {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  translate: -50% -50%;
-  width: 13vmin;
-  height: 13vmin;
-  border-radius: 50%;
-  background: radial-gradient(
-    circle at 38% 34%,
-    var(--lift) 0%,
-    color-mix(in srgb, var(--lift) 70%, var(--red)) 34%,
-    var(--red) 68%,
-    color-mix(in srgb, var(--red-deep) 92%, var(--red)) 100%
-  );
-  box-shadow:
-    0 0 6vmin color-mix(in srgb, var(--red) 60%, transparent),
-    0 0 14vmin color-mix(in srgb, var(--red-deep) 45%, transparent);
-  animation: sp-sun-pulse 5.5s ease-in-out infinite;
-}
-.sp-sun-glow {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  translate: -50% -50%;
-  width: 40vmin;
-  height: 40vmin;
-  border-radius: 50%;
-  background: radial-gradient(
-    circle,
-    color-mix(in srgb, var(--red) 26%, transparent) 0%,
-    color-mix(in srgb, var(--red-deep) 12%, transparent) 42%,
-    transparent 70%
-  );
-  animation: sp-sun-pulse 5.5s ease-in-out infinite reverse;
-}
-@keyframes sp-sun-pulse {
-  0%,
-  100% {
-    scale: 1;
-  }
-  50% {
-    scale: 1.06;
-  }
-}
-
-/* ORBITE IN PROSPETTIVA: il piano è inclinato (rotateX) e visto in
-   perspective diventa un'ellisse — il pianeta gira dentro quel piano,
-   quindi passa DAVANTI e DIETRO al sole. --phase è la posizione di
-   partenza sull'orbita (0–1) ed è data come delay negativo: così il
-   pianeta e la sua controrotazione restano sincronizzati. */
-.sp-orbit-tilt {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: var(--d);
-  height: var(--d);
-  margin-left: calc(var(--d) / -2);
-  margin-top: calc(var(--d) / -2);
-  transform: rotateX(72deg);
-  transform-style: preserve-3d;
-}
-.sp-ring {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  border: 1px dashed color-mix(in srgb, var(--lift) 15%, transparent);
-}
-.sp-orbit {
-  position: absolute;
-  inset: 0;
-  transform-style: preserve-3d;
-  animation: sp-spin var(--t) linear infinite;
-  animation-delay: calc(var(--t) * var(--phase) * -1);
-}
-@keyframes sp-spin {
-  from {
-    transform: rotateZ(0deg);
-  }
-  to {
-    transform: rotateZ(360deg);
-  }
-}
-
-/* il pianeta sta sul bordo alto dell'orbita e viene trascinato in giro */
-.sp-planet {
-  position: absolute;
-  left: 50%;
-  top: 0;
-  margin-left: calc(var(--ps) / -2);
-  margin-top: calc(var(--ps) / -2);
-  width: var(--ps);
-  height: var(--ps);
-  pointer-events: auto;
-  text-decoration: none;
-  display: block;
-  transform-style: preserve-3d;
-}
-/* controruota E raddrizza: annulla sia il giro dell'orbita sia
-   l'inclinazione del piano → glifo sempre in faccia alla camera */
-.sp-planet-spin {
-  position: absolute;
-  inset: 0;
-  display: block;
-  transform-style: flat;
-  animation: sp-spin-back var(--t) linear infinite;
-  animation-delay: calc(var(--t) * var(--phase) * -1);
-}
-@keyframes sp-spin-back {
-  from {
-    transform: rotateZ(0deg) rotateX(-72deg);
-  }
-  to {
-    transform: rotateZ(-360deg) rotateX(-72deg);
-  }
-}
-.sp-planet-body {
-  position: absolute;
-  inset: 0;
+/* ── schermata 2: i servizi ── */
+.srv-voci {
+  position: relative;
+  z-index: 34;
+  /* Meno di una schermata piena: il contenuto è centrato, quindi l'aria
+     avanzata si somma a quella della sezione seguente e fra l'ultima voce
+     di una schermata e la prima della successiva si apriva un vuoto
+     doppio rispetto a quello fra le voci vicine. */
+  min-height: 84vh;
   display: grid;
-  place-items: center;
-  border-radius: 50%;
-  color: var(--lift);
-  box-shadow:
-    inset -0.6vmin -0.9vmin 1.8vmin -0.5vmin color-mix(in srgb, var(--ink) 55%, transparent),
-    inset 0.5vmin 0.7vmin 1.4vmin -0.4vmin color-mix(in srgb, var(--lift) 55%, transparent),
-    0 0 2.4vmin color-mix(in srgb, var(--glow, var(--red)) 40%, transparent);
-  transition:
-    scale 0.28s cubic-bezier(0.34, 1.56, 0.64, 1),
-    box-shadow 0.28s ease;
+  align-content: center;
+  /* Via di mezzo fra il centro e il bordo destro: appoggiato a destra ma
+     con un margine ampio, così non si schiaccia contro il bordo e resta
+     comunque lontano dalla massa di vetro nell'angolo opposto. */
+  justify-content: end;
+  padding: 0 clamp(6vw, 21vw, 420px) 0 6vw;
 }
-/* ogni pianeta ha il colore del suo social (--glow tinge alone e ombra) */
-.sp-p-tiktok {
-  --glow: #25f4ee;
+.srv-colonne {
+  display: grid;
+  /* una colonna sola: le quattro voci si leggono in fila, come paragrafi
+     di un discorso invece che come caselle da confrontare */
+  grid-template-columns: 1fr;
+  /* Aria fra una voce e l'altra: senza filetti a separarle, è la distanza
+     a dire dove finisce un servizio e comincia il prossimo. Va tenuta in
+     rapporto con lo stacco fra una schermata e la successiva — se quello
+     è molto maggiore, il passaggio sembra un buco. */
+  gap: clamp(74px, 15vh, 210px);
+  /* Misura assoluta e non in `ch`: l'unità ch si calcola sul font di
+     QUESTO contenitore (16px), non su quello del testo dentro — con il
+     testo a 36px la colonna restava larga meno della metà del dovuto e le
+     righe andavano a capo ogni tre parole. */
+  max-width: min(760px, 52vw);
 }
-.sp-p-tiktok .sp-planet-body {
-  background: radial-gradient(
-    circle at 32% 28%,
-    #3a3a45 0%,
-    #17161c 52%,
-    #08080c 100%
-  );
-  color: var(--lift);
+.srv-voce {
+  display: grid;
+  gap: 0.3em;
 }
-.sp-p-instagram {
-  --glow: #dd2a7b;
+.srv-nome {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: clamp(42px, 5vw, 96px);
+  letter-spacing: -0.03em;
+  line-height: 1.08;
+  color: var(--paper);
 }
-.sp-p-instagram .sp-planet-body {
-  background: radial-gradient(
-    circle at 26% 92%,
-    #ffd776 0%,
-    #f58529 20%,
-    #dd2a7b 52%,
-    #8134af 76%,
-    #515bd4 100%
-  );
-  color: var(--lift);
+.srv-testo {
+  margin: 0;
+  font-family: var(--font-title);
+  font-weight: 500;
+  font-size: clamp(21px, 2vw, 36px);
+  line-height: 1.45;
+  color: color-mix(in srgb, var(--paper) 90%, transparent);
+  text-wrap: pretty;
 }
-.sp-p-facebook {
-  --glow: #1877f2;
+
+/* schermi stretti: una colonna sola, o le voci diventano illeggibili */
+@media (max-width: 860px) {
+  .srv-colonne {
+    grid-template-columns: 1fr;
+  }
+  .rosso-massa {
+    width: 92vw;
+    left: -18vw;
+  }
 }
-.sp-p-facebook .sp-planet-body {
-  background: radial-gradient(
-    circle at 32% 28%,
-    #59a0ff 0%,
-    #1877f2 52%,
-    #0b3f8c 100%
-  );
-  color: var(--lift);
+
+/* ── Il gruppo che rende possibile il titolo in negativo ────────────────
+   Contiene SOLO le lastre bianche e il titolo. Il fondo rosso resta fuori
+   di proposito: se fosse qui dentro, la fusione per differenza
+   trasformerebbe il bianco in ciano invece di lasciarlo bianco.
+
+   Scorre insieme alla sezione (è `absolute` dentro di essa), mentre le
+   lastre al suo interno sono `sticky` e restano ferme. Così il titolo
+   scorre sopra figure immobili senza che nessuno dei due abbia
+   un'animazione — ed è quello il punto: appena un elemento viene promosso
+   a un livello composito a sé, la fusione smette di avvenire. ───────── */
+.rosso-blend {
+  position: absolute;
+  inset: 0;
+  z-index: 33; /* sopra il fondo rosso, sotto i testi */
+  isolation: isolate;
+  pointer-events: none;
 }
-.sp-p-email {
-  --glow: var(--red);
+
+.rosso-massa {
+  /* Coordinate IDENTICHE alla copia rossa che sta dietro (vedi .massa):
+     è quella coincidenza a far leggere le due copie come un oggetto solo
+     che cambia colore.
+
+     `fixed` e non `sticky`: un elemento appiccicoso, finché non raggiunge
+     la sua soglia, sta ancora nel flusso — quindi durante l'ingresso della
+     sezione si trovava molto più in alto dell'altra copia, e il taglio fra
+     le due si vedeva. Fisso è fermo da subito.
+     Il blend del titolo continua a funzionare: qui la posizione fissa è
+     sul FONDALE, non sull'elemento che si fonde. */
+  /* stesse coordinate della copia rossa: è la coincidenza a farle
+     leggere come un oggetto solo che cambia colore */
+  position: fixed;
+  left: -7vw;
+  bottom: -12vh;
+  width: min(52vw, 780px);
+  height: calc(min(52vw, 780px) * 0.82);
 }
-.sp-p-email .sp-planet-body {
-  background: radial-gradient(
-    circle at 32% 28%,
-    var(--lift) 0%,
-    var(--paper-2) 46%,
-    color-mix(in srgb, var(--muted) 70%, var(--paper-2)) 100%
-  );
+
+/* ── I due ritagli ──
+   Due gusci a tutta finestra, uno dentro l'altro. Essendo grandi quanto
+   la finestra, `inset()` si misura direttamente in coordinate schermo: il
+   valore È la quota del bordo rosso, senza calcoli sull'altezza della
+   massa. Il primo scopre le lastre dall'alto mentre il rosso sale, il
+   secondo le ricopre dal basso mentre il rosso se ne va. */
+.taglio-alto,
+.taglio-basso {
+  /* `fixed` e NON `absolute`: dentro la sezione questi gusci sarebbero
+     alti quanto TUTTA la sezione rossa (tre schermate), e `inset(100vh …)`
+     taglierebbe cento unità di finestra misurate sull'elemento, non sullo
+     schermo — il ritaglio cadeva quindi molto più in alto del bordo rosso
+     e lasciava una fascia di rosso senza lastre.
+     Ancorati alla finestra, il valore del ritaglio È la quota a schermo. */
+  position: fixed;
+  inset: 0;
+}
+/* prima che il rosso arrivi, niente lastre bianche */
+.taglio-alto {
+  clip-path: inset(100% 0 0 0);
+}
+@supports (animation-timeline: view()) {
+  .taglio-alto {
+    animation: scopre-dallalto linear both;
+    animation-timeline: --sale-rosso;
+    animation-range: entry 0% entry 100%;
+  }
+  .taglio-basso {
+    animation: ricopre-dal-basso linear both;
+    animation-timeline: --esce-rosso;
+    animation-range: exit 0% exit 100%;
+  }
+}
+@keyframes scopre-dallalto {
+  from {
+    clip-path: inset(100vh 0 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+@keyframes ricopre-dal-basso {
+  from {
+    clip-path: inset(0 0 0 0);
+  }
+  to {
+    clip-path: inset(0 0 100vh 0);
+  }
+}
+/* alto una schermata esatta: è questo a rendere il ritaglio preciso */
+.rosso-sensore {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 100vh;
+  pointer-events: none;
+  view-timeline-name: --sale-rosso;
+  view-timeline-axis: block;
+}
+/* Il secondo sensore, in fondo alla sezione. Va dichiarato DOPO quello
+   base: a parità di specificità vince l'ultima regola, e messo prima si
+   faceva sovrascrivere top e nome della linea temporale. */
+.rosso-sensore--fine {
+  top: auto;
+  bottom: 0;
+  view-timeline-name: --esce-rosso;
+}
+:root {
+  /* le linee temporali dei sensori servono ai ritagli, che stanno in un
+     altro ramo del documento */
+  timeline-scope: --sale-rosso, --esce-rosso;
+}
+@supports (animation-timeline: view()) {
+  .rosso-massa {
+    animation: svela-bianca linear both;
+    animation-timeline: --sale-rosso;
+    animation-range: entry 0% entry 100%;
+  }
+}
+@keyframes svela-bianca {
+  from {
+    clip-path: inset(calc(var(--h) - 12vh) 0 0 0);
+  }
+  to {
+    clip-path: inset(calc(var(--h) - 112vh) 0 0 0);
+  }
+}
+
+/* il titolo vive qui dentro, non nella schermata: è l'unico modo perché
+   si fonda con le lastre e non col rosso */
+.srv-titolo {
+  position: absolute;
+  left: 6vw;
+  right: 6vw;
+  top: clamp(180px, 32vh, 420px);
+  margin: 0;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: clamp(52px, 11.5vw, 220px);
+  letter-spacing: -0.045em;
+  line-height: 0.92;
+  color: #fff; /* bianco pieno: è ciò che fa nero sulle lastre */
+  mix-blend-mode: difference;
+}
+.srv-dot {
+  display: inline-block;
+  width: 0.15em;
+  height: 0.15em;
+  margin-left: 0.1em;
+  background: #fff;
+}
+
+/* ══ PARTE 5 · CONTATTI ═══════════════════════════════════════════════════
+   Il rosso finisce qui e torna la carta. Lo strato sta sopra a tutto il
+   resto della sezione rossa: sopra il suo fondo (30) e sopra le lastre
+   bianche (31), che essendo fisse resterebbero altrimenti appese sopra
+   questa schermata. ─────────────────────────────────────────────────── */
+.cnt {
+  position: relative;
+  /* Nessun z-index qui: la sezione deve lasciar passare due livelli
+     distinti — il suo fondo (30, sotto le figure) e il suo testo (33,
+     sopra). Un contesto di impilamento su questo elemento li terrebbe
+     insieme e il fondo coprirebbe le figure. */
+  min-height: 100vh;
+  display: grid;
+  align-content: center;
+  gap: clamp(18px, 2.6vh, 40px);
+  padding: clamp(90px, 14vh, 180px) 6vw clamp(80px, 12vh, 150px);
+}
+/* Il fondo su uno strato a parte, al livello degli altri fondi: se stesse
+   sull'elemento coprirebbe le figure invece di lasciarle passare. */
+.cnt::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 30; /* al livello degli altri fondi, sotto le figure */
+  background: var(--paper);
+}
+/* il contenuto sopra le figure */
+.cnt > * {
+  position: relative;
+  z-index: 34;
+}
+
+.cnt-occhiello {
+  margin: 0;
+  font-family: var(--font-title);
+  font-weight: 700;
+  font-size: clamp(11px, 0.8vw, 14px);
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  /* rosso profondo e non --red: su carta il rosso pieno a corpo piccolo
+     vibra e si legge peggio */
   color: var(--red-deep);
 }
 
-/* ── LUNA: stessa meccanica dei pianeti attorno al sole — piano inclinato
-   (rotateX) + orbita che ruota di continuo, quindi movimento fluido.
-   È UNA sola luna, INTERA: sta davanti o dietro al pianeta per vero
-   ordinamento 3D (preserve-3d), non con ritagli che la spezzerebbero.
-   Orbita contenuta: resta dentro la "zona" del pianeta. ── */
-.sp-has-moon .sp-planet-spin {
-  transform-style: preserve-3d;
+.cnt-titolo {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: clamp(40px, 6.4vw, 120px);
+  letter-spacing: -0.045em;
+  line-height: 0.94;
+  color: var(--ink);
 }
-.sp-moon-plane {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 180%;
-  height: 180%;
-  margin-left: -90%;
-  margin-top: -90%;
-  transform: rotateX(66deg);
-  transform-style: preserve-3d;
-  pointer-events: none;
-}
-.sp-moon-orbit {
-  position: absolute;
-  inset: 0;
-  transform-style: preserve-3d;
-  animation: sp-moon-spin 9s linear infinite;
-}
-@keyframes sp-moon-spin {
-  from {
-    transform: rotateZ(0deg);
-  }
-  to {
-    transform: rotateZ(360deg);
-  }
-}
-/* la luna sta sul bordo dell'orbita e viene trascinata in giro */
-.sp-moon {
-  position: absolute;
-  left: 50%;
-  top: 0;
-  width: 17%;
-  height: 17%;
-  margin-left: -8.5%;
-  margin-top: -8.5%;
-  transform-style: preserve-3d;
-}
-/* controrotazione: annulla giro e inclinazione → la luna resta un cerchio
-   in faccia alla camera, esattamente come si fa per i pianeti */
-.sp-moon-fix {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  background: radial-gradient(
-    circle at 34% 30%,
-    var(--lift) 0%,
-    var(--muted) 62%,
-    color-mix(in srgb, var(--ink) 60%, var(--muted)) 100%
-  );
-  box-shadow: 0 0 0.6vmin color-mix(in srgb, var(--lift) 40%, transparent);
-  animation: sp-moon-fix 9s linear infinite;
-}
-@keyframes sp-moon-fix {
-  from {
-    transform: rotateZ(0deg) rotateX(-66deg);
-  }
-  to {
-    transform: rotateZ(-360deg) rotateX(-66deg);
-  }
+.cnt-dot {
+  display: inline-block;
+  width: 0.15em;
+  height: 0.15em;
+  margin-left: 0.1em;
+  background: var(--red);
 }
 
-/* ── ANELLI (il "Saturno" del sistema): metà dietro, metà davanti ── */
-.sp-rings {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 250%;
-  height: 250%;
-  margin-left: -125%;
-  margin-top: -125%;
-  transform: rotateX(74deg) rotateZ(-16deg);
-  pointer-events: none;
+/* L'indirizzo scritto per esteso e grande: è la cosa per cui la pagina
+   esiste, non va nascosto dietro un pulsante generico. */
+.cnt-mail {
+  justify-self: start;
+  margin-top: clamp(10px, 2vh, 26px);
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: clamp(20px, 2.4vw, 46px);
+  letter-spacing: -0.03em;
+  color: var(--ink);
+  text-decoration: none;
+  /* il filetto è disegnato col bordo, così lo spessore non cambia con la
+     dimensione del testo come farebbe una sottolineatura */
+  border-bottom: 2px solid var(--red);
+  padding-bottom: 0.08em;
+  transition:
+    color 0.25s ease,
+    border-color 0.25s ease;
 }
-/* la fascia vera: un anello spesso con bande chiare e scure che GIRA —
-   è il movimento che lo fa leggere come gli anelli di Saturno */
-.sp-rings-tex {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  background: conic-gradient(
-    from 0deg,
-    color-mix(in srgb, var(--paper) 78%, transparent) 0deg,
-    color-mix(in srgb, var(--paper) 42%, transparent) 38deg,
-    color-mix(in srgb, var(--lift) 88%, transparent) 92deg,
-    color-mix(in srgb, var(--red) 46%, transparent) 145deg,
-    color-mix(in srgb, var(--paper) 70%, transparent) 200deg,
-    color-mix(in srgb, var(--paper) 34%, transparent) 258deg,
-    color-mix(in srgb, var(--lift) 82%, transparent) 310deg,
-    color-mix(in srgb, var(--paper) 78%, transparent) 360deg
-  );
-  /* ciambella: foro al centro e bordo esterno sfumato (divisione di
-     Cassini a metà fascia, come nel vero Saturno) */
-  -webkit-mask: radial-gradient(
-    closest-side,
-    transparent 0 54%,
-    #000 57% 68%,
-    transparent 69% 71%,
-    #000 72% 88%,
-    transparent 90%
-  );
-  mask: radial-gradient(
-    closest-side,
-    transparent 0 54%,
-    #000 57% 68%,
-    transparent 69% 71%,
-    #000 72% 88%,
-    transparent 90%
-  );
-  animation: sp-rings-spin 22s linear infinite;
+.cnt-mail:hover,
+.cnt-mail:focus-visible {
+  color: var(--red-deep);
+  border-color: var(--red-deep);
 }
-@keyframes sp-rings-spin {
-  to {
-    rotate: 360deg;
+
+.cnt-social {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(16px, 2vw, 34px);
+  margin: clamp(8px, 1.6vh, 20px) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.cnt-social a {
+  font-family: var(--font-title);
+  font-weight: 600;
+  font-size: clamp(13px, 1.05vw, 18px);
+  letter-spacing: 0.06em;
+  color: var(--ink-soft);
+  text-decoration: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--ink) 24%, transparent);
+  padding-bottom: 0.15em;
+  transition:
+    color 0.25s ease,
+    border-color 0.25s ease;
+}
+.cnt-social a:hover,
+.cnt-social a:focus-visible {
+  color: var(--red-deep);
+  border-color: var(--red-deep);
+}
+
+
+/* ── Il modulo, scritto come una frase ───────────────────────────────────
+   I campi non sono caselle: sono buchi dentro una riga di discorso. Il
+   filetto rosso sotto è lo stesso dell'indirizzo email qui accanto, così
+   si capisce al volo che sono punti in cui si scrive. ───────────────── */
+.mod {
+  display: grid;
+  justify-items: start;
+  gap: clamp(22px, 3.4vh, 44px);
+  margin-top: clamp(14px, 2.4vh, 32px);
+  max-width: 30ch;
+}
+
+.mod-frase {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: clamp(22px, 2.6vw, 50px);
+  letter-spacing: -0.03em;
+  /* interlinea generosa: le righe contengono campi, e stretta si
+     toccherebbero i filetti */
+  line-height: 1.75;
+  color: var(--ink);
+  max-width: 22ch;
+}
+
+.mod-campo {
+  position: relative;
+  display: inline-block;
+}
+/* l'etichetta serve a chi usa uno screen reader: la frase da sola non
+   dice quale campo è quale */
+.mod-etichetta {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.mod-campo input {
+  font: inherit;
+  color: var(--red-deep);
+  background: none;
+  border: 0;
+  border-bottom: 3px solid var(--red);
+  padding: 0 0.12em 0.04em;
+  /* si allarga da sé man mano che si scrive: un campo di larghezza fissa
+     dentro una frase la spezzerebbe in modo innaturale */
+  field-sizing: content;
+  min-width: 5ch;
+  max-width: 100%;
+  border-radius: 0;
+  transition: border-color 0.2s ease;
+}
+/* dove `field-sizing` non c'è, una larghezza di scorta: senza, il campo
+   resterebbe alla misura di default del browser */
+@supports not (field-sizing: content) {
+  .mod-campo input {
+    width: 7ch;
+  }
+  .mod-campo--largo input {
+    width: 13ch;
   }
 }
-/* la metà lontana passa DIETRO il corpo, quella vicina davanti */
-.sp-rings-back {
-  z-index: 1;
-  clip-path: inset(0 0 50% 0);
+.mod-campo input::placeholder {
+  color: color-mix(in srgb, var(--ink) 32%, transparent);
+  font-weight: 500;
 }
-.sp-rings-front {
-  z-index: 3;
-  clip-path: inset(50% 0 0 0);
+.mod-campo input:focus {
+  outline: none;
+  border-color: var(--ink);
 }
-.sp-planet-body {
-  z-index: 2;
+.mod-campo input:focus-visible {
+  /* il filetto da solo non basta a segnalare il fuoco da tastiera */
+  outline: 2px solid var(--ink);
+  outline-offset: 4px;
 }
-.sp-glyph {
-  width: 52%;
-  height: 52%;
-  display: block;
+
+/* il punto del marchio chiude la frase, come nei titoli */
+.mod-dot {
+  display: inline-block;
+  width: 0.16em;
+  height: 0.16em;
+  margin-left: 0.06em;
+  background: var(--red);
 }
-/* il nome compare avvicinando il cursore */
-.sp-planet-name {
-  position: absolute;
-  left: 50%;
-  top: 108%;
-  translate: -50% 0;
+
+.mod-invia {
   font-family: var(--font-title);
   font-weight: 700;
-  font-size: clamp(9px, 1.05vmin, 14px);
-  letter-spacing: 0.14em;
+  font-size: clamp(13px, 1.05vw, 18px);
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: color-mix(in srgb, var(--lift) 72%, transparent);
-  white-space: nowrap;
-  opacity: 0;
-  transition: opacity 0.25s ease;
+  color: var(--paper);
+  background: var(--red);
+  border: 0;
+  border-radius: 4px;
+  padding: 0.9em 1.6em;
+  cursor: pointer;
+  transition:
+    background 0.25s ease,
+    translate 0.25s ease;
 }
-.sp-planet:hover .sp-planet-body,
-.sp-planet:focus-visible .sp-planet-body {
-  scale: 1.16;
-  box-shadow:
-    inset -0.6vmin -0.9vmin 1.8vmin -0.5vmin color-mix(in srgb, var(--ink) 55%, transparent),
-    inset 0.5vmin 0.7vmin 1.4vmin -0.4vmin color-mix(in srgb, var(--lift) 70%, transparent),
-    0 0 5vmin color-mix(in srgb, var(--glow, var(--red)) 72%, transparent);
-}
-.sp-planet:hover .sp-planet-name,
-.sp-planet:focus-visible .sp-planet-name {
-  opacity: 1;
+.mod-invia:hover,
+.mod-invia:focus-visible {
+  background: var(--red-deep);
+  translate: 0 -2px;
 }
 
-/* ── 4 · comete: ogni tanto una taglia il cielo ───────────────────────── */
-.sp-comet {
-  position: absolute;
-  height: 2px;
-  border-radius: 999px;
-  /* testa luminosa a destra, scia che sfuma all'indietro */
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    color-mix(in srgb, var(--lift) 30%, transparent) 55%,
-    var(--lift) 100%
-  );
-  filter: drop-shadow(0 0 3px color-mix(in srgb, var(--lift) 70%, transparent));
-  opacity: 0;
-  pointer-events: none;
+/* la rete di sicurezza, se la posta non si apre */
+.mod-scorta {
+  display: grid;
+  gap: 0.9em;
+  justify-items: start;
+  padding: clamp(16px, 2vw, 24px);
+  border: 1px solid var(--hair);
+  border-radius: 10px;
+  background: var(--lift);
+  max-width: 46ch;
 }
-.space-live .sp-comet {
-  animation-name: sp-comet;
-  animation-timing-function: linear;
-  animation-iteration-count: infinite;
+.mod-scorta p {
+  margin: 0;
+  font-family: var(--font-title);
+  font-size: clamp(13px, 1vw, 16px);
+  line-height: 1.55;
+  color: var(--ink);
 }
-/* attraversa in un lampo, poi il cielo resta quieto a lungo */
-@keyframes sp-comet {
-  0% {
-    transform: translate(0, 0) rotate(var(--rot));
-    opacity: 0;
+.mod-scorta pre {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: clamp(11px, 0.85vw, 14px);
+  line-height: 1.6;
+  color: var(--ink-soft);
+  white-space: pre-wrap;
+}
+.mod-scorta button {
+  font-family: var(--font-title);
+  font-weight: 700;
+  font-size: clamp(11px, 0.85vw, 14px);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink);
+  background: none;
+  border: 1px solid var(--ink);
+  border-radius: 4px;
+  padding: 0.7em 1.2em;
+  cursor: pointer;
+}
+.mod-scorta button:hover {
+  color: var(--paper);
+  background: var(--ink);
+}
+
+/* separa il modulo dall'indirizzo scritto in chiaro */
+.cnt-oppure {
+  margin: clamp(10px, 1.6vh, 22px) 0 0;
+  font-family: var(--font-title);
+  font-weight: 600;
+  font-size: clamp(12px, 0.9vw, 15px);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--ink) 62%, transparent);
+}
+
+/* ── Contatti su due colonne ─────────────────────────────────────────────
+   A sinistra i modi diretti (email e social), a destra il modulo. Chi ha
+   già un programma di posta non deve passare dal modulo, e chi preferisce
+   scrivere lì dentro non deve cercarlo. ─────────────────────────────── */
+.cnt-colonne {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: clamp(30px, 5vw, 90px);
+  align-items: start;
+  margin-top: clamp(16px, 2.6vh, 36px);
+}
+.cnt-diretto {
+  display: grid;
+  justify-items: start;
+  gap: clamp(10px, 1.6vh, 20px);
+}
+/* Il modulo perde il margine proprio (la distanza la dà la colonna) e si
+   appoggia al bordo destro con una larghezza sua: così sta al centro della
+   metà destra dello schermo invece che a ridosso della colonna sinistra. */
+.cnt-colonne .mod {
+  margin-top: 0;
+  justify-self: end;
+  max-width: min(720px, 100%);
+}
+
+/* Sotto i 900px le due colonne diventano strette e la frase del modulo si
+   spezzerebbe a ogni parola: si impilano, col modulo per primo. */
+@media (max-width: 900px) {
+  .cnt-colonne {
+    grid-template-columns: 1fr;
+    gap: clamp(28px, 5vh, 54px);
   }
-  1.5% {
-    opacity: 0.95;
-  }
-  9% {
-    opacity: 0.95;
-  }
-  12% {
-    transform: translate(128vw, 62vh) rotate(var(--rot));
-    opacity: 0;
-  }
-  100% {
-    transform: translate(128vw, 62vh) rotate(var(--rot));
-    opacity: 0;
+  .cnt-colonne .mod {
+    order: -1;
   }
 }
 
+/* ── L'avviso al posto del fumetto di sistema ────────────────────────────
+   Il messaggio nativo del browser non si può vestire: quel riquadro lo
+   disegna il browser e il CSS non lo raggiunge. Qui la validazione è
+   nostra, quindi l'avviso può parlare la lingua del sito. ───────────── */
+.mod-manca {
+  display: flex;
+  align-items: baseline;
+  gap: 0.7em;
+  margin: 0;
+  padding: 0.75em 1.1em 0.8em;
+  font-family: var(--font-title);
+  font-weight: 600;
+  font-size: clamp(13px, 1.02vw, 17px);
+  line-height: 1.45;
+  /* rosso profondo e non --red: a corpo piccolo il rosso pieno vibra */
+  color: var(--red-deep);
+  /* velo rosato invece di un riquadro pieno: si stacca dalla carta senza
+     diventare una scatola d'allarme */
+  background: color-mix(in srgb, var(--red) 7%, transparent);
+  border-radius: 3px;
+  /* il filetto sul fianco è il segno che nel sito indica "qui c'è una
+     cosa da leggere" — come i bordi delle voci dei servizi */
+  border-left: 3px solid var(--red);
+  animation: manca-entra 0.34s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+/* il quadratino del marchio come richiamo, al posto di un'icona d'allarme
+   presa da un'altra grafica */
+.mod-manca::before {
+  content: "";
+  flex-shrink: 0;
+  width: 0.62em;
+  height: 0.62em;
+  background: var(--red);
+  translate: 0 -0.02em;
+}
+@keyframes manca-entra {
+  from {
+    opacity: 0;
+    translate: 0 -6px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
-  .fa-nose,
-  .fa-fin,
-  .fa-flame,
-  .sp-sky,
-  .sp-stars,
-  .sp-system {
-    transition: none;
-  }
-  .space-live .fa-cabinet {
+  .mod-manca {
     animation: none;
-    transition: none;
   }
-  .fa-flame,
-  .sp-star,
-  .sp-sun,
-  .sp-sun-glow,
-  .sp-orbit,
-  .sp-planet-spin,
-  .sp-moon-orbit,
-  .sp-moon-fix,
-  .sp-rings-tex,
-  .space-live .sp-comet {
-    animation: none;
+}
+
+/* Il campo mancante si segnala col filetto più marcato, non con un bordo
+   attorno: dentro una frase una casella riquadrata spezzerebbe la lettura.
+   Compare solo DOPO un tentativo di invio — colorare di rosso ciò che non
+   è ancora stato scritto sarebbe un rimprovero a chi non ha fatto nulla. */
+.mod-campo input.manca {
+  border-bottom-width: 4px;
+  border-bottom-color: var(--red-deep);
+  background: color-mix(in srgb, var(--red) 9%, transparent);
+  /* arrotonda solo sopra: il filetto sotto deve restare una riga netta */
+  border-radius: 3px 3px 0 0;
+}
+.mod-campo input.manca::placeholder {
+  color: color-mix(in srgb, var(--red-deep) 62%, transparent);
+}
+
+/* ══ PIEDE DI PAGINA ══════════════════════════════════════════════════════
+   Inchiostro pieno: dopo la carta e il rosso è la terza e ultima
+   superficie del sito, e serve a dire "qui finisce". Sta sopra ogni scena
+   fissa, comprese le figure di vetro, perché niente deve galleggiarci
+   sopra. ────────────────────────────────────────────────────────────── */
+.pie {
+  position: relative;
+  z-index: 36;
+  background: var(--ink);
+  color: var(--paper);
+  padding: clamp(56px, 8vh, 110px) 6vw clamp(28px, 4vh, 44px);
+  display: grid;
+  gap: clamp(40px, 6vh, 76px);
+}
+
+.pie-alto {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: clamp(28px, 5vw, 80px);
+  align-items: start;
+}
+
+/* il marchio su fondo scuro: la parola diventa carta, il quadratino resta
+   rosso — è l'unico segno di colore che il piede si tiene */
+.pie-marchio {
+  display: grid;
+  gap: clamp(14px, 2vh, 22px);
+  justify-items: start;
+}
+.pie-marchio .logo-lockup {
+  font-size: clamp(30px, 3.4vw, 54px);
+}
+.pie-marchio .logo-word,
+.pie-marchio .logo-sub {
+  color: var(--paper);
+}
+.pie-claim {
+  margin: 0;
+  max-width: 34ch;
+  font-family: var(--font-title);
+  font-weight: 500;
+  font-size: clamp(14px, 1.1vw, 19px);
+  line-height: 1.55;
+  color: color-mix(in srgb, var(--paper) 76%, transparent);
+}
+
+.pie-nav {
+  display: grid;
+  gap: clamp(12px, 1.8vh, 20px);
+  justify-items: start;
+}
+.pie-nav ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(14px, 1.8vw, 28px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.pie-mail {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: clamp(16px, 1.5vw, 26px);
+  letter-spacing: -0.02em;
+  color: var(--paper);
+  text-decoration: none;
+  border-bottom: 2px solid var(--red);
+  padding-bottom: 0.1em;
+  transition: border-color 0.25s ease;
+}
+.pie-mail:hover,
+.pie-mail:focus-visible {
+  border-color: var(--paper);
+}
+.pie-nav ul a {
+  font-family: var(--font-title);
+  font-weight: 600;
+  font-size: clamp(12px, 0.95vw, 16px);
+  letter-spacing: 0.06em;
+  /* schiarito quanto basta a restare leggibile sul nero: sotto questa
+     soglia il grigio su inchiostro non regge il contrasto minimo */
+  color: color-mix(in srgb, var(--paper) 72%, transparent);
+  text-decoration: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--paper) 26%, transparent);
+  padding-bottom: 0.15em;
+  transition:
+    color 0.25s ease,
+    border-color 0.25s ease;
+}
+.pie-nav ul a:hover,
+.pie-nav ul a:focus-visible {
+  color: var(--paper);
+  border-color: var(--paper);
+}
+
+/* ── la riga dei dati di legge ── */
+.pie-basso {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: clamp(12px, 2vw, 30px);
+  padding-top: clamp(20px, 3vh, 32px);
+  border-top: 1px solid color-mix(in srgb, var(--paper) 16%, transparent);
+}
+.pie-dati {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 clamp(14px, 2vw, 30px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.pie-dati li {
+  font-family: var(--font-title);
+  font-weight: 500;
+  font-size: clamp(11px, 0.85vw, 14px);
+  letter-spacing: 0.04em;
+  color: color-mix(in srgb, var(--paper) 66%, transparent);
+}
+/* il numero di partita IVA in cifre chiare: è il dato che viene cercato */
+.pie-dati span {
+  color: color-mix(in srgb, var(--paper) 88%, transparent);
+  font-variant-numeric: tabular-nums;
+}
+.pie-nota {
+  margin: 0;
+  font-family: var(--font-title);
+  font-weight: 500;
+  font-size: clamp(11px, 0.85vw, 14px);
+  color: color-mix(in srgb, var(--paper) 66%, transparent);
+}
+.pie-nota a {
+  color: color-mix(in srgb, var(--paper) 82%, transparent);
+  text-decoration: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--paper) 30%, transparent);
+}
+.pie-nota a:hover,
+.pie-nota a:focus-visible {
+  color: var(--paper);
+  border-color: var(--paper);
+}
+
+@media (max-width: 860px) {
+  .pie-alto {
+    grid-template-columns: 1fr;
   }
 }

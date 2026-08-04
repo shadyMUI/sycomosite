@@ -1,85 +1,40 @@
-"use client";
-
-import { useCallback, useEffect, useRef, useState } from "react";
-
 /**
- * Sipario d'apertura: la pagina è interamente coperta di rosso e "cola"
- * verso il basso come un liquido, con la superficie superiore che ondeggia
- * e alcuni schizzi (gocce) che si staccano dalla cresta.
- * Si smonta a fine animazione per liberare l'interazione.
+ * Sipario d'apertura: la schermata è piena del rosso del brand e cala verso
+ * il basso come un liquido che defluisce, scoprendo il sito.
  *
- * Un timeout di sicurezza garantisce che il sipario si tolga comunque, anche
- * se `animationend` non scatta (es. tab in background, timeline congelata).
+ * È tutto CSS: nessun JavaScript, nessun "use client". Così l'animazione
+ * parte al primo fotogramma dipinto invece di aspettare l'idratazione di
+ * React — che è esattamente quando si vedrebbe lo sfarfallio.
+ *
+ * L'onda è un SVG largo il doppio che scorre in loop: il tracciato ha
+ * periodo 200 su una viewBox di 1200 (sei creste), quindi traslandolo di
+ * metà larghezza — tre periodi esatti — ricombacia con sé stesso e il
+ * movimento non ha giunte visibili.
+ *
+ * Sei creste e non due: con periodi larghi, uno solo copriva l'intero
+ * schermo e la superficie sembrava piatta invece che liquida.
  */
-const FALLBACK_MS = 2600;
-
-// Schizzi: posizione orizzontale, dimensione e tempi variati per un effetto vivo.
-const DROPS = [
-  { left: "12%", size: 14, dur: "0.9s", delay: "0.15s" },
-  { left: "27%", size: 9, dur: "1.1s", delay: "0.45s" },
-  { left: "44%", size: 18, dur: "0.85s", delay: "0.05s" },
-  { left: "58%", size: 11, dur: "1.05s", delay: "0.35s" },
-  { left: "73%", size: 15, dur: "0.95s", delay: "0.2s" },
-  { left: "88%", size: 8, dur: "1.15s", delay: "0.5s" },
-];
-
 export default function IntroCurtain() {
-  const [done, setDone] = useState(false);
-  const finishedRef = useRef(false);
-
-  const finish = useCallback(() => {
-    if (finishedRef.current) return;
-    finishedRef.current = true;
-    document.body.style.overflow = "";
-    setDone(true);
-  }, []);
-
-  useEffect(() => {
-    document.body.style.overflow = "hidden";
-    const timer = window.setTimeout(finish, FALLBACK_MS);
-    return () => {
-      window.clearTimeout(timer);
-      document.body.style.overflow = "";
-    };
-  }, [finish]);
-
-  if (done) return null;
-
   return (
-    <div className="intro-root" aria-hidden="true">
-      <div className="intro-curtain" onAnimationEnd={finish}>
-        {DROPS.map((d, i) => (
-          <span
-            key={i}
-            className="intro-drop"
-            style={{
-              left: d.left,
-              width: d.size,
-              height: d.size,
-              animationDuration: d.dur,
-              animationDelay: d.delay,
-            }}
-          />
-        ))}
-
+    <div className="intro" aria-hidden="true">
+      {/* la massa di liquido: cala e esce dal fondo dello schermo */}
+      <div className="intro-sheet">
+        {/* superficie: due onde a velocità diverse danno profondità */}
+        {/* cresta lontana: più alta e più chiara, fa da schiuma */}
         <svg
-          className="intro-wave"
-          viewBox="0 0 1440 200"
+          className="intro-wave intro-wave--back"
+          viewBox="0 0 1200 60"
           preserveAspectRatio="none"
         >
-          <path d="M0,110 C120,40 240,40 360,110 C480,180 600,180 720,110 C840,40 960,40 1080,110 C1200,180 1320,180 1440,110 L1440,200 L0,200 Z">
-            <animate
-              attributeName="d"
-              dur="0.9s"
-              repeatCount="indefinite"
-              calcMode="spline"
-              keyTimes="0;0.5;1"
-              keySplines="0.45 0 0.55 1;0.45 0 0.55 1"
-              values="M0,110 C120,40 240,40 360,110 C480,180 600,180 720,110 C840,40 960,40 1080,110 C1200,180 1320,180 1440,110 L1440,200 L0,200 Z;
-                      M0,110 C120,180 240,180 360,110 C480,40 600,40 720,110 C840,180 960,180 1080,110 C1200,40 1320,40 1440,110 L1440,200 L0,200 Z;
-                      M0,110 C120,40 240,40 360,110 C480,180 600,180 720,110 C840,40 960,40 1080,110 C1200,180 1320,180 1440,110 L1440,200 L0,200 Z"
-            />
-          </path>
+          <path d="M0,32 C33,14 67,14 100,32 C133,50 167,50 200,32 C233,14 267,14 300,32 C333,50 367,50 400,32 C433,14 467,14 500,32 C533,50 567,50 600,32 C633,14 667,14 700,32 C733,50 767,50 800,32 C833,14 867,14 900,32 C933,50 967,50 1000,32 C1033,14 1067,14 1100,32 C1133,50 1167,50 1200,32 V60 H0 Z" />
+        </svg>
+        {/* superficie vera: stesso colore della massa, dà la sagoma al bordo */}
+        <svg
+          className="intro-wave intro-wave--front"
+          viewBox="0 0 1200 60"
+          preserveAspectRatio="none"
+        >
+          <path d="M0,38 C33,22 67,22 100,38 C133,54 167,54 200,38 C233,22 267,22 300,38 C333,54 367,54 400,38 C433,22 467,22 500,38 C533,54 567,54 600,38 C633,22 667,22 700,38 C733,54 767,54 800,38 C833,22 867,22 900,38 C933,54 967,54 1000,38 C1033,22 1067,22 1100,38 C1133,54 1167,54 1200,38 V60 H0 Z" />
         </svg>
       </div>
     </div>
