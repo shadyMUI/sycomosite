@@ -24,8 +24,6 @@ const SOCIAL = [
 export default function Contatti() {
   return (
     <section className="cnt" aria-labelledby="cnt-t">
-      <p className="cnt-occhiello">parliamone</p>
-
       <h2 id="cnt-t" className="cnt-titolo">
         Raccontateci
         <br />
@@ -39,21 +37,29 @@ export default function Contatti() {
           posta o i social ha tutto sull'altro lato senza scorrere. */}
       <div className="cnt-colonne">
         <div className="cnt-diretto">
-          <p className="cnt-oppure">scriveteci direttamente</p>
+          <div className="cnt-voce">
+            <span className="cnt-etichetta">
+              email<span className="cnt-duepunti">:</span>
+            </span>
+            <a className="cnt-mail" href={`mailto:${EMAIL}`}>
+              {EMAIL}
+            </a>
+          </div>
 
-          <a className="cnt-mail" href={`mailto:${EMAIL}`}>
-            {EMAIL}
-          </a>
-
-          <ul className="cnt-social">
-            {SOCIAL.map((s) => (
-              <li key={s.nome}>
-                <a href={s.url} target="_blank" rel="noopener noreferrer">
-                  {s.nome}
-                </a>
-              </li>
-            ))}
-          </ul>
+          <div className="cnt-voce">
+            <span className="cnt-etichetta">
+              social<span className="cnt-duepunti">:</span>
+            </span>
+            <ul className="cnt-social">
+              {SOCIAL.map((s) => (
+                <li key={s.nome}>
+                  <a href={s.url} target="_blank" rel="noopener noreferrer">
+                    {s.nome}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
 
         <ModuloContatto email={EMAIL} />

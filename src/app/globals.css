@@ -1168,17 +1168,6 @@ body::after {
   z-index: 35;
 }
 
-.cnt-occhiello {
-  margin: 0;
-  font-family: var(--font-title);
-  font-weight: 700;
-  font-size: clamp(11px, 0.8vw, 14px);
-  letter-spacing: 0.24em;
-  text-transform: uppercase;
-  /* rosso profondo e non --red: su carta il rosso pieno a corpo piccolo
-     vibra e si legge peggio */
-  color: var(--red-deep);
-}
 
 .cnt-titolo {
   margin: 0;
@@ -1404,16 +1393,6 @@ body::after {
   background: var(--ink);
 }
 
-/* separa il modulo dall'indirizzo scritto in chiaro */
-.cnt-oppure {
-  margin: clamp(10px, 1.6vh, 22px) 0 0;
-  font-family: var(--font-title);
-  font-weight: 600;
-  font-size: clamp(12px, 0.9vw, 15px);
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: color-mix(in srgb, var(--ink) 62%, transparent);
-}
 
 /* ── Contatti su due colonne ─────────────────────────────────────────────
    A sinistra i modi diretti (email e social), a destra il modulo. Chi ha
@@ -1837,4 +1816,31 @@ body::after {
 .doc-torna:focus-visible {
   background: var(--red-deep);
   color: var(--paper);
+}
+
+/* ── Le due voci dirette: etichetta sopra, contenuto sotto ───────────────
+   Un'etichetta breve seguita dai due punti, come su una scheda: dice cosa
+   si sta guardando senza occupare una riga di discorso. ─────────────── */
+.cnt-voce {
+  display: flex;
+  /* allineate sulla linea di base, non al centro: etichetta e contenuto
+     hanno corpi molto diversi e al centro "galleggerebbero" */
+  align-items: baseline;
+  gap: 0.55em;
+  /* se la riga non ci sta, il contenuto va a capo sotto l'etichetta
+     invece di sbordare */
+  flex-wrap: wrap;
+}
+.cnt-etichetta {
+  flex-shrink: 0;
+  font-family: var(--font-title);
+  font-weight: 600;
+  font-size: clamp(17px, 1.6vw, 30px);
+  letter-spacing: 0.01em;
+  color: var(--ink);
+}
+/* i due punti nel rosso del marchio: un tocco di colore là dove serve
+   soltanto un segno d'interpunzione */
+.cnt-duepunti {
+  color: var(--red);
 }
