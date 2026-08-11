@@ -26,7 +26,34 @@ import emailjs from "@emailjs/browser";
  * li facciamo qui, e l'avviso è scritto nella lingua del sito.
  */
 
-type Props = { email: string };
+type Props = {
+  email: string;
+  /* La frase da completare cambia col mestiere: chi scrive per un sito
+     dice che attività ha, chi scrive per un computer dice che macchina
+     ha. Gli esempi nei campi sono la parte che fa capire cosa scrivere,
+     quindi devono parlare della cosa giusta. */
+  frase?: {
+    attivita: { chiede: string; esempio: string; etichetta: string };
+    serve: { chiede: string; esempio: string; etichetta: string };
+    /* l'esempio nel campo dell'indirizzo: cambia col mestiere come gli
+       altri, così la frase intera resta verosimile */
+    mail?: string;
+  };
+};
+
+const FRASE_SITI = {
+  attivita: {
+    chiede: ", ho",
+    esempio: "un bar in centro",
+    etichetta: "che attività avete",
+  },
+  serve: {
+    chiede: "e vorrei",
+    esempio: "un sito dove si vede il menù",
+    etichetta: "cosa vi serve",
+  },
+  mail: "marco@ilmiobar.it",
+};
 
 /* Chiavi EmailJS. Sono pubbliche per costruzione: EmailJS invia dal
    browser, quindi finiscono comunque nel codice che arriva al visitatore.
@@ -42,7 +69,10 @@ const CHIAVE = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
 
 type Campo = { id: string; valore: string; nome: string; mail?: boolean };
 
-export default function ModuloContatto({ email }: Props) {
+export default function ModuloContatto({
+  email,
+  frase = FRASE_SITI,
+}: Props) {
   const [nome, setNome] = useState("");
   const [attivita, setAttivita] = useState("");
   const [serve, setServe] = useState("");
@@ -60,7 +90,7 @@ export default function ModuloContatto({ email }: Props) {
   const testo = [
     `Ciao, sono ${nome || "…"}.`,
     ``,
-    `Ho ${attivita || "…"} e vorrei ${serve || "…"}.`,
+    `Ho ${attivita || "…"} ${frase.serve.chiede} ${serve || "…"}.`,
     ``,
     `Potete rispondermi a ${mittente || "…"}.`,
   ].join("\n");
@@ -79,8 +109,8 @@ export default function ModuloContatto({ email }: Props) {
 
     const campi: Campo[] = [
       { id: "c-nome", valore: nome, nome: "il vostro nome" },
-      { id: "c-attivita", valore: attivita, nome: "che attività avete" },
-      { id: "c-serve", valore: serve, nome: "cosa vi serve" },
+      { id: "c-attivita", valore: attivita, nome: frase.attivita.etichetta },
+      { id: "c-serve", valore: serve, nome: frase.serve.etichetta },
       { id: "c-mail", valore: mittente, nome: "la vostra email", mail: true },
     ];
 
@@ -168,32 +198,32 @@ export default function ModuloContatto({ email }: Props) {
             className={manca("il vostro nome") ? "manca" : undefined}
           />
         </span>
-        , ho{" "}
+        {frase.attivita.chiede}{" "}
         <span className="mod-campo mod-campo--largo">
           <label className="mod-etichetta" htmlFor="c-attivita">
-            che attività avete
+            {frase.attivita.etichetta}
           </label>
           <input
             id="c-attivita"
             value={attivita}
             onChange={(e) => setAttivita(e.target.value)}
-            placeholder="un bar in centro"
-            aria-invalid={manca("che attività avete") || undefined}
-            className={manca("che attività avete") ? "manca" : undefined}
+            placeholder={frase.attivita.esempio}
+            aria-invalid={manca(frase.attivita.etichetta) || undefined}
+            className={manca(frase.attivita.etichetta) ? "manca" : undefined}
           />
         </span>{" "}
-        e vorrei{" "}
+        {frase.serve.chiede}{" "}
         <span className="mod-campo mod-campo--largo">
           <label className="mod-etichetta" htmlFor="c-serve">
-            cosa vi serve
+            {frase.serve.etichetta}
           </label>
           <input
             id="c-serve"
             value={serve}
             onChange={(e) => setServe(e.target.value)}
-            placeholder="un sito dove si vede il menù"
-            aria-invalid={manca("cosa vi serve") || undefined}
-            className={manca("cosa vi serve") ? "manca" : undefined}
+            placeholder={frase.serve.esempio}
+            aria-invalid={manca(frase.serve.etichetta) || undefined}
+            className={manca(frase.serve.etichetta) ? "manca" : undefined}
           />
         </span>
         . Rispondetemi a{" "}
@@ -206,7 +236,7 @@ export default function ModuloContatto({ email }: Props) {
             type="email"
             value={mittente}
             onChange={(e) => setMittente(e.target.value)}
-            placeholder="marco@ilmiobar.it"
+            placeholder={frase.mail ?? "marco@esempio.it"}
             autoComplete="email"
             aria-invalid={
               manca("la vostra email") ||

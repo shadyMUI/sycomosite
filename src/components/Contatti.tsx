@@ -24,13 +24,23 @@ const SOCIAL = [
   { nome: "TikTok", url: "https://www.tiktok.com/@sycomo.digital" },
 ];
 
-export default function Contatti() {
+type Props = {
+  /* Due righe: vanno a capo dove lo decide chi scrive, non dove capita. */
+  titolo?: [string, string];
+  /* la frase da completare nel modulo, che cambia col mestiere */
+  frase?: React.ComponentProps<typeof ModuloContatto>["frase"];
+};
+
+export default function Contatti({
+  titolo = ["Raccontateci", "cosa vi serve"],
+  frase,
+}: Props) {
   return (
     <section className="cnt" id="contatti" aria-labelledby="cnt-t">
       <h2 id="cnt-t" className="cnt-titolo">
-        Raccontateci
+        {titolo[0]}
         <br />
-        cosa vi serve
+        {titolo[1]}
         {/* il punto del marchio: quadrato, non tondo */}
         <span className="cnt-dot" aria-hidden="true" />
       </h2>
@@ -65,7 +75,7 @@ export default function Contatti() {
           </div>
         </div>
 
-        <ModuloContatto email={EMAIL} />
+        <ModuloContatto email={EMAIL} frase={frase} />
       </div>
     </section>
   );

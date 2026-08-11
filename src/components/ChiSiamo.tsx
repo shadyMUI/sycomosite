@@ -11,19 +11,32 @@
  */
 import Polaroid from "./Polaroid";
 
-export default function ChiSiamo() {
+type Props = {
+  /* Le due metà della frase. Hanno un valore di partenza perché la pagina
+     principale è quella per cui sono state scritte; l'assistenza passa
+     le sue. */
+  uno?: string;
+  due?: string;
+  didascalia?: string;
+};
+
+export default function ChiSiamo({
+  uno = "le piccole attività",
+  due = "meritano grandi progetti",
+  didascalia = "Sycomo Digital",
+}: Props) {
   return (
     <section className="chi">
-      <h1 className="chi-uno">le piccole attività</h1>
+      <h1 className="chi-uno">{uno}</h1>
 
       <Polaroid
         video="/vetrina.mp4"
         alt="Una piccola bottega apre la saracinesca e accende l'insegna"
-        didascalia="Sycomo Digital"
+        didascalia={didascalia}
       />
 
       <p className="chi-due">
-        meritano grandi progetti
+        {due}
         {/* il punto del marchio: quadrato, non tondo */}
         <span className="chi-dot" aria-hidden="true" />
       </p>

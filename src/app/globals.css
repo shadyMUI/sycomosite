@@ -363,6 +363,97 @@ html {
   }
 }
 
+/* ── I due richiami sotto il marchio ─────────────────────────────────────
+   Vivono nello stesso sistema di coordinate del logo: fissi, appoggiati
+   al suo stesso margine sinistro, poco sotto il blocco. Spariscono al
+   primo scroll insieme a lui — appartengono all'apertura, e restare
+   appesi sopra il contenuto darebbe fastidio. */
+.sotto-logo {
+  position: fixed;
+  left: 0;
+  /* Sotto il centro, staccati dalla riga del sottotitolo. La misura
+     cresce col corpo del logo — che è in vw — o resterebbero incollati
+     sugli schermi larghi. */
+  top: calc(50vh + clamp(96px, 15vw, 240px));
+  margin-left: 8vw; /* stesso margine del logo grande */
+  z-index: 50;
+
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: clamp(14px, 2vw, 30px);
+
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity 0.45s ease,
+    visibility 0s linear 0s;
+}
+
+.sotto-voce {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42em;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: clamp(16px, 1.35vw, 26px);
+  letter-spacing: -0.02em;
+  text-decoration: none;
+  color: var(--ink);
+  /* il filetto rosso è il segno che nel sito dice "questo si clicca" */
+  border-bottom: 2px solid var(--red);
+  padding-bottom: 0.1em;
+  transition:
+    color 0.25s ease,
+    border-color 0.25s ease;
+}
+.sotto-voce:hover,
+.sotto-voce:focus-visible {
+  color: var(--red);
+}
+
+/* il marchio WhatsApp: segue il corpo del testo, non una misura sua */
+.sotto-wa {
+  width: 1.15em;
+  height: 1.15em;
+  flex-shrink: 0;
+  translate: 0 -0.04em;
+}
+
+/* Spariscono appena si comincia a scorrere, come il logo che vola nella
+   barra. `visibility` insieme all'opacità, o da invisibili resterebbero
+   cliccabili e intercetterebbero i clic al contenuto sotto. */
+.figs-on .sotto-logo {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 0.45s ease,
+    visibility 0s linear 0.45s;
+}
+
+@media (max-width: 860px) {
+  .sotto-logo {
+    /* il marchio qui è più piccolo e centrato in verticale: i richiami
+       gli stanno più vicini */
+    top: calc(50vh + clamp(64px, 17vw, 150px));
+    margin-left: 7vw;
+    gap: 18px;
+  }
+  .sotto-voce {
+    font-size: 19px;
+    /* bersaglio comodo per il pollice senza allargare il filetto */
+    padding-bottom: 0.16em;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sotto-logo,
+  .sotto-voce {
+    transition: none;
+  }
+}
+
 /* ── La massa di vetro ───────────────────────────────────────────────────
    Un ammasso solo, denso, nell'angolo in basso a sinistra e tagliato dai
    bordi: la scena continua fuori dallo schermo invece di finire dentro.
@@ -652,6 +743,25 @@ html {
     text-align: left;
     /* qui la riga intera non ci starebbe: meglio spezzata che tagliata */
     white-space: normal;
+  }
+
+  /* Corpo maggiore che sul grande schermo, in proporzione.
+     Le misure di là sono calibrate su una riga sola, distesa in
+     diagonale: portate qui cadevano al minimo del clamp — 30 e 34px — e
+     su una schermata alta e stretta le due frasi diventavano una nota a
+     margine invece che l'apertura del sito. Impilate su più righe possono
+     permettersi molta più larghezza relativa. */
+  .chi-uno {
+    font-size: clamp(34px, 11vw, 76px);
+  }
+  .chi-due {
+    /* più della prima, come sul grande schermo: è qui che cade l'accento */
+    font-size: clamp(40px, 13.5vw, 92px);
+    /* Via il -50%: là centra la frase sulla sua quota nella disposizione
+       diagonale, ma qui le frasi sono impilate in una griglia, e quella
+       risalita di mezza altezza la faceva salire sopra la prima — a tre
+       righe si sovrapponevano del tutto. Resta la sola salita d'ingresso. */
+    translate: 0 calc((1 - var(--p)) * 52px);
   }
 }
 
@@ -1219,11 +1329,41 @@ body::after {
   margin: 0;
   font-family: var(--font-sans);
   font-weight: 700;
-  font-size: clamp(52px, 11.5vw, 220px);
+  /* Due limiti, e vince il più stretto.
+     Il primo è la misura voluta; il secondo è quella che il testo può
+     davvero occupare: 88vw è lo spazio fra i margini, 0.52em è quanto
+     pesa in media un carattere con la crenatura stretta usata qui, e
+     0.35em è il quadratino con la sua aria. Senza il secondo, un titolo
+     più lungo di quello della pagina principale spinge il quadratino a
+     capo — e da solo su una riga sembra un errore.
+
+     Il conteggio per caratteri è una stima grossolana: "costruiamo" con
+     le sue lettere tonde occupa più di "facciamo" a parità di numero. Il
+     coefficiente è quindi tarato largo, e costa qualche pixel di corpo
+     anche dove non servirebbe — differenza che a 200px non si vede,
+     mentre un quadratino orfano su una riga sua si vede eccome. */
+  font-size: min(
+    clamp(52px, 11.5vw, 220px),
+    calc(88vw / (var(--srv-n, 17) * 0.52 + 0.35))
+  );
   letter-spacing: -0.045em;
   line-height: 0.92;
   color: #fff; /* bianco pieno: è ciò che fa nero sulle lastre */
   mix-blend-mode: difference;
+}
+
+/* Schermi stretti: il titolo va a capo, e allora il secondo limite non
+   serve più.
+   Quel calcolo tiene tutto su una riga sola, quadratino compreso; su
+   375px imponeva 36px di corpo — un titolo più piccolo delle voci che
+   lo seguono, che qui sotto stanno a 44. Andando a capo il testo può
+   permettersi molta più larghezza relativa, e il quadratino chiude
+   l'ultima riga qualunque essa sia. */
+@media (max-width: 860px) {
+  .srv-titolo {
+    top: clamp(120px, 22vh, 260px);
+    font-size: clamp(44px, 16vw, 92px);
+  }
 }
 .srv-dot {
   display: inline-block;
@@ -1647,6 +1787,75 @@ body::after {
 }
 .mod-campo input.manca::placeholder {
   color: color-mix(in srgb, var(--red-deep) 62%, transparent);
+}
+
+/* ⚠️ PROVVISORIO — DA RIMUOVERE PRIMA DI PUBBLICARE ─────────────────────
+   Il commutatore fra le due metà del sito mentre si lavora. Volutamente
+   estraneo alla grafica — tratteggio, carattere a spaziatura fissa,
+   minuscolo — perché non venga scambiato per un elemento del progetto e
+   finisca online per distrazione. */
+.cantiere {
+  position: fixed;
+  right: 12px;
+  bottom: 12px;
+  z-index: 9999; /* sopra ogni cosa: è un attrezzo, non un contenuto */
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 12px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1;
+  background: color-mix(in srgb, var(--ink) 88%, transparent);
+  border: 1px dashed var(--red);
+  border-radius: 4px;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+.cantiere-etichetta {
+  color: var(--red);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-size: 10px;
+}
+.cantiere a {
+  color: color-mix(in srgb, var(--paper) 78%, transparent);
+  text-decoration: none;
+  padding: 2px 4px;
+  border-radius: 2px;
+}
+.cantiere a:hover,
+.cantiere a:focus-visible {
+  color: var(--paper);
+  background: color-mix(in srgb, var(--paper) 14%, transparent);
+}
+/* la pagina in cui ci si trova, spenta: non è un posto dove andare */
+.cantiere a.cantiere-qui {
+  color: var(--red);
+  pointer-events: none;
+}
+
+@media (max-width: 640px) {
+  .cantiere {
+    right: 10px;
+    /* Sopra la barra del browser: su iPhone quella zona è coperta, e un
+       comando che ci finisce sotto non si riesce a premere. */
+    bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+    padding: 4px 8px;
+    gap: 2px;
+    font-size: 13px;
+  }
+  /* L'etichetta va via: su schermo stretto si prende un terzo della
+     larghezza per dire una cosa che il tratteggio rosso dice già. */
+  .cantiere-etichetta {
+    display: none;
+  }
+  .cantiere a {
+    /* Bersaglio da 44px: è la misura sotto la quale il pollice comincia a
+       mancare il segno. Il testo è di 13px, tutto il resto è margine
+       trasparente che serve solo a dare qualcosa da premere. */
+    padding: 15px 14px;
+  }
 }
 
 /* ══ PIEDE DI PAGINA ══════════════════════════════════════════════════════

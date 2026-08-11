@@ -23,18 +23,27 @@ const SOCIAL = [
   { nome: "TikTok", url: "https://www.tiktok.com/@sycomo.digital" },
 ];
 
-export default function Footer() {
+type Props = {
+  /* la riga sotto il nome nel marchio, e la frase che chiude */
+  sub?: string;
+  claim?: string;
+};
+
+export default function Footer({
+  sub = "Digital",
+  claim = "le piccole attività meritano grandi progetti.",
+}: Props) {
   const anno = new Date().getFullYear();
 
   return (
     <footer className="pie">
       <div className="pie-alto">
         <div className="pie-marchio">
-          <Logo />
+          <Logo sub={sub} />
           {/* La stessa frase delle due righe diagonali in apertura: qui
               chiude il sito dicendo ciò con cui si era aperto. Minuscola
               come i titoli, che nel sito non gridano mai. */}
-          <p className="pie-claim">le piccole attività meritano grandi progetti.</p>
+          <p className="pie-claim">{claim}</p>
         </div>
 
         <nav className="pie-nav" aria-label="Contatti e social">
@@ -60,7 +69,8 @@ export default function Footer() {
         </ul>
 
         <p className="pie-nota">
-          © {anno} — <a href="/privacy">Privacy</a>
+          © {anno} — <a href="/pc-su-misura">Computer su misura</a> ·{" "}
+          <a href="/privacy">Privacy</a>
         </p>
       </div>
     </footer>

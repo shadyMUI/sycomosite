@@ -24,7 +24,13 @@ export default function VaiAiContatti() {
     e.preventDefault();
 
     const meta = document.getElementById("contatti");
-    if (!meta) return;
+    /* Fuori dalla pagina principale la sezione non c'è: si lascia fare al
+       browser, che segue il collegamento e atterra sui contatti della
+       home. Senza questa uscita il richiamo, qui, non farebbe nulla. */
+    if (!meta) {
+      window.location.href = "/#contatti";
+      return;
+    }
 
     const menoMovimento = window.matchMedia(
       "(prefers-reduced-motion: reduce)"

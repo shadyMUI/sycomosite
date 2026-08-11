@@ -4,10 +4,24 @@ import Logo from "@/components/Logo";
 import Footer from "@/components/Footer";
 
 export const metadata: Metadata = {
+  /* diventa "Privacy · Sycomo Digital" per via del modello nel layout */
   title: "Privacy",
   description:
     "Come Sycomo Digital tratta i dati personali di chi visita il sito e di chi ci scrive.",
+  alternates: { canonical: "/privacy" },
   robots: { index: true, follow: true },
+  openGraph: {
+    type: "article",
+    locale: "it_IT",
+    url: "/privacy",
+    title: "Privacy",
+    description:
+      "Come trattiamo i dati di chi visita il sito e di chi ci scrive.",
+    /* L'immagine va ripetuta: dichiarando un blocco openGraph proprio, la
+       pagina smette di ereditare quella generata da opengraph-image.tsx
+       nella radice, e il link condiviso resterebbe senza anteprima. */
+    images: ["/opengraph-image"],
+  },
 };
 
 /* ⚠️ DA COMPLETARE prima di pubblicare — sono gli unici punti da toccare.

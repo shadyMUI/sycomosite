@@ -47,7 +47,20 @@ const SERVIZI = [
 
 const LASTRE = ["ml-fondo", "ml-ancora", "ml-quadro", "ml-tondo", "ml-scheggia"];
 
-export default function Servizi() {
+type Voce = { n: string; nome: string; testo: string };
+type Props = {
+  /* Titolo e voci hanno un valore di partenza: sono quelli scritti per la
+     pagina principale. L'assistenza passa i suoi e riusa tutta la
+     macchina — il ritaglio delle lastre, il negativo del titolo, le due
+     schermate — senza duplicarne una riga. */
+  titolo?: string;
+  voci?: Voce[];
+};
+
+export default function Servizi({
+  titolo = "che cosa facciamo",
+  voci = SERVIZI,
+}: Props) {
   return (
     <div className="rosso">
       {/* Sensore per il ritaglio delle lastre bianche: alto esattamente una
@@ -74,19 +87,27 @@ export default function Servizi() {
           </div>
         </div>
 
-        <h2 className="srv-titolo">
-          che cosa facciamo
+        {/* La lunghezza del titolo viaggia fino al CSS: è l'unico modo
+            perché il corpo si adatti da sé a testi diversi. "che cosa
+            facciamo" ci stava, "come lo costruiamo" mandava a capo il
+            quadratino, e un valore fisso avrebbe rotto l'una o l'altra
+            pagina a ogni cambio di parole. */}
+        <h2
+          className="srv-titolo"
+          style={{ "--srv-n": titolo.length } as React.CSSProperties}
+        >
+          {titolo}
           {/* il punto del marchio: quadrato, non tondo */}
           <span className="srv-dot" aria-hidden="true" />
         </h2>
       </div>
 
       {/* schermata 1: dà l'altezza al titolo, che è disegnato nel gruppo */}
-      <section className="srv-apre" aria-label="Che cosa facciamo" />
+      <section className="srv-apre" aria-label={titolo} />
 
       {/* Due schermate, due servizi ciascuna: a quattro per volta la
           pagina era una lista da scorrere, a due si leggono. */}
-      {[SERVIZI.slice(0, 2), SERVIZI.slice(2)].map((gruppo, i) => (
+      {[voci.slice(0, 2), voci.slice(2)].map((gruppo, i) => (
         <section
           key={i}
           className="srv-voci"
