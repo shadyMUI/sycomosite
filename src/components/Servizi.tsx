@@ -23,25 +23,25 @@ const SERVIZI = [
     n: "01",
     nome: "Parliamone",
     testo:
-      "Prima di preventivi e schermate: una chiamata per capire cosa vi serve davvero. A volte è meno di quello che pensavate, e ve lo diciamo.",
+      "Prima di preventivi e schermate: una conversazione per capire cosa vi serve davvero. A volte è meno di quello che pensavate, e ve lo diciamo.",
   },
   {
     n: "02",
     nome: "Il sito",
     testo:
-      "Disegnato e scritto da zero attorno alla vostra attività. Veloce, curato nei dettagli, e vostro: codice, dominio e accessi restano intestati a voi.",
+      "Progettato e realizzato partendo da zero, attorno alle vostre esigenze. Ottimizzato, curato nei dettagli, e fatto per durare.",
   },
   {
     n: "03",
     nome: "Farsi trovare",
     testo:
-      "Un sito che nessuno trova è un volantino chiuso nel cassetto. Lo mettiamo in condizione di uscire su Google per le ricerche che contano per voi.",
+      "Un sito che nessuno trova non porta clienti. Ci occupiamo della SEO e lo mettiamo in condizione di apparire su Google.",
   },
   {
     n: "04",
     nome: "Restare online",
     testo:
-      "Aggiornamenti, backup e assistenza. Quando qualcosa va storto rispondiamo noi, senza rimbalzarvi a un modulo di supporto.",
+      "Aggiornamenti, backup e assistenza. Quando qualcosa va storto rispondiamo noi, senza intermediari.",
   },
 ];
 

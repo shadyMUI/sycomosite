@@ -32,6 +32,9 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# il modello va invece condiviso: non contiene valori, solo i nomi delle
+# chiavi da riempire, e senza di esso chi clona non sa cosa serve
+!.env.example
 
 # vercel
 .vercel

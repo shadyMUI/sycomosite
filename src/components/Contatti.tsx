@@ -12,9 +12,12 @@ import ModuloContatto from "./ModuloContatto";
  * "scrivici": chi vuole copiarlo lo vede, chi vuole cliccarlo lo clicca.
  */
 
-/* ⚠️ DA SOSTITUIRE con l'indirizzo del dominio quando c'è: è l'unico
-   punto da toccare, compare anche nel link qui sotto. */
-const EMAIL = "shadymaarouf05@gmail.com";
+/* ⚠️ Da sostituire con l'indirizzo sul dominio quando ci sarà
+   (info@sycomo.it o simile): una casella sul proprio dominio dice che
+   c'è una struttura dietro, una gmail dice il contrario. Compare anche
+   nel piede di pagina e nell'informativa privacy: vanno cambiati
+   insieme, e deve restare la stessa a cui EmailJS consegna. */
+const EMAIL = "sycomodigital@gmail.com";
 
 const SOCIAL = [
   { nome: "Instagram", url: "https://www.instagram.com/sycomo.digital" },
@@ -23,7 +26,7 @@ const SOCIAL = [
 
 export default function Contatti() {
   return (
-    <section className="cnt" aria-labelledby="cnt-t">
+    <section className="cnt" id="contatti" aria-labelledby="cnt-t">
       <h2 id="cnt-t" className="cnt-titolo">
         Raccontateci
         <br />

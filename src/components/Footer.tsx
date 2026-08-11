@@ -6,19 +6,17 @@ import Logo from "./Logo";
  * Chiude il sito con lo stesso nero delle scritte: dopo la carta e il
  * rosso è la terza e ultima superficie, e serve a dire "qui finisce".
  *
- * Sotto stanno i dati che per legge devono comparire su un sito di
- * un'attività con partita IVA: chi siete, dove, e il numero. Non sono
- * righe di contorno — se mancano, il sito è irregolare.
+ * ⚠️ Quando ci sarà la partita IVA va rimessa qui sotto, accanto alla
+ * ragione sociale: su un sito di un'attività che ne ha una è un dato
+ * obbligatorio, non una riga di contorno.
  */
 
-/* ⚠️ DA COMPLETARE con i dati veri prima di pubblicare. */
 const DATI = {
   ragioneSociale: "Sycomo Digital",
-  partitaIva: "IT00000000000",
   sede: "Italia",
 };
 
-const EMAIL = "shadymaarouf05@gmail.com";
+const EMAIL = "sycomodigital@gmail.com";
 
 const SOCIAL = [
   { nome: "Instagram", url: "https://www.instagram.com/sycomo.digital" },
@@ -33,9 +31,10 @@ export default function Footer() {
       <div className="pie-alto">
         <div className="pie-marchio">
           <Logo />
-          <p className="pie-claim">
-            Siti su misura per le attività che meritano di essere trovate.
-          </p>
+          {/* La stessa frase delle due righe diagonali in apertura: qui
+              chiude il sito dicendo ciò con cui si era aperto. Minuscola
+              come i titoli, che nel sito non gridano mai. */}
+          <p className="pie-claim">le piccole attività meritano grandi progetti.</p>
         </div>
 
         <nav className="pie-nav" aria-label="Contatti e social">
@@ -54,13 +53,9 @@ export default function Footer() {
         </nav>
       </div>
 
-      {/* I dati che devono comparire per legge, e le informative. */}
       <div className="pie-basso">
         <ul className="pie-dati">
           <li>{DATI.ragioneSociale}</li>
-          <li>
-            P. IVA <span>{DATI.partitaIva}</span>
-          </li>
           <li>{DATI.sede}</li>
         </ul>
 

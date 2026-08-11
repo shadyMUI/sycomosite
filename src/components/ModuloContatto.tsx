@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import emailjs from "@emailjs/browser";
 
 /**
  * Il modulo di contatto, scritto come una frase da completare.
@@ -10,11 +11,14 @@ import { useRef, useState } from "react";
  * finendo una frase — e intanto ci dice le uniche quattro cose che
  * servono per rispondere con qualcosa di sensato.
  *
- * Non c'è un server dietro: alla conferma si apre il programma di posta
- * con tutto già scritto. È la scelta onesta per uno studio piccolo — chi
- * riceve vede una mail vera, da un indirizzo vero, a cui può rispondere.
- * Se la posta non si apre resta il testo pronto da copiare, così il
- * messaggio non va perso.
+ * L'invio passa da EmailJS: il messaggio parte dal browser di chi scrive
+ * e arriva nella nostra casella senza che serva un server nostro.
+ *
+ * Se la chiamata non riesce — rete assente, quota del mese finita, chiavi
+ * sbagliate — non si perde nulla: si apre il programma di posta con il
+ * messaggio già scritto, e sotto resta comunque il testo da copiare. Un
+ * modulo che dice "errore" e basta fa perdere il cliente; questo lascia
+ * sempre una strada aperta.
  *
  * `noValidate` disattiva i controlli del browser: il fumetto giallo di
  * sistema non si può vestire in alcun modo — è disegnato dal browser, il
@@ -24,6 +28,18 @@ import { useRef, useState } from "react";
 
 type Props = { email: string };
 
+/* Chiavi EmailJS. Sono pubbliche per costruzione: EmailJS invia dal
+   browser, quindi finiscono comunque nel codice che arriva al visitatore.
+   Non sono un segreto — la protezione dagli abusi si fa dal pannello di
+   EmailJS, limitando i domini da cui si può inviare.
+
+   Vanno lette così, per esteso: Next.js sostituisce `process.env.NOME`
+   con il valore al momento della compilazione, e con un accesso dinamico
+   non saprebbe cosa sostituire. */
+const SERVIZIO = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID;
+const MODELLO = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID;
+const CHIAVE = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
+
 type Campo = { id: string; valore: string; nome: string; mail?: boolean };
 
 export default function ModuloContatto({ email }: Props) {
@@ -32,7 +48,13 @@ export default function ModuloContatto({ email }: Props) {
   const [serve, setServe] = useState("");
   const [mittente, setMittente] = useState("");
   const [mancano, setMancano] = useState<string[]>([]);
-  const [inviato, setInviato] = useState(false);
+  /* fermo → in-corso → fatto | ripiego.
+     "ripiego" è quando EmailJS non ce l'ha fatta e si è passati alla
+     posta: l'esito va detto in modo diverso, perché lì il messaggio non
+     è ancora partito davvero. */
+  const [stato, setStato] = useState<"fermo" | "invio" | "fatto" | "ripiego">(
+    "fermo"
+  );
   const form = useRef<HTMLFormElement>(null);
 
   const testo = [
@@ -43,8 +65,17 @@ export default function ModuloContatto({ email }: Props) {
     `Potete rispondermi a ${mittente || "…"}.`,
   ].join("\n");
 
-  const invia = (e: React.FormEvent) => {
+  /* La via di scorta: apre il programma di posta con tutto già scritto. */
+  const apriPosta = () => {
+    const oggetto = `Richiesta da ${nome}`;
+    window.location.href = `mailto:${email}?subject=${encodeURIComponent(
+      oggetto
+    )}&body=${encodeURIComponent(testo)}`;
+  };
+
+  const invia = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (stato === "invio") return; // niente doppi invii sul doppio clic
 
     const campi: Campo[] = [
       { id: "c-nome", valore: nome, nome: "il vostro nome" },
@@ -71,11 +102,45 @@ export default function ModuloContatto({ email }: Props) {
     }
 
     setMancano([]);
-    const oggetto = `Richiesta da ${nome}`;
-    window.location.href = `mailto:${email}?subject=${encodeURIComponent(
-      oggetto
-    )}&body=${encodeURIComponent(testo)}`;
-    setInviato(true);
+
+    /* Senza chiavi configurate non ha senso tentare la chiamata: si va
+       dritti alla posta. Capita in locale a chi non ha il file .env. */
+    if (!SERVIZIO || !MODELLO || !CHIAVE) {
+      apriPosta();
+      setStato("ripiego");
+      return;
+    }
+
+    setStato("invio");
+    try {
+      await emailjs.send(
+        SERVIZIO,
+        MODELLO,
+        {
+          /* Questi nomi devono corrispondere alle variabili scritte nel
+             modello su EmailJS; se lì si chiamano diversamente, arriva una
+             mail con i campi vuoti. Usiamo i nomi che EmailJS mette di
+             default nei suoi modelli — name, email, title, message — così
+             il modello funziona senza doverlo riscrivere, e i campi
+             "From Name" e "Reply To" del pannello pescano da soli. */
+          name: nome,
+          email: mittente,
+          title: `${nome} — ${attivita}`,
+          message: testo,
+          /* In più, i due campi grezzi: servono solo se vorrete comporre
+             il modello in modo più ricco che con la sola frase. */
+          attivita,
+          serve,
+        },
+        { publicKey: CHIAVE }
+      );
+      setStato("fatto");
+    } catch {
+      /* Non mostriamo l'errore tecnico: a chi scrive non dice nulla e
+         suona come "riprova più tardi", che di solito vuol dire mai. */
+      apriPosta();
+      setStato("ripiego");
+    }
   };
 
   const copia = () => navigator.clipboard?.writeText(testo);
@@ -167,18 +232,27 @@ export default function ModuloContatto({ email }: Props) {
         </p>
       )}
 
-      <button className="mod-invia" type="submit">
-        Mandate il messaggio
+      <button className="mod-invia" type="submit" disabled={stato === "invio"}>
+        {stato === "invio" ? "Un attimo…" : "Mandate il messaggio"}
       </button>
 
-      {/* Rete di sicurezza: se il programma di posta non si apre — capita
-          spesso su computer condivisi o con la webmail — il messaggio è
-          già scritto e si può copiare invece di riscriverlo da capo. */}
-      {inviato && (
+      {stato === "fatto" && (
+        <p className="mod-fatto" role="status">
+          Ricevuto. Vi rispondiamo presto, all&apos;indirizzo che ci avete
+          lasciato.
+        </p>
+      )}
+
+      {/* Ultima rete: si arriva qui solo se l'invio diretto è fallito e si
+          è ripiegati sulla posta. Se anche quella non si apre — capita su
+          computer condivisi o con la webmail — il messaggio è già scritto
+          e si può copiare invece di riscriverlo da capo. */}
+      {stato === "ripiego" && (
         <div className="mod-scorta" role="status">
           <p>
-            Non si è aperta la posta? Il messaggio è pronto: copiatelo e
-            mandatelo a <strong>{email}</strong>.
+            Abbiamo aperto il vostro programma di posta. Se non è successo,
+            il messaggio è pronto: copiatelo e mandatelo a{" "}
+            <strong>{email}</strong>.
           </p>
           <pre>{testo}</pre>
           <button type="button" onClick={copia}>

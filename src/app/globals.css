@@ -47,6 +47,29 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* ── La barra di scorrimento ─────────────────────────────────────────────
+   Quella di sistema è grigia e larga, e su una pagina di carta è l'unica
+   cosa che denuncia il browser. Qui resta la barra nativa — trascinabile,
+   con la sua accessibilità intatta e il comportamento che ognuno si
+   aspetta dal proprio sistema — ma vestita nei colori del marchio:
+   pollice rosso, binario nella carta scura.
+
+   Il rosso e non il color capello: quello si confondeva con la carta e
+   la barra spariva. Così invece corre lungo il bordo destro come una
+   riga di colore, e mentre si scorre si vede dove si è arrivati — è
+   l'unico segno rosso che accompagna tutta la pagina.
+
+   Due proprietà standard e nulla di più. Le capiscono Firefox e ormai
+   anche Chrome ed Edge; Safari resta con la barra di sistema, che lì è
+   già sovrapposta e discreta di suo. È il controllo grossolano — due
+   colori e due spessori, niente angoli o margini — ma non c'è nulla che
+   possa rompersi. */
+html {
+  scrollbar-width: thin;
+  /* prima il pollice, poi il binario */
+  scrollbar-color: var(--red) var(--paper-2);
+}
+
 ::selection {
   background: var(--red);
   color: var(--paper);
@@ -295,6 +318,49 @@ body {
   ); /* centrato in basso a sinistra → filo della header */
   font-size: calc((1 - var(--p)) * clamp(84px, 19vw, 300px) + var(--p) * 30px);
   z-index: 50;
+}
+
+/* Il richiamo ai contatti, in alto a destra.
+   Non un bottone: una parola con il filetto rosso, lo stesso trattamento
+   dell'indirizzo email e dei social più in basso. In una pagina di carta
+   e inchiostro un rettangolo pieno sembrava incollato sopra; così è già
+   l'alfabeto del sito.
+
+   Sta nel posto dove chiunque cerca i contatti per abitudine, e ci resta
+   per tutta la pagina: quando il logo vola nella barra di vetro se lo
+   trova già di fronte, all'altro capo. Non sparisce con l'apertura —
+   è il secondo elemento della barra, non un ornamento della copertina. */
+.vai-contatti {
+  position: fixed;
+  right: 0;
+  /* centrato nei 64px della barra, così è a filo col logo che ci arriva */
+  top: 32px;
+  translate: 0 -50%;
+  margin-right: 22px; /* speculare al margine del logo dentro la barra */
+  z-index: 50; /* sopra il vetro della barra, come il logo */
+
+  display: inline-block;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: clamp(19px, 1.5vw, 27px);
+  letter-spacing: -0.03em;
+  text-decoration: none;
+  color: var(--ink);
+  transition: color 0.25s ease;
+}
+/* Senza filetto: nella barra la parola sta da sola, e a questo corpo si
+   riconosce come cliccabile per il peso e la posizione. Resta il rosso
+   al passaggio del mouse a dire che risponde. */
+.vai-contatti:hover,
+.vai-contatti:focus-visible {
+  color: var(--red);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vai-contatti,
+  .vai-contatti::after {
+    transition: none;
+  }
 }
 
 /* ── La massa di vetro ───────────────────────────────────────────────────
@@ -915,7 +981,9 @@ body::after {
 .srv-apre {
   position: relative;
   z-index: 32;
-  min-height: 100vh;
+  /* Non serve una schermata intera: il titolo ne occupa poco più di un
+     terzo e il resto era solo strada da fare prima dei contatti. */
+  min-height: 70vh;
 }
 
 /* ── schermata 2: i servizi ── */
@@ -925,8 +993,10 @@ body::after {
   /* Meno di una schermata piena: il contenuto è centrato, quindi l'aria
      avanzata si somma a quella della sezione seguente e fra l'ultima voce
      di una schermata e la prima della successiva si apriva un vuoto
-     doppio rispetto a quello fra le voci vicine. */
-  min-height: 84vh;
+     doppio rispetto a quello fra le voci vicine.
+     Stretta ancora: restavano ~270px di aria per schermata, che sommati
+     facevano mezza schermata di strada in più fino ai contatti. */
+  min-height: 72vh;
   display: grid;
   align-content: center;
   /* Via di mezzo fra il centro e il bordo destro: appoggiato a destra ma
@@ -934,6 +1004,33 @@ body::after {
      comunque lontano dalla massa di vetro nell'angolo opposto. */
   justify-content: end;
   padding: 0 clamp(6vw, 21vw, 420px) 0 6vw;
+}
+
+/* L'ultima schermata confina con il bordo del rosso: senza questo margine
+   l'ultima riga di testo gli finiva addosso a 24px, e il colore sembrava
+   tagliato sulla frase invece di chiuderla.
+   Va dopo la regola base, o il `padding` scorciatoia qui sopra lo
+   rimetterebbe a zero. */
+.srv-voci:last-of-type {
+  padding-bottom: clamp(56px, 7vh, 110px);
+}
+
+/* I quattro paragrafi devono distare uguale, ma due stacchi su tre sono
+   il `gap` dentro una schermata e il terzo è il salto FRA le schermate —
+   che nasce invece dall'aria avanzata attorno al contenuto centrato, ed
+   era 68px più stretto.
+   Il riempimento qui vale metà: il contenuto è centrato nello spazio che
+   resta, quindi metà di ciò che si aggiunge se ne va dall'altro lato.
+   Per questo i valori sono il doppio del guadagno che serve.
+
+   I selettori sono per adiacenza e non `nth-of-type`: quello conta fra
+   TUTTE le <section> del contenitore, e la prima è .srv-apre — il
+   riempimento finiva sulla schermata del titolo. */
+.srv-apre + .srv-voci {
+  padding-bottom: 68px;
+}
+.srv-voci + .srv-voci {
+  padding-top: 68px;
 }
 .srv-colonne {
   display: grid;
@@ -1214,20 +1311,28 @@ body::after {
 .cnt-social {
   display: flex;
   flex-wrap: wrap;
-  gap: clamp(16px, 2vw, 34px);
+  /* più larga di prima: a corpo grande due parole vicine si leggono come
+     una sola riga continua */
+  gap: clamp(20px, 2.6vw, 48px);
   margin: clamp(8px, 1.6vh, 20px) 0 0;
   padding: 0;
   list-style: none;
 }
+/* Stesso trattamento dell'indirizzo email qui sopra: inchiostro pieno e
+   filetto rosso. Sono due modi di raggiungerci messi allo stesso livello,
+   quindi devono pesare uguale — prima i social erano grigi e a corpo
+   piccolo, e sembravano una nota a piè di pagina. */
 .cnt-social a {
-  font-family: var(--font-title);
-  font-weight: 600;
-  font-size: clamp(13px, 1.05vw, 18px);
-  letter-spacing: 0.06em;
-  color: var(--ink-soft);
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: clamp(18px, 2vw, 38px);
+  letter-spacing: -0.03em;
+  color: var(--ink);
   text-decoration: none;
-  border-bottom: 1px solid color-mix(in srgb, var(--ink) 24%, transparent);
-  padding-bottom: 0.15em;
+  /* filetto col bordo, non sottolineatura: così lo spessore resta di 2px
+     e non cresce insieme al corpo del testo */
+  border-bottom: 2px solid var(--red);
+  padding-bottom: 0.08em;
   transition:
     color 0.25s ease,
     border-color 0.25s ease;
@@ -1258,8 +1363,10 @@ body::after {
   font-size: clamp(22px, 2.6vw, 50px);
   letter-spacing: -0.03em;
   /* interlinea generosa: le righe contengono campi, e stretta si
-     toccherebbero i filetti */
-  line-height: 1.75;
+     toccherebbero i filetti — con 1.75 il riquadro che il browser
+     disegna attorno al campo attivo arrivava a filo del filetto della
+     riga sopra, e le due caselle sembravano incastrate */
+  line-height: 1.85;
   color: var(--ink);
   max-width: 22ch;
 }
@@ -1281,6 +1388,11 @@ body::after {
 
 .mod-campo input {
   font: inherit;
+  /* Non erediti l'interlinea della frase: `font` la porta con sé, e la
+     casella crescerebbe insieme alla riga — allargare l'interlinea per
+     staccare le righe allargava anche il riquadro, annullando il
+     guadagno. Qui resta compatta e lo spazio in più è tutto aria. */
+  line-height: 1.2;
   color: var(--red-deep);
   background: none;
   border: 0;
@@ -1289,7 +1401,12 @@ body::after {
   /* si allarga da sé man mano che si scrive: un campo di larghezza fissa
      dentro una frase la spezzerebbe in modo innaturale */
   field-sizing: content;
-  min-width: 5ch;
+  /* Un minimo appena percettibile, non 5ch: `ch` è la larghezza dello
+     zero, più generosa delle lettere, e su un nome corto come "Marco" il
+     campo restava più largo del testo — il filetto rosso proseguiva nel
+     vuoto oltre la parola. Serve solo a impedire che un campo svuotato
+     sparisca del tutto. */
+  min-width: 2.5ch;
   max-width: 100%;
   border-radius: 0;
   transition: border-color 0.2s ease;
@@ -1347,6 +1464,41 @@ body::after {
 .mod-invia:focus-visible {
   background: var(--red-deep);
   translate: 0 -2px;
+}
+/* durante l'invio: spento e fermo, così si vede che sta lavorando e un
+   secondo clic non parte */
+.mod-invia:disabled {
+  background: color-mix(in srgb, var(--red) 45%, var(--paper));
+  cursor: wait;
+  translate: none;
+}
+
+/* la conferma, quando il messaggio è partito davvero.
+   Stesso impianto dell'avviso di campo mancante — velo, filetto laterale,
+   quadratino — ma in inchiostro: è una buona notizia, non un allarme. */
+.mod-fatto {
+  display: flex;
+  align-items: baseline;
+  gap: 0.7em;
+  margin: 0;
+  padding: 0.75em 1.1em 0.8em;
+  font-family: var(--font-title);
+  font-weight: 600;
+  font-size: clamp(13px, 1.02vw, 17px);
+  line-height: 1.45;
+  color: var(--ink);
+  background: color-mix(in srgb, var(--ink) 5%, transparent);
+  border-radius: 3px;
+  border-left: 3px solid var(--ink);
+  animation: manca-entra 0.34s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.mod-fatto::before {
+  content: "";
+  flex-shrink: 0;
+  width: 0.62em;
+  height: 0.62em;
+  background: var(--red);
+  translate: 0 -0.02em;
 }
 
 /* la rete di sicurezza, se la posta non si apre */
@@ -1616,11 +1768,6 @@ body::after {
   font-size: clamp(11px, 0.85vw, 14px);
   letter-spacing: 0.04em;
   color: color-mix(in srgb, var(--paper) 66%, transparent);
-}
-/* il numero di partita IVA in cifre chiare: è il dato che viene cercato */
-.pie-dati span {
-  color: color-mix(in srgb, var(--paper) 88%, transparent);
-  font-variant-numeric: tabular-nums;
 }
 .pie-nota {
   margin: 0;

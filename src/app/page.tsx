@@ -5,6 +5,7 @@ import Servizi from "@/components/Servizi";
 import Contatti from "@/components/Contatti";
 import Footer from "@/components/Footer";
 import ScrollDirector from "@/components/ScrollDirector";
+import VaiAiContatti from "@/components/VaiAiContatti";
 
 export default function Home() {
   return (
@@ -18,6 +19,7 @@ export default function Home() {
           scorre sopra di loro. */}
       <HeroArt />
       <Logo className="logo-fly" />
+      <VaiAiContatti />
       <ChiSiamo />
 
       {/* Dà alle scene fisse lo spazio per esistere: due schermate di
