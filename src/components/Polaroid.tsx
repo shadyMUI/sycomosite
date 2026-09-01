@@ -12,6 +12,13 @@ type PolaroidProps = {
   alt?: string;
   /** la riga scritta sul bordo basso della cornice */
   didascalia?: string;
+  /** classi in più: serve a chi la usa fuori dalla scena d'apertura */
+  className?: string;
+  /** Che cosa scrivere nel riquadro finché la foto non c'è. Solo con
+      questa la polaroid mostra il segnaposto invece della scena animata:
+      quella racconta una bottega, e sotto una fila di computer montati
+      sarebbe fuori posto. */
+  daFare?: string;
 };
 
 /**
@@ -36,6 +43,8 @@ export default function Polaroid({
   video,
   alt,
   didascalia,
+  className = "",
+  daFare,
 }: PolaroidProps) {
   const [carica, setCarica] = useState(false);
 
@@ -51,7 +60,7 @@ export default function Polaroid({
   }, [video]);
 
   return (
-    <figure className="pol">
+    <figure className={`pol ${className}`}>
       <div className="pol-scatto">
         {video ? (
           <>
@@ -77,6 +86,13 @@ export default function Polaroid({
         ) : src ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={src} alt={alt ?? ""} />
+        ) : daFare ? (
+          /* Tratteggiato di proposito: si vede che manca una foto, e
+             nessuno lo scambia per una scelta grafica. */
+          <div className="pol-dafare" role="presentation">
+            <span>foto da fare</span>
+            <small>{daFare}</small>
+          </div>
         ) : (
           <PolaroidScena />
         )}

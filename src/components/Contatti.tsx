@@ -29,14 +29,23 @@ type Props = {
   titolo?: [string, string];
   /* la frase da completare nel modulo, che cambia col mestiere */
   frase?: React.ComponentProps<typeof ModuloContatto>["frase"];
+  /* quale modello di EmailJS recapita questo modulo */
+  modello?: React.ComponentProps<typeof ModuloContatto>["modello"];
+  /* Il rimando all'altra metà dello studio. Sta qui, in fondo, e non nel
+     piede: chi è arrivato ai contatti ha finito di leggere, ed è il
+     momento in cui scoprire che facciamo anche l'altra cosa può servirgli
+     davvero. Nel piede l'avrebbe visto solo chi legge i piedi. */
+  altra?: { domanda: string; invito: string; href: string };
 };
 
 export default function Contatti({
   titolo = ["Raccontateci", "cosa vi serve"],
   frase,
+  modello,
+  altra,
 }: Props) {
   return (
-    <section className="cnt" id="contatti" aria-labelledby="cnt-t">
+    <section className="cnt" id="contatti" aria-labelledby="cnt-t" data-aggancio>
       <h2 id="cnt-t" className="cnt-titolo">
         {titolo[0]}
         <br />
@@ -73,9 +82,22 @@ export default function Contatti({
               ))}
             </ul>
           </div>
+
+          {altra && (
+            /* Lastra di vetro nell'angolo, sopra la massa che ci passa
+               sotto: è l'unico punto della pagina in cui il vetro fa da
+               contenitore invece che da scenografia. */
+            <aside className="cnt-altra">
+              <p className="cnt-altra-domanda">{altra.domanda}</p>
+              <a className="cnt-altra-vai" href={altra.href}>
+                {altra.invito}
+                <span className="cnt-altra-freccia" aria-hidden="true" />
+              </a>
+            </aside>
+          )}
         </div>
 
-        <ModuloContatto email={EMAIL} frase={frase} />
+        <ModuloContatto email={EMAIL} frase={frase} modello={modello} />
       </div>
     </section>
   );

@@ -39,6 +39,8 @@ type Props = {
        altri, così la frase intera resta verosimile */
     mail?: string;
   };
+  /* Quale modello di EmailJS recapita il messaggio. */
+  modello?: keyof typeof MODELLI;
 };
 
 const FRASE_SITI = {
@@ -64,15 +66,27 @@ const FRASE_SITI = {
    con il valore al momento della compilazione, e con un accesso dinamico
    non saprebbe cosa sostituire. */
 const SERVIZIO = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID;
-const MODELLO = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID;
 const CHIAVE = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
+
+/* Un modello per mestiere: i due moduli chiedono cose diverse — attività
+   e sito da una parte, uso e budget dall'altra — e su EmailJS ognuno ha
+   il suo, così le mail arrivano già scritte nella forma giusta.
+   Vanno lette entrambe per esteso: Next.js sostituisce `process.env.NOME`
+   col valore al momento della compilazione, e con un accesso costruito a
+   pezzi non saprebbe cosa sostituire. */
+const MODELLI = {
+  siti: process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID,
+  computer: process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_PC,
+};
 
 type Campo = { id: string; valore: string; nome: string; mail?: boolean };
 
 export default function ModuloContatto({
   email,
   frase = FRASE_SITI,
+  modello = "siti",
 }: Props) {
+  const idModello = MODELLI[modello];
   const [nome, setNome] = useState("");
   const [attivita, setAttivita] = useState("");
   const [serve, setServe] = useState("");
@@ -86,6 +100,7 @@ export default function ModuloContatto({
     "fermo"
   );
   const form = useRef<HTMLFormElement>(null);
+
 
   const testo = [
     `Ciao, sono ${nome || "…"}.`,
@@ -135,7 +150,7 @@ export default function ModuloContatto({
 
     /* Senza chiavi configurate non ha senso tentare la chiamata: si va
        dritti alla posta. Capita in locale a chi non ha il file .env. */
-    if (!SERVIZIO || !MODELLO || !CHIAVE) {
+    if (!SERVIZIO || !idModello || !CHIAVE) {
       apriPosta();
       setStato("ripiego");
       return;
@@ -145,7 +160,7 @@ export default function ModuloContatto({
     try {
       await emailjs.send(
         SERVIZIO,
-        MODELLO,
+        idModello,
         {
           /* Questi nomi devono corrispondere alle variabili scritte nel
              modello su EmailJS; se lì si chiamano diversamente, arriva una

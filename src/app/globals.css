@@ -70,6 +70,25 @@ html {
   scrollbar-color: var(--red) var(--paper-2);
 }
 
+/* Sul telefono sparisce del tutto.
+   Là la barra non serve a niente: non si trascina col dito, e i sistemi
+   touch la mostrano già da sé per un attimo mentre si scorre e poi la
+   ritirano. Tenerla fissa vuol dire solo una striscia rossa incollata al
+   bordo per tutta la lettura.
+
+   Due condizioni: il puntatore grossolano — il dito — e la larghezza.
+   La prima prende telefoni e tavolette anche in orizzontale, la seconda
+   copre le finestre strette su computer che il dito non lo hanno. */
+@media (pointer: coarse), (max-width: 860px) {
+  html {
+    scrollbar-width: none;
+  }
+  /* la scrittura di Chrome e Safari, che a `none` non guardano */
+  html::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 ::selection {
   background: var(--red);
   color: var(--paper);
@@ -282,6 +301,25 @@ html {
 .scroll-section[data-label="apertura"] {
   height: 85vh;
 }
+/* Dove dopo l'apertura non c'è una scena fissa ma contenuto vero, il
+   binario va accorciato ancora: il logo se ne va dopo un gesto, e quello
+   che resta è carta bianca da attraversare prima di vedere qualcosa.
+   Tanto basta perché il volo si compia sotto gli occhi. */
+/* Due classi nel selettore, non una: la regola qui sopra usa un
+   attributo — `[data-label="apertura"]` — che pesa quanto una classe, e
+   una classe sola perdeva il confronto lasciando il binario a 85vh. */
+.scroll-section.scroll-section--corta {
+  height: 34vh;
+}
+@media (max-width: 860px) {
+  /* Sul telefono la corsa resta corta: quello che tiene il rosso fuori
+     dalla prima schermata è l'altezza della sezione che segue, non il
+     binario. Allungando questo, fra il marchio e il testo restava mezza
+     schermata di carta vuota da attraversare. */
+  .scroll-section.scroll-section--corta {
+    height: 54vh;
+  }
+}
 
 /* ── la header di vetro ──
    Non un pannello opaco: velo di carta + sfocatura forte e satura, così
@@ -320,74 +358,58 @@ html {
   z-index: 50;
 }
 
-/* Il richiamo ai contatti, in alto a destra.
-   Non un bottone: una parola con il filetto rosso, lo stesso trattamento
-   dell'indirizzo email e dei social più in basso. In una pagina di carta
-   e inchiostro un rettangolo pieno sembrava incollato sopra; così è già
-   l'alfabeto del sito.
+/* ── I due richiami: sotto il marchio, poi nella barra ───────────────────
+   Viaggiano con lo stesso --p del logo, quindi non possono sfasarsi da
+   lui: partono incolonnati sotto il marchio e finiscono affiancati in
+   alto a destra, all'altro capo della barra di vetro.
 
-   Sta nel posto dove chiunque cerca i contatti per abitudine, e ci resta
-   per tutta la pagina: quando il logo vola nella barra di vetro se lo
-   trova già di fronte, all'altro capo. Non sparisce con l'apertura —
-   è il secondo elemento della barra, non un ornamento della copertina. */
-.vai-contatti {
-  position: fixed;
-  right: 0;
-  /* centrato nei 64px della barra, così è a filo col logo che ci arriva */
-  top: 32px;
-  translate: 0 -50%;
-  margin-right: 22px; /* speculare al margine del logo dentro la barra */
-  z-index: 50; /* sopra il vetro della barra, come il logo */
-
-  display: inline-block;
-  font-family: var(--font-sans);
-  font-weight: 700;
-  font-size: clamp(19px, 1.5vw, 27px);
-  letter-spacing: -0.03em;
-  text-decoration: none;
-  color: var(--ink);
-  transition: color 0.25s ease;
-}
-/* Senza filetto: nella barra la parola sta da sola, e a questo corpo si
-   riconosce come cliccabile per il peso e la posizione. Resta il rosso
-   al passaggio del mouse a dire che risponde. */
-.vai-contatti:hover,
-.vai-contatti:focus-visible {
-  color: var(--red);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .vai-contatti,
-  .vai-contatti::after {
-    transition: none;
-  }
-}
-
-/* ── I due richiami sotto il marchio ─────────────────────────────────────
-   Vivono nello stesso sistema di coordinate del logo: fissi, appoggiati
-   al suo stesso margine sinistro, poco sotto il blocco. Spariscono al
-   primo scroll insieme a lui — appartengono all'apertura, e restare
-   appesi sopra il contenuto darebbe fastidio. */
+   Non spariscono come farebbe un ornamento dell'apertura: sono l'unico
+   modo per farsi sentire che resta sempre sullo schermo, e nasconderli
+   perderebbe chi si decide a metà lettura. ────────────────────────────── */
 .sotto-logo {
   position: fixed;
-  left: 0;
-  /* Sotto il centro, staccati dalla riga del sottotitolo. La misura
-     cresce col corpo del logo — che è in vw — o resterebbero incollati
-     sugli schermi larghi. */
-  top: calc(50vh + clamp(96px, 15vw, 240px));
-  margin-left: 8vw; /* stesso margine del logo grande */
-  z-index: 50;
+  z-index: 50; /* sopra il vetro della barra, come il logo */
+
+  /* Il viaggio, in due coordinate.
+     In orizzontale: dal margine sinistro del logo fino al bordo destro
+     dello schermo. Il translate a -100% è ciò che permette di ancorare a
+     destra usando `left` — due proprietà diverse non si possono
+     interpolare fra loro, una sola sì.
+     In verticale: da sotto il marchio al centro dei 64px della barra. */
+  left: calc((1 - var(--p)) * 8vw + var(--p) * (100vw - 22px));
+  top: calc((1 - var(--p)) * (50vh + clamp(96px, 15vw, 240px)) + var(--p) * 32px);
+  translate: calc(var(--p) * -100%) calc(var(--p) * -50%);
+
+  /* Le due voci stanno SEMPRE in riga. L'aspetto incolonnato
+     dell'apertura è ottenuto spostando la seconda sotto la prima (vedi
+     .sotto-voce--scivola): `flex-direction` non si può interpolare, e
+     cambiandolo le voci saltavano da una forma all'altra di colpo. */
+  --gap-x: clamp(14px, 1.4vw, 26px);
+  --gap-y: clamp(8px, 1vh, 14px);
 
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: row;
   align-items: center;
-  gap: clamp(14px, 2vw, 30px);
+  gap: var(--gap-x);
+}
 
-  opacity: 1;
-  visibility: visible;
-  transition:
-    opacity 0.45s ease,
-    visibility 0s linear 0s;
+/* La voce che scivola: in apertura sta sotto la prima e a filo con lei;
+   arrivando nella barra torna al suo posto naturale, di fianco.
+   Il tragitto è una traslazione, quindi si interpola con --p come tutto
+   il resto del volo — nessuno scatto, nessun ricalcolo di impaginazione.
+
+   --wa-w e --voce-h le scrive il componente misurando la prima voce:
+   quanto sia larga la parola "whatsapp" il CSS non può saperlo. I valori
+   di ripiego servono solo al primo fotogramma, prima che la misura
+   arrivi. */
+.sotto-voce--scivola {
+  /* Riporta la voce sotto la prima, annullando il posto che le spetterebbe
+     di fianco. Nessun rientro: i due richiami partono dallo stesso filo
+     sinistro, con l'icona di WhatsApp incolonnata sulla "c" di contatti —
+     è il bordo del blocco a fare da linea, non la prima lettera. */
+  translate:
+    calc((var(--p) - 1) * (var(--wa-w, 130px) + var(--gap-x)))
+    calc((1 - var(--p)) * (var(--voce-h, 30px) + var(--gap-y)));
 }
 
 .sotto-voce {
@@ -396,20 +418,56 @@ html {
   gap: 0.42em;
   font-family: var(--font-sans);
   font-weight: 700;
-  font-size: clamp(16px, 1.35vw, 26px);
+  /* Stessa misura per tutto il viaggio, e la stessa del richiamo nella
+     pagina dei siti: le due metà del sito devono avere la barra identica.
+     Il rimpicciolimento c'era per far somigliare il volo a quello del
+     logo, ma arrivate nella barra le voci risultavano minute accanto al
+     marchio, e più piccole delle stesse parole nell'altra pagina. */
+  font-size: clamp(19px, 1.5vw, 27px);
   letter-spacing: -0.02em;
   text-decoration: none;
   color: var(--ink);
   /* il filetto rosso è il segno che nel sito dice "questo si clicca" */
   border-bottom: 2px solid var(--red);
   padding-bottom: 0.1em;
+  white-space: nowrap;
   transition:
     color 0.25s ease,
-    border-color 0.25s ease;
+    border-color 0.35s ease;
+}
+
+/* Nella barra il filetto si spegne: là le due voci sono già riconoscibili
+   per dove stanno, e due sottolineature rosse su una striscia alta 64px
+   diventano un accento di troppo. Il bordo resta, trasparente, così la
+   riga non si sposta di 2px arrivando. */
+.figs-on .sotto-logo .sotto-voce {
+  border-bottom-color: transparent;
 }
 .sotto-voce:hover,
 .sotto-voce:focus-visible {
   color: var(--red);
+}
+
+/* ── Variante "barra": già in alto a destra, e lì resta ──
+   Nessun viaggio da fare, quindi nessuna coordinata legata a --p: sta
+   dove i contatti si cercano per abitudine e non si muove di lì per
+   tutta la pagina. Senza filetto: a questo corpo la parola si riconosce
+   come cliccabile per il peso e la posizione, e un filo rosso sotto
+   l'unica voce della barra sarebbe un accento di troppo. */
+.sotto-logo--barra {
+  left: auto;
+  right: 0;
+  top: 32px; /* centro dei 64px della barra */
+  margin-right: 22px; /* speculare al margine del logo dentro la barra */
+  translate: 0 -50%;
+  flex-direction: row;
+  align-items: center;
+}
+.sotto-logo--barra .sotto-voce {
+  font-size: clamp(19px, 1.5vw, 27px);
+  letter-spacing: -0.03em;
+  border-bottom: 0;
+  padding-bottom: 0;
 }
 
 /* il marchio WhatsApp: segue il corpo del testo, non una misura sua */
@@ -420,25 +478,44 @@ html {
   translate: 0 -0.04em;
 }
 
-/* Spariscono appena si comincia a scorrere, come il logo che vola nella
-   barra. `visibility` insieme all'opacità, o da invisibili resterebbero
-   cliccabili e intercetterebbero i clic al contenuto sotto. */
-.figs-on .sotto-logo {
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-  transition:
-    opacity 0.45s ease,
-    visibility 0s linear 0.45s;
-}
-
 @media (max-width: 860px) {
-  .sotto-logo {
-    /* il marchio qui è più piccolo e centrato in verticale: i richiami
-       gli stanno più vicini */
-    top: calc(50vh + clamp(64px, 17vw, 150px));
-    margin-left: 7vw;
-    gap: 18px;
+  /* Sul telefono scende in basso a destra: lassù divideva la barra con
+     il marchio in una striscia stretta, quaggiù sta dove sta il pollice
+     e non toglie niente all'apertura. */
+  .sotto-logo--barra {
+    top: auto;
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    /* via la centratura sulla barra: qui non c'è una barra da centrare */
+    translate: 0 0;
+    margin-right: 14px;
+  }
+  .sotto-logo--barra .sotto-voce {
+    font-size: 18px;
+    /* Pastiglia di carta sotto la parola. In alto era la barra di vetro a
+       fare da fondo; quaggiù il richiamo passa sopra la sezione rossa e
+       sopra il piede nero, dove l'inchiostro sparirebbe. */
+    padding: 9px 15px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--paper) 88%, transparent);
+    -webkit-backdrop-filter: blur(10px) saturate(1.4);
+    backdrop-filter: blur(10px) saturate(1.4);
+    box-shadow: 0 6px 18px -10px color-mix(in srgb, var(--red-deep) 45%, transparent);
+  }
+
+  /* `:not(--barra)` è necessario: questa regola sta più in basso di
+     quella della variante e, a pari specificità, le rimetteva il `left`
+     che lì è `auto`. Il richiamo della pagina dei siti finiva così
+     ancorato a 100vw e usciva dallo schermo a destra. */
+  .sotto-logo:not(.sotto-logo--barra) {
+    left: calc((1 - var(--p)) * 7vw + var(--p) * (100vw - 14px));
+    /* Più staccati dal marchio che sul grande schermo: qui il lockup è
+       centrato e sotto c'è tutta la schermata vuota, mentre i richiami
+       gli stavano addosso come se fossero una terza riga del logo. */
+    top: calc((1 - var(--p)) * (50vh + clamp(104px, 28vw, 200px)) + var(--p) * 32px);
+    /* le variabili, non la scorciatoia `gap`: servono anche al calcolo
+       dello scivolamento della seconda voce */
+    --gap-x: 14px;
+    --gap-y: 8px;
   }
   .sotto-voce {
     font-size: 19px;
@@ -448,7 +525,6 @@ html {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .sotto-logo,
   .sotto-voce {
     transition: none;
   }
@@ -963,10 +1039,13 @@ html {
   text-align: center;
 }
 
-/* schermi stretti: sparisce, non c'è spazio per tenerla senza schiacciare
-   le due frasi, che vengono prima */
+/* Schermi stretti: sparisce, non c'è spazio per tenerla senza schiacciare
+   le due frasi, che vengono prima.
+   Vale però solo per la polaroid della scena d'apertura: quelle
+   dell'album sono il contenuto della loro sezione, e nasconderle
+   lascerebbe un titolo senza niente sotto. */
 @media (max-width: 860px) {
-  .pol {
+  .pol:not(.pol--album) {
     display: none;
   }
 }
@@ -1360,9 +1439,26 @@ body::after {
    permettersi molta più larghezza relativa, e il quadratino chiude
    l'ultima riga qualunque essa sia. */
 @media (max-width: 860px) {
+  /* La schermata che regge il titolo: più bassa che sul grande schermo.
+     Con 70vh fra il titolo e il commutatore restavano 322px di rosso
+     vuoto, che su un telefono è mezza schermata percorsa per niente. */
+  .srv-apre {
+    min-height: 42vh;
+  }
+
   .srv-titolo {
     top: clamp(120px, 22vh, 260px);
-    font-size: clamp(44px, 16vw, 92px);
+    /* Due limiti, come sul grande schermo, ma qui il secondo guarda la
+       parola più LUNGA invece dell'intera riga: andando a capo il titolo
+       si spezza fra le parole, e l'unica misura che deve starci è quella
+       della più larga. Senza, "costruiamo" più il quadratino sforavano di
+       una manciata di pixel e il quadratino finiva su una riga tutta sua.
+       Il coefficiente è più alto di quello di sopra perché una parola
+       piena di lettere tonde pesa più della media di una frase. */
+    font-size: min(
+      clamp(44px, 16vw, 92px),
+      calc(88vw / (var(--srv-max, 8) * 0.56 + 0.35))
+    );
   }
 }
 .srv-dot {
@@ -1371,6 +1467,784 @@ body::after {
   height: 0.15em;
   margin-left: 0.1em;
   background: #fff;
+}
+
+/* ══ LA DOMANDA · che computer vi serve ═══════════════════════════════════
+   Scena fissa come le frasi diagonali dell'altra pagina, e nello stesso
+   posto del racconto: fra il marchio e i quattro passi. Ma qui non si
+   legge una dichiarazione, si sceglie — e la scelta scende nel modulo.
+
+   Compare col marchio che si ritira: entrambe dipendono dalla stessa --p,
+   quindi i due movimenti non possono sfasarsi. ─────────────────────────── */
+.uso {
+  /* Sezione nel flusso, non scena fissa.
+     Fissa era più elegante — entrava col marchio che si ritira — ma le
+     scene fisse vivono a un livello che il fondo dei contatti non copre:
+     arrivati in fondo, la domanda restava a galleggiare sopra il modulo.
+     Nel flusso scorre via da sé, e non c'è nessun ordine di strati da
+     tenere in equilibrio. */
+  position: relative;
+  /* sopra le figure di vetro, che passano sotto */
+  z-index: 32;
+  /* Più bassa di una schermata e con poco riempimento in testa: così il
+     blocco si trova al centro dello schermo dopo un solo gesto, invece
+     che dopo tre. In apertura non sbuca comunque, perché fino a che il
+     marchio non vola via l'opacità qui sotto la tiene a zero. */
+  min-height: 100vh;
+  display: grid;
+  /* Centrato nella sua schermata. Era ancorato in alto perché prima
+     servivano tre gesti per portarlo a metà video; ora che lo scorrimento
+     si aggancia ai bordi delle sezioni, un gesto solo ce lo mette
+     esattamente, e il testo appoggiato al bordo alto sembrava scivolato
+     sotto la barra. */
+  align-content: center;
+  padding: clamp(70px, 10vh, 130px) 6vw clamp(56px, 8vh, 110px);
+
+  /* Entra insieme al marchio che vola nella barra: la stessa --p, quindi
+     i due movimenti non possono sfasarsi. */
+  opacity: calc((var(--p) - 0.35) / 0.65);
+  translate: 0 calc((1 - var(--p)) * 40px);
+}
+
+.uso-domanda {
+  margin: 0 0 clamp(28px, 4.5vh, 64px);
+  font-family: var(--font-sans);
+  font-weight: 700;
+  /* Due limiti, e vince il più stretto: la misura voluta e quella che il
+     testo può davvero occupare fra i margini, quadratino compreso. Senza
+     il secondo, un titolo lungo spinge il punto su una riga tutta sua. */
+  font-size: min(
+    clamp(40px, 6.4vw, 118px),
+    calc(88vw / (var(--dom-n, 17) * 0.52 + 0.35))
+  );
+  letter-spacing: -0.045em;
+  line-height: 0.96;
+  color: var(--ink);
+}
+/* il punto del marchio è un quadrato, e chiude la domanda */
+.uso-dot {
+  display: inline-block;
+  width: 0.13em;
+  height: 0.13em;
+  margin-left: 0.09em;
+  background: var(--red);
+}
+
+/* La riga di promessa sotto il titolo. Nessun riquadro: i tre casi si
+   staccano dal resto per il peso dell'inchiostro, e il prezzo per il
+   rosso — gli unici due strumenti che il sito usa per dare accento. */
+.uso-testo {
+  margin: 0;
+  max-width: 20ch;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: clamp(22px, 2.6vw, 52px);
+  letter-spacing: -0.025em;
+  line-height: 1.25;
+  color: var(--ink-soft);
+  text-wrap: balance;
+}
+.uso-testo strong {
+  font-weight: 700;
+  color: var(--ink);
+}
+/* la barra separa e basta: tenue e leggera, o si legge come una parola */
+.uso-barra {
+  font-weight: 400;
+  color: var(--muted);
+  padding: 0 0.06em;
+}
+.uso-testo em {
+  font-style: normal;
+  font-weight: 700;
+  color: var(--red);
+}
+
+@media (max-width: 860px) {
+  .uso {
+    /* Alta quanto serve perché il rosso della schermata dopo cominci
+       oltre il bordo dello schermo — 36vh di binario più 66 di sezione
+       fanno una schermata piena — ma col testo ancorato IN CIMA e non
+       centrato: qui lo schermo è alto e stretto, e centrandolo si
+       apriva sopra la frase mezza schermata di carta bianca.
+       Il riempimento verticale va ridichiarato: la scorciatoia `padding`
+       lo azzerava. */
+    /* La somma con il binario qui sopra deve fare una schermata piena —
+       è quello che tiene il rosso oltre il bordo — ma il peso sta quasi
+       tutto sul binario, dove c'è il marchio a riempire. Qui resta il
+       minimo che serve al testo più un po' d'aria: alzando questa il
+       vuoto si apriva SOTTO la frase, fra lei e il rosso. */
+    min-height: 46vh;
+    align-content: start;
+    padding: clamp(26px, 4vh, 50px) 7vw clamp(30px, 4vh, 60px);
+  }
+  .uso-domanda {
+    /* Qui il titolo va a capo fra le parole, quindi l'unica misura che
+       deve starci è quella della parola più LUNGA — non della riga
+       intera, come invece serve sul grande schermo. */
+    font-size: min(
+      clamp(28px, 10vw, 76px),
+      calc(86vw / (var(--dom-max, 8) * 0.56 + 0.35))
+    );
+    margin-bottom: 22px;
+  }
+  .uso-testo {
+    font-size: 22px;
+    /* misura in px e non in ch: `ch` si calcola sul carattere di questo
+       elemento e a corpo grande lascerebbe righe di due parole */
+    max-width: 300px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .uso {
+    transition: none;
+  }
+}
+
+/* ══ I DUE MESTIERI · assemblaggio e manutenzione ═════════════════════════
+   Affiancati su schermo largo, uno alla volta sul telefono con un
+   commutatore di vetro in cima. Vivono dentro la schermata rossa e usano
+   la sua impalcatura — fondo, sensori, titolo in negativo — quindi qui
+   c'è solo il contenuto. ─────────────────────────────────────────────── */
+.duo {
+  position: relative;
+  z-index: 35; /* sopra il fondo rosso e sopra il vetro */
+  min-height: 78vh;
+  display: grid;
+  align-content: center;
+  padding: clamp(30px, 5vh, 70px) 6vw clamp(50px, 8vh, 110px);
+}
+
+.duo-griglia {
+  display: grid;
+  /* due colonne larghe uguali: il confronto fra i due mestieri è
+     immediato solo se hanno lo stesso peso sulla pagina */
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(28px, 4vw, 90px);
+  max-width: 1500px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Una lastra dietro ciascuna colonna. Stessa ricetta del commutatore —
+   vetro chiaro sul fondo rosso, filo di luce sul taglio alto, ombra calda
+   di contatto — ma più sobria: è un piano d'appoggio, non un comando, e
+   deve staccare il testo dal rosso senza chiedere attenzione per sé.
+   Il velo aiuta anche la lettura: la massa di vetro nell'angolo passa
+   sotto la colonna di sinistra, e senza qualcosa in mezzo le righe ci si
+   confondevano. */
+.duo-col {
+  position: relative;
+  isolation: isolate;
+  padding: clamp(22px, 2.4vw, 40px) clamp(20px, 2.2vw, 36px)
+    clamp(26px, 2.8vw, 44px);
+  border: 1px solid color-mix(in srgb, var(--lift) 26%, transparent);
+  border-radius: 10px;
+  /* Denso più di quanto sembri necessario a guardarlo: sotto la colonna
+     di sinistra passa la massa di vetro, che è CHIARA, e con un velo
+     leggero il testo bianco ci si scioglieva dentro — 2,4:1, illeggibile.
+     A questa densità resta traslucido, le lastre sotto si intravedono
+     ancora muoversi, ma le righe si leggono ovunque capitino. */
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--red-deep) 46%, transparent) 0%,
+    color-mix(in srgb, var(--red-deep) 52%, transparent) 45%,
+    color-mix(in srgb, var(--red-deep) 62%, transparent) 100%
+  );
+  box-shadow:
+    /* filo di luce sul taglio alto: è il bordo della lastra */
+    inset 0 1px 0 0 color-mix(in srgb, var(--lift) 34%, transparent),
+    /* luce interna dall'alto */
+    inset 0 24px 44px -30px color-mix(in srgb, var(--lift) 26%, transparent),
+    /* fondo più denso: spessore */
+    inset 0 -18px 34px -30px color-mix(in srgb, var(--red-deep) 34%, transparent),
+    /* ombra di contatto, calda come tutte quelle del sito */
+    0 18px 44px -28px color-mix(in srgb, var(--red-deep) 62%, transparent);
+  /* Il negativo, come sul titolo dei servizi: quello che passa dietro
+     viene invertito. Le lastre di vetro che scorrono sotto la colonna
+     sono chiare, e invertite diventano scure — è quello che le fa
+     "stampare" sulla superficie invece di annacquarla.
+     `invert` prima di `blur`: l'ordine conta, e sfocare dopo ammorbidisce
+     i bordi dell'inversione invece di invertire una macchia già sfocata. */
+  -webkit-backdrop-filter: invert(1) hue-rotate(180deg) blur(8px) saturate(1.2);
+  backdrop-filter: invert(1) hue-rotate(180deg) blur(8px) saturate(1.2);
+}
+/* il riflesso in alto a sinistra, come sulle lastre della massa */
+.duo-col::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: radial-gradient(
+    100% 80% at 14% 0%,
+    color-mix(in srgb, var(--lift) 18%, transparent) 0%,
+    transparent 62%
+  );
+  pointer-events: none;
+}
+
+.duo-nome {
+  margin: 0 0 0.35em;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: clamp(26px, 2.9vw, 56px);
+  letter-spacing: -0.04em;
+  line-height: 1.02;
+  color: var(--paper);
+}
+.duo-guida {
+  margin: 0 0 clamp(22px, 3vh, 44px);
+  max-width: 40ch;
+  font-family: var(--font-title);
+  font-weight: 500;
+  font-size: clamp(14px, 1.15vw, 20px);
+  line-height: 1.45;
+  color: color-mix(in srgb, var(--paper) 86%, transparent);
+  text-wrap: pretty;
+}
+
+.duo-voci {
+  display: grid;
+  gap: clamp(16px, 2.2vh, 32px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.duo-voce h4 {
+  margin: 0 0 0.25em;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: clamp(17px, 1.45vw, 27px);
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+  color: var(--paper);
+}
+.duo-voce p {
+  margin: 0;
+  max-width: 46ch;
+  font-family: var(--font-title);
+  font-weight: 500;
+  font-size: clamp(13px, 1vw, 17px);
+  line-height: 1.5;
+  /* carta piena e non velata: è il testo più piccolo della schermata, e
+     sopra le figure ogni punto di contrasto conta */
+  color: var(--paper);
+  text-wrap: pretty;
+}
+
+/* ── Il commutatore, solo sul telefono ──
+   Liquid glass del marchio, ma rovesciato: sul fondo rosso il vetro è
+   chiaro invece che rosso, e le luci vengono dalla carta. Stessa ricetta
+   — filo di luce sul taglio, luce interna dall'alto, fondo più denso,
+   ombra calda di contatto — solo con l'altro colore. */
+.duo-scelta {
+  display: none; /* acceso dalla media query in fondo */
+  position: relative;
+  isolation: isolate;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px;
+  padding: 4px;
+  margin: 0 auto clamp(22px, 3.4vh, 40px);
+  width: 100%;
+  max-width: 420px;
+
+  border: 1px solid color-mix(in srgb, var(--lift) 46%, transparent);
+  border-radius: 999px;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--lift) 24%, transparent) 0%,
+    color-mix(in srgb, var(--lift) 14%, transparent) 40%,
+    color-mix(in srgb, var(--red-deep) 22%, transparent) 100%
+  );
+  box-shadow:
+    /* filo di luce sul taglio alto */
+    inset 0 1px 0 0 color-mix(in srgb, var(--lift) 55%, transparent),
+    /* luce interna dall'alto: vetro spesso */
+    inset 0 14px 26px -14px color-mix(in srgb, var(--lift) 34%, transparent),
+    /* fondo più denso: spessore */
+    inset 0 -10px 20px -14px color-mix(in srgb, var(--red-deep) 40%, transparent),
+    /* ombra di contatto, calda come tutte quelle del sito */
+    0 8px 20px -12px color-mix(in srgb, var(--red-deep) 55%, transparent);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  backdrop-filter: blur(14px) saturate(1.4);
+}
+/* il riflesso: una luce radiale in alto a sinistra, come sulle lastre */
+.duo-scelta::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: radial-gradient(
+    120% 100% at 18% 0%,
+    color-mix(in srgb, var(--lift) 30%, transparent) 0%,
+    transparent 60%
+  );
+  pointer-events: none;
+}
+
+/* La pastiglia che segna la scelta. Scorre da una parte all'altra invece
+   di accendersi e spegnersi: il movimento dice che è lo stesso oggetto
+   che si sposta, e si capisce che le posizioni sono due. */
+.duo-cursore {
+  position: absolute;
+  z-index: -1;
+  top: 4px;
+  left: 4px;
+  width: calc(50% - 5px);
+  height: calc(100% - 8px);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--paper) 92%, transparent);
+  box-shadow: 0 4px 12px -6px color-mix(in srgb, var(--red-deep) 60%, transparent);
+  translate: 0 0;
+  transition: translate 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.rosso[data-attivo="manutenzione"] .duo-cursore {
+  translate: calc(100% + 2px) 0;
+}
+
+.duo-tasto {
+  position: relative;
+  padding: 11px 8px;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: -0.01em;
+  color: color-mix(in srgb, var(--paper) 82%, transparent);
+  background: none;
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+/* la voce scelta sta sulla pastiglia chiara: qui il testo torna rosso */
+.duo-tasto[aria-selected="true"] {
+  color: var(--red-deep);
+}
+
+@media (max-width: 860px) {
+  .duo {
+    padding: clamp(20px, 3vh, 40px) 7vw clamp(40px, 6vh, 80px);
+  }
+  .duo-scelta {
+    display: grid;
+    margin-bottom: 22px;
+  }
+  .duo-tasto {
+    /* più grande: è il primo comando della schermata, e a 15px si legge
+       come un'etichetta invece che come una scelta da fare */
+    font-size: 17px;
+    padding: 13px 8px;
+  }
+  .duo-griglia {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  .duo-col {
+    padding: 20px 18px 26px;
+    border-radius: 8px;
+  }
+  /* Una colonna alla volta. Restano entrambe nel documento — i motori
+     leggono tutti i servizi, e chi usa uno screen reader non perde metà
+     pagina — ma se ne mostra una sola. */
+  .rosso[data-attivo="assemblaggio"] .duo-col[data-col="manutenzione"],
+  .rosso[data-attivo="manutenzione"] .duo-col[data-col="assemblaggio"] {
+    display: none;
+  }
+  /* il nome è già scritto sul commutatore, qui sarebbe detto due volte */
+  .duo-nome {
+    display: none;
+  }
+  .duo-guida {
+    margin-bottom: 26px;
+    font-size: 15px;
+  }
+  .duo-voce h4 {
+    font-size: 19px;
+  }
+  .duo-voce p {
+    font-size: 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .duo-cursore,
+  .duo-tasto {
+    transition: none;
+  }
+}
+
+/* ══ L'ALBUM · le macchine montate ════════════════════════════════════════
+   Torna la carta dopo il rosso: là si racconta come si lavora, qui lo si
+   dimostra. Stampe appoggiate sul tavolo, non una griglia di immagini —
+   la cornice è la stessa polaroid dell'altra pagina. ─────────────────── */
+.alb {
+  position: relative;
+  /* sopra le figure di vetro, che passano sotto */
+  z-index: 32;
+  padding: clamp(70px, 11vh, 150px) 6vw clamp(80px, 12vh, 170px);
+}
+/* Nessun fondo qui: la pagina è già carta, e dipingerla di nuovo serviva
+   solo a tagliare la massa di vetro che deve passarci sotto. */
+
+.alb-titolo {
+  margin: 0 0 clamp(40px, 6vh, 90px);
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: clamp(32px, 4.6vw, 88px);
+  letter-spacing: -0.045em;
+  line-height: 0.98;
+  color: var(--ink);
+}
+.alb-dot {
+  display: inline-block;
+  width: 0.13em;
+  height: 0.13em;
+  margin-left: 0.09em;
+  background: var(--red);
+}
+
+.alb-tavolo {
+  display: grid;
+  /* Due per riga e non quattro: in fila sarebbero quattro francobolli, e
+     una foto piccola non dimostra niente. Con due colonne ogni stampa
+     vale il doppio e si guarda davvero. */
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(34px, 4.5vw, 80px);
+  align-items: start;
+  /* centrate nella pagina: il titolo resta a sinistra, il tavolo si
+     dispone al centro come un mazzo di stampe posato lì */
+  max-width: 1080px;
+  margin-inline: auto;
+}
+
+/* La polaroid fuori dalla scena d'apertura: niente posizione assoluta,
+   niente comparsa legata al volo del logo. Sta nel flusso e basta. */
+.pol--album {
+  position: static;
+  width: auto;
+  top: auto;
+  right: auto;
+  opacity: 1;
+  translate: none;
+}
+/* Rotazioni alternate e piccole: sembrano posate a mano invece che
+   allineate da un programma. La terza torna quasi dritta, o la fila
+   comincia a somigliare a una decorazione. */
+.pol--album:nth-child(1) {
+  rotate: -2.5deg;
+}
+.pol--album:nth-child(2) {
+  rotate: 1.8deg;
+}
+.pol--album:nth-child(3) {
+  rotate: -0.8deg;
+}
+.pol--album:nth-child(4) {
+  rotate: 2.2deg;
+}
+.pol--album:hover {
+  /* si raddrizza al passaggio, come se la si prendesse in mano */
+  rotate: 0deg;
+}
+
+/* Il posto della foto finché non c'è. */
+.pol-dafare {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 0.55em;
+  text-align: center;
+  width: 100%;
+  height: 100%;
+  padding: 1.2em;
+  border: 2px dashed color-mix(in srgb, var(--red) 42%, transparent);
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--paper-2) 70%, transparent);
+}
+.pol-dafare span {
+  font-family: var(--font-title);
+  font-weight: 700;
+  font-size: clamp(11px, 0.9vw, 14px);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--red);
+}
+.pol-dafare small {
+  max-width: 24ch;
+  font-family: var(--font-title);
+  font-weight: 500;
+  font-size: clamp(11px, 0.9vw, 14px);
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+@media (max-width: 860px) {
+  .alb {
+    padding: clamp(50px, 8vh, 90px) 7vw clamp(56px, 9vh, 100px);
+  }
+  .alb-titolo {
+    font-size: clamp(28px, 9vw, 60px);
+    margin-bottom: 32px;
+  }
+  /* Carosello: le stampe scorrono di lato invece di impilarsi.
+     Tre polaroid in colonna erano tre schermate di scorrimento per
+     guardare tre foto; di fianco si sfogliano con un gesto, come un
+     mazzo di stampe sul tavolo. */
+  .alb-tavolo {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    /* larghezza di una stampa: meno dello schermo, così la successiva
+       sbircia dal bordo e si capisce che ce n'è un'altra — senza quel
+       taglio nessuno pensa a trascinare */
+    grid-auto-columns: 78%;
+    gap: 16px;
+
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    /* esce dai margini della sezione e li rimette come riempimento: così
+       la prima stampa resta allineata al testo ma il carosello usa tutta
+       la larghezza dello schermo */
+    margin-inline: -7vw;
+    padding-inline: 7vw;
+    /* le rotazioni fanno sporgere gli angoli: senza questo verrebbero
+       tagliati dal bordo del contenitore che scorre */
+    padding-block: 10px 4px;
+
+    /* niente barra: su touch si scorre col dito e la barra è solo una
+       riga grigia in mezzo alle stampe */
+    scrollbar-width: none;
+  }
+  .alb-tavolo::-webkit-scrollbar {
+    display: none;
+  }
+  .pol--album {
+    scroll-snap-align: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pol--album {
+    transition: none;
+  }
+}
+
+/* ══ LE DOMANDE · fondo rosso ═════════════════════════════════════════════
+   Torna il rosso per l'ultima volta prima dei contatti: è il colore con
+   cui il sito dice "adesso parliamo di lavoro", e qui si tolgono gli
+   ultimi dubbi.
+   Fondo pieno su uno strato a parte, come nella schermata dei servizi:
+   sopra le figure di vetro, che in questo tratto vanno coperte — sarebbero
+   chiare sul rosso e disturberebbero la lettura delle risposte. ──────── */
+.faq {
+  position: relative;
+  z-index: 34;
+  padding: clamp(70px, 11vh, 150px) 6vw clamp(80px, 12vh, 160px);
+}
+.faq::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  /* lo stesso rosso della schermata "cosa facciamo": due rossi diversi a
+     due sezioni di distanza si notano */
+  background: var(--rosso-fondo);
+}
+
+/* La massa di vetro nella sua copia chiara, come nella schermata dei
+   servizi. Ancorata alla sezione e non allo schermo: questa è più bassa
+   di una schermata, quindi si vede per intero senza doverla inseguire. */
+/* La finestra da cui si vede la copia bianca.
+   Scorre con la sezione — è `absolute` sui suoi bordi — e ritaglia quello
+   che contiene. `clip-path` e non `overflow: hidden`: quest'ultimo non
+   trattiene un figlio `fixed`, e la copia bianca comparirebbe anche sopra
+   l'album e sotto i contatti. Al contrario di `transform`, `clip-path`
+   ritaglia senza ancorare a sé il figlio fisso — che è esattamente ciò
+   che serve qui. */
+.faq-taglio {
+  position: absolute;
+  inset: 0;
+  clip-path: inset(0);
+  pointer-events: none;
+}
+
+.faq-massa {
+  /* Ferma nell'angolo dello schermo, sopra la copia rossa che le sta
+     sotto: stesse identiche coordinate di .massa, ed è la coincidenza a
+     farle leggere come un oggetto solo che cambia colore. */
+  position: fixed;
+  left: -7vw;
+  bottom: -12vh;
+  width: min(52vw, 780px);
+  height: calc(min(52vw, 780px) * 0.82);
+}
+
+.faq-titolo {
+  margin: 0 0 clamp(34px, 5vh, 70px);
+  max-width: 20ch;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: clamp(32px, 4.6vw, 88px);
+  letter-spacing: -0.045em;
+  line-height: 0.98;
+  color: var(--paper);
+}
+.faq-dot {
+  display: inline-block;
+  width: 0.13em;
+  height: 0.13em;
+  margin-left: 0.09em;
+  /* qui il quadratino è chiaro: sul rosso, in rosso sparirebbe */
+  background: var(--paper);
+}
+
+/* La lastra dietro le domande: stessa ricetta delle colonne dei due
+   mestieri — vetro chiaro sul rosso, filo di luce sul taglio, ombra calda
+   di contatto — e lo stesso negativo. Quello che le passa dietro viene
+   invertito: le lastre di vetro sono chiare, e invertite diventano scure,
+   così si stampano sulla superficie invece di annacquarla. */
+.faq-elenco {
+  position: relative;
+  isolation: isolate;
+  max-width: 900px;
+  padding: clamp(10px, 1.4vw, 26px) clamp(18px, 2vw, 34px)
+    clamp(14px, 1.6vw, 28px);
+  border: 1px solid color-mix(in srgb, var(--lift) 26%, transparent);
+  border-radius: 10px;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--red-deep) 46%, transparent) 0%,
+    color-mix(in srgb, var(--red-deep) 52%, transparent) 45%,
+    color-mix(in srgb, var(--red-deep) 62%, transparent) 100%
+  );
+  box-shadow:
+    inset 0 1px 0 0 color-mix(in srgb, var(--lift) 34%, transparent),
+    inset 0 24px 44px -30px color-mix(in srgb, var(--lift) 26%, transparent),
+    inset 0 -18px 34px -30px color-mix(in srgb, var(--red-deep) 34%, transparent),
+    0 18px 44px -28px color-mix(in srgb, var(--red-deep) 62%, transparent);
+  -webkit-backdrop-filter: invert(1) hue-rotate(180deg) blur(8px) saturate(1.2);
+  backdrop-filter: invert(1) hue-rotate(180deg) blur(8px) saturate(1.2);
+}
+.faq-elenco::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: radial-gradient(
+    100% 80% at 14% 0%,
+    color-mix(in srgb, var(--lift) 18%, transparent) 0%,
+    transparent 62%
+  );
+  pointer-events: none;
+}
+
+/* Una riga per domanda, separata da un filetto: nessun riquadro, come
+   ovunque nel sito. La risposta si apre sotto. */
+.faq-voce {
+  border-top: 1px solid color-mix(in srgb, var(--paper) 30%, transparent);
+}
+.faq-voce:last-child {
+  border-bottom: 1px solid color-mix(in srgb, var(--paper) 30%, transparent);
+}
+
+.faq-voce summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.2em;
+  padding: clamp(18px, 2.4vh, 30px) 0;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: clamp(18px, 1.7vw, 32px);
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  color: var(--paper);
+  /* via la freccina del browser: al suo posto c'è il segno qui sotto */
+  list-style: none;
+  transition: color 0.25s ease;
+}
+.faq-voce summary::-webkit-details-marker {
+  display: none;
+}
+.faq-voce summary:hover {
+  color: color-mix(in srgb, var(--paper) 78%, transparent);
+}
+
+/* Il segno: una croce che diventa un trattino quando la risposta si apre.
+   Disegnata con due filetti invece che con un carattere, così resta della
+   stessa misura a qualunque corpo di testo. */
+.faq-segno {
+  position: relative;
+  flex-shrink: 0;
+  width: 0.62em;
+  height: 0.62em;
+}
+.faq-segno::before,
+.faq-segno::after {
+  content: "";
+  position: absolute;
+  inset: 50% 0 auto 0;
+  height: 2px;
+  background: var(--paper);
+  transition: rotate 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.faq-segno::after {
+  rotate: 90deg;
+}
+/* aperta: il braccio verticale ruota e la croce diventa un meno */
+.faq-voce[open] .faq-segno::after {
+  rotate: 0deg;
+}
+
+/* Il corpo della risposta: è questo che si anima, e l'altezza gliela dà
+   il codice. `overflow: hidden` è indispensabile — senza, il testo
+   sborderebbe dal riquadro mentre questo si apre invece di essere
+   scoperto un poco alla volta. */
+.faq-corpo {
+  overflow: hidden;
+}
+
+.faq-voce p {
+  margin: 0;
+  padding: 0 0 clamp(20px, 2.6vh, 32px);
+  max-width: 62ch;
+  font-family: var(--font-title);
+  font-weight: 500;
+  font-size: clamp(14px, 1.15vw, 20px);
+  line-height: 1.55;
+  color: color-mix(in srgb, var(--paper) 88%, transparent);
+  text-wrap: pretty;
+}
+
+@media (max-width: 860px) {
+  .faq {
+    padding: clamp(50px, 8vh, 90px) 7vw clamp(56px, 9vh, 100px);
+  }
+  .faq-titolo {
+    font-size: clamp(28px, 9vw, 60px);
+    margin-bottom: 26px;
+  }
+  .faq-voce summary {
+    font-size: 18px;
+    /* bersaglio comodo per il pollice */
+    padding: 17px 0;
+  }
+  .faq-voce p {
+    font-size: 15px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .faq-segno::before,
+  .faq-segno::after,
+  .faq-voce summary {
+    transition: none;
+  }
 }
 
 /* ══ PARTE 5 · CONTATTI ═══════════════════════════════════════════════════
@@ -1483,6 +2357,127 @@ body::after {
   border-color: var(--red-deep);
 }
 
+
+/* ── Il rimando all'altra metà dello studio ──
+   Una lastra di vetro nell'angolo in basso a sinistra, sopra la massa che
+   ci passa sotto: qui il vetro fa da contenitore invece che da
+   scenografia, ed è l'unico punto del sito in cui succede.
+   Ricetta del marchio, quella su carta: riempimento fra i due rossi, filo
+   di luce sul taglio alto, ombre sempre calde e mai grigie. */
+.cnt-altra {
+  position: relative;
+  isolation: isolate;
+  /* `auto` spinge la lastra in fondo alla colonna: il suo bordo basso
+     finisce alla stessa quota del pulsante che chiude il modulo, e le due
+     metà della sezione si chiudono sulla stessa riga.
+     Non serve un minimo: quando la colonna è corta il margine automatico
+     vale zero e resta comunque il `gap` della colonna a separarla dai
+     social. */
+  margin-top: auto;
+  max-width: 540px;
+  padding: clamp(24px, 2.6vw, 40px) clamp(26px, 2.8vw, 44px);
+
+  border: 1px solid color-mix(in srgb, var(--lift) 78%, transparent);
+  border-radius: 10px;
+  /* Vetro bianco invece che rosso: il rosso lo lasciamo agli accenti, e
+     qui la lastra deve staccarsi dalla carta — che è già calda — senza
+     diventare una macchia colorata. Le lastre della massa passano sotto e
+     si intravedono ancora, appena velate. */
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--lift) 74%, transparent) 0%,
+    color-mix(in srgb, var(--lift) 66%, transparent) 45%,
+    color-mix(in srgb, var(--lift) 58%, transparent) 100%
+  );
+  box-shadow:
+    inset 0 1px 0 0 color-mix(in srgb, var(--lift) 62%, transparent),
+    inset 0 20px 40px -26px color-mix(in srgb, var(--lift) 40%, transparent),
+    inset 0 -14px 28px -24px color-mix(in srgb, var(--red-deep) 26%, transparent),
+    0 4px 10px -6px color-mix(in srgb, var(--red-deep) 22%, transparent),
+    0 20px 44px -26px color-mix(in srgb, var(--red-deep) 32%, transparent);
+  -webkit-backdrop-filter: blur(12px) saturate(1.3);
+  backdrop-filter: blur(12px) saturate(1.3);
+}
+/* il riflesso in alto a sinistra, come sulle lastre della massa */
+.cnt-altra::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: radial-gradient(
+    120% 100% at 16% 0%,
+    color-mix(in srgb, var(--lift) 30%, transparent) 0%,
+    transparent 62%
+  );
+  pointer-events: none;
+}
+
+.cnt-altra-domanda {
+  margin: 0 0 0.4em;
+  font-family: var(--font-title);
+  font-weight: 600;
+  font-size: clamp(14px, 1.2vw, 21px);
+  line-height: 1.4;
+  color: var(--ink-soft);
+}
+
+.cnt-altra-vai {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: clamp(19px, 1.8vw, 33px);
+  letter-spacing: -0.03em;
+  color: var(--ink);
+  text-decoration: none;
+  /* il filetto col bordo, come l'indirizzo qui sopra */
+  border-bottom: 2px solid var(--red);
+  padding-bottom: 0.06em;
+  transition:
+    color 0.25s ease,
+    border-color 0.25s ease;
+}
+.cnt-altra-vai:hover,
+.cnt-altra-vai:focus-visible {
+  color: var(--red);
+}
+/* la punta di freccia: due lati di un quadrato ruotato */
+.cnt-altra-freccia {
+  width: 0.42em;
+  height: 0.42em;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  rotate: -45deg;
+  translate: 0 -0.06em;
+  transition: translate 0.25s ease;
+}
+.cnt-altra-vai:hover .cnt-altra-freccia {
+  /* scivola in avanti: indica dove si va */
+  translate: 3px -0.06em;
+}
+
+@media (max-width: 860px) {
+  .cnt-altra {
+    margin-top: 26px;
+    max-width: none;
+    padding: 20px 22px;
+  }
+  .cnt-altra-domanda {
+    font-size: 15px;
+  }
+  .cnt-altra-vai {
+    font-size: 21px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cnt-altra-vai,
+  .cnt-altra-freccia {
+    transition: none;
+  }
+}
 
 /* ── Il modulo, scritto come una frase ───────────────────────────────────
    I campi non sono caselle: sono buchi dentro una riga di discorso. Il
@@ -1694,12 +2689,18 @@ body::after {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   gap: clamp(30px, 5vw, 90px);
-  align-items: start;
+  /* `stretch` e non `start`: le due colonne prendono la stessa altezza,
+     ed è quello che permette al rimando in fondo alla prima di allinearsi
+     col piede del modulo nell'altra. */
+  align-items: stretch;
   margin-top: clamp(16px, 2.6vh, 36px);
 }
 .cnt-diretto {
-  display: grid;
-  justify-items: start;
+  /* colonna flessibile invece che griglia: serve a spingere in fondo
+     l'ultimo elemento con un margine automatico */
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
   gap: clamp(10px, 1.6vh, 20px);
 }
 /* Il modulo perde il margine proprio (la distanza la dà la colonna) e si
@@ -1837,7 +2838,9 @@ body::after {
 
 @media (max-width: 640px) {
   .cantiere {
-    right: 10px;
+    /* a sinistra: l'angolo destro è del richiamo ai contatti */
+    right: auto;
+    left: 10px;
     /* Sopra la barra del browser: su iPhone quella zona è coperta, e un
        comando che ci finisce sotto non si riesce a premere. */
     bottom: calc(10px + env(safe-area-inset-bottom, 0px));

@@ -69,8 +69,7 @@ export default function Footer({
         </ul>
 
         <p className="pie-nota">
-          © {anno} — <a href="/pc-su-misura">Computer su misura</a> ·{" "}
-          <a href="/privacy">Privacy</a>
+          © {anno} — <a href="/privacy">Privacy</a>
         </p>
       </div>
     </footer>

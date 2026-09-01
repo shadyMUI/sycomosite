@@ -66,7 +66,13 @@ export default function Home() {
           scorre sopra di loro. */}
       <HeroArt />
       <Logo className="logo-fly" />
-      <SottoLogo />
+      {/* Qui niente WhatsApp: chi cerca un sito ha una cosa da spiegare —
+          che attività ha, cosa gli serve — e il modulo la raccoglie meglio
+          di una chat. Sulla pagina dei computer resta, perché lì la
+          domanda è spesso una sola e urgente.
+          E restando una voce sola, sta meglio in alto a destra dove i
+          contatti si cercano per abitudine, che appesa sotto il marchio. */}
+      <SottoLogo whatsapp={false} dove="barra" />
       <ChiSiamo />
 
       {/* Dà alle scene fisse lo spazio per esistere: due schermate di
@@ -74,12 +80,18 @@ export default function Home() {
           vero, che scorre normalmente sopra di esse. */}
       <div className="scroll-track" aria-hidden="true">
         <div className="scroll-section" data-label="apertura" />
-        <div className="scroll-section" data-label="chi-siamo" />
+        <div className="scroll-section" data-label="chi-siamo" data-aggancio />
       </div>
 
       <main>
         <Servizi />
-        <Contatti />
+        <Contatti
+          altra={{
+            domanda: "Vi serve anche un computer?",
+            invito: "Li montiamo su misura",
+            href: "/pc-su-misura",
+          }}
+        />
       </main>
 
       <Footer />

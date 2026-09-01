@@ -62,7 +62,7 @@ export default function Servizi({
   voci = SERVIZI,
 }: Props) {
   return (
-    <div className="rosso">
+    <div className="rosso" data-aggancio>
       {/* Sensore per il ritaglio delle lastre bianche: alto esattamente una
           schermata, quindi il suo ingresso nella finestra coincide al pixel
           con la salita del bordo rosso da 100vh a 0. Sulla sezione intera
@@ -94,7 +94,16 @@ export default function Servizi({
             pagina a ogni cambio di parole. */}
         <h2
           className="srv-titolo"
-          style={{ "--srv-n": titolo.length } as React.CSSProperties}
+          style={
+            {
+              "--srv-n": titolo.length,
+              /* La parola più lunga: quando il titolo va a capo — sugli
+                 schermi stretti — è lei a decidere quanto può essere
+                 grande il testo. Se non ci sta, si spezza o spinge il
+                 quadratino da solo su una riga sua. */
+              "--srv-max": Math.max(...titolo.split(" ").map((w) => w.length)),
+            } as React.CSSProperties
+          }
         >
           {titolo}
           {/* il punto del marchio: quadrato, non tondo */}

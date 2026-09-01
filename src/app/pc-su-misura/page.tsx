@@ -1,22 +1,31 @@
 import type { Metadata } from "next";
 import Logo from "@/components/Logo";
 import HeroArt from "@/components/HeroArt";
-import ChiSiamo from "@/components/ChiSiamo";
-import Servizi from "@/components/Servizi";
+import DueMestieri from "@/components/DueMestieri";
 import Contatti from "@/components/Contatti";
 import Footer from "@/components/Footer";
 import ScrollDirector from "@/components/ScrollDirector";
 import SottoLogo from "@/components/SottoLogo";
+import CheComputer from "@/components/CheComputer";
+import Album from "@/components/Album";
+import Domande from "@/components/Domande";
 
 /**
  * I computer su misura.
  *
  * Stessa macchina della pagina principale — tenda, volo del logo, massa
- * di vetro, sezione rossa, contatti — con testi propri. I componenti sono
+ * di vetro, sezione rossa, contatti — con testi propri. Al posto delle
+ * due frasi diagonali c'è però una domanda: chi cerca un computer ha in
+ * testa una cosa precisa da farci, e chiederla apre il discorso meglio di
+ * qualsiasi frase a effetto. I componenti sono
  * gli stessi: ciò che cambia sono le parole, non il modo in cui si
  * muovono. Così le due metà dello studio si somigliano senza che nessuna
  * sia la copia sbiadita dell'altra, e una correzione al meccanismo vale
  * per entrambe.
+ *
+ * La schermata rossa non elenca più quattro passi ma due mestieri
+ * affiancati — assemblare e mantenere — perché sono due persone diverse:
+ * chi la macchina non ce l'ha ancora e chi ce l'ha già e non va più.
  *
  * È anche la stessa idea, detta su un altro oggetto: là un sito costruito
  * attorno a un'attività invece di un modello comprato, qui un computer
@@ -30,33 +39,6 @@ import SottoLogo from "@/components/SottoLogo";
    pc". Senza, la pagina non si posiziona per le ricerche locali — che
    sono l'unica fonte di clienti che conti per questo servizio. */
 const CITTA = "[città]";
-
-const PASSI = [
-  {
-    n: "01",
-    nome: "Scegliamo insieme",
-    testo:
-      "Ci dite cosa dovete farci e quanto volete spendere. Da lì scegliamo i pezzi: non i più costosi, quelli che rendono di più per quella cifra. Spesso si spende meno di quanto pensavate.",
-  },
-  {
-    n: "02",
-    nome: "Lo montiamo",
-    testo:
-      "Assemblaggio, cavi in ordine, sistema installato e programmi pronti. Ve lo consegnamo che si accende e funziona, non da configurare.",
-  },
-  {
-    n: "03",
-    nome: "Lo mettiamo a punto",
-    testo:
-      "Un computer montato non è ancora un computer finito. Temperature, avvio, prestazioni reali: lo tariamo perché dia tutto quello per cui l'avete pagato.",
-  },
-  {
-    n: "04",
-    nome: "Lo teniamo in forma",
-    testo:
-      "Pulizia, pasta termica, sostituzione dei pezzi che invecchiano. Un computer curato dura anni in più, e costa molto meno che ricomprarlo.",
-  },
-];
 
 export const metadata: Metadata = {
   /* Prima il servizio, poi la città: chi cerca scrive "assemblaggio pc
@@ -92,24 +74,31 @@ export default function PcSuMisura() {
       <HeroArt />
       <Logo className="logo-fly" sub="Hardware" />
       <SottoLogo />
-      <ChiSiamo
-        uno="il computer giusto"
-        due="non è il più caro"
-        didascalia="Sycomo Hardware"
-      />
 
-      {/* Dà alle scene fisse lo spazio per esistere: due schermate di
-          scorrimento, l'apertura e la frase. Poi comincia il contenuto
-          vero, che scorre normalmente sopra di esse. */}
+      {/* Dà all'apertura lo spazio per esistere, e poco: qui dopo il
+          marchio non c'è una scena fissa da guardare — la domanda arriva
+          col flusso — quindi un binario lungo sarebbe carta bianca da
+          attraversare. */}
       <div className="scroll-track" aria-hidden="true">
-        <div className="scroll-section" data-label="apertura" />
-        <div className="scroll-section" data-label="chi-siamo" />
+        <div
+          className="scroll-section scroll-section--corta"
+          data-label="apertura"
+        />
       </div>
 
       <main>
-        <Servizi titolo="come lo costruiamo" voci={PASSI} />
+        <CheComputer />
+        <DueMestieri />
+        <Album />
+        <Domande />
         <Contatti
           titolo={["Diteci", "cosa vi serve"]}
+          modello="computer"
+          altra={{
+            domanda: "Vi serve anche un sito?",
+            invito: "Li facciamo su misura",
+            href: "/",
+          }}
           /* Qui la frase chiede l'uso e il budget, non l'attività e il
              sito: sono gli esempi nei campi a far capire cosa scrivere, e
              il budget è la prima cosa che serve sapere per consigliare. */

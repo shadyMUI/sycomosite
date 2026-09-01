@@ -16,6 +16,16 @@ import { useEffect } from "react";
  * ritaglio delle figure, il negativo del titolo — continuano a funzionare
  * senza sapere che c'è di mezzo qualcosa.
  *
+ * Alla fine del movimento c'è un aggancio: se ci si è fermati vicino
+ * all'inizio di una sezione — gli elementi marcati `data-aggancio` — la
+ * pagina ci si posa sopra. Un colpo di rotella un po' più deciso lasciava
+ * altrimenti la schermata a metà, con mezzo titolo sopra e mezzo sotto, e
+ * chi legge non capisce se ha già visto tutto o gli è sfuggito qualcosa.
+ *
+ * Non è una paginazione: se il gesto è lungo abbastanza da superare la
+ * soglia, la pagina scorre dove volevate. L'aggancio raccoglie solo chi è
+ * andato lungo di poco.
+ *
  * Resta fuori:
  * – il touch, che ha già la sua inerzia e ne uscirebbe raddoppiata;
  * – chi ha chiesto meno movimento, per cui è proprio ciò che dà fastidio.
@@ -26,6 +36,12 @@ import { useEffect } from "react";
    0.075 fa durare la frenata circa mezzo secondo — abbastanza da vederla
    senza che la pagina sembri inseguire il gesto in ritardo. */
 const AVVICINAMENTO = 0.075;
+
+/* Quanto lontano può essere l'inizio di una sezione perché la pagina ci
+   si agganci, in frazione di schermata. Le sezioni sono alte più o meno
+   una schermata: con mezza schermata di raggio c'è quasi sempre un punto
+   entro tiro, e ci si ferma su un bordo invece che a metà. */
+const RAGGIO = 0.55;
 
 export default function ScorrimentoFluido() {
   useEffect(() => {
@@ -46,9 +62,68 @@ export default function ScorrimentoFluido() {
     let inCorsa = false;
     let nostro = false;
     let frame = 0;
+    /* Serve a non far rimbalzare l'aggancio all'infinito: il movimento
+       che porta al bordo finisce anch'esso, e senza questo cercherebbe
+       subito il punto successivo. */
+    let inAggancio = false;
+    /* Da che parte si stava andando: +1 giù, -1 su. Senza, risalendo
+       l'aggancio trovava il bordo appena lasciato e ci riportava sopra —
+       la pagina rimbalzava e non si riusciva più a tornare in cima. */
+    let verso = 1;
 
     const limite = () =>
       Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+
+    /* Gli inizi delle sezioni, in coordinate di documento. Si rileggono a
+       ogni aggancio e non una volta sola: le altezze cambiano quando le
+       immagini finiscono di caricarsi o si ridimensiona la finestra.
+
+       Si somma `offsetTop` lungo la catena dei contenitori invece di
+       usare il riquadro sullo schermo: quello comprende le trasformazioni,
+       e le sezioni entrano traslate di qualche decina di pixel finché il
+       marchio non ha finito di volare. Il bersaglio sarebbe quindi un
+       punto che si sposta mentre ci si va. */
+    const quotaDi = (el: HTMLElement) => {
+      let y = 0;
+      let n: HTMLElement | null = el;
+      while (n) {
+        y += n.offsetTop;
+        n = n.offsetParent as HTMLElement | null;
+      }
+      return y;
+    };
+
+    const punti = () =>
+      [...document.querySelectorAll<HTMLElement>("[data-aggancio]")].map(quotaDi);
+
+    const aggancia = () => {
+      const raggio = window.innerHeight * RAGGIO;
+      let meta: number | null = null;
+      let minimo = Infinity;
+
+      for (const p of punti()) {
+        /* Solo i bordi davanti a sé, con una tolleranza di pochi pixel per
+           quello su cui si è appena arrivati. Guardare anche indietro
+           significherebbe tirare l'utente nella direzione da cui viene. */
+        const avanti = verso > 0 ? p >= corrente - 4 : p <= corrente + 4;
+        if (!avanti) continue;
+
+        const d = Math.abs(p - corrente);
+        if (d < minimo) {
+          minimo = d;
+          meta = p;
+        }
+      }
+
+      /* Niente da fare se non c'è un bordo vicino, o se ci siamo già
+         sopra: sotto i due pixel il movimento non si vedrebbe e servirebbe
+         solo a tenere vivo un ciclo. */
+      if (meta === null || minimo < 2 || minimo > raggio) return;
+
+      inAggancio = true;
+      arrivo = Math.min(limite(), Math.max(0, meta));
+      avvia();
+    };
 
     const passo = () => {
       corrente += (arrivo - corrente) * AVVICINAMENTO;
@@ -65,6 +140,12 @@ export default function ScorrimentoFluido() {
 
       if (finita) {
         inCorsa = false;
+        /* Se questo movimento ERA l'aggancio, ci si ferma qui. */
+        if (inAggancio) {
+          inAggancio = false;
+          return;
+        }
+        aggancia();
         return;
       }
       frame = requestAnimationFrame(passo);
@@ -87,6 +168,9 @@ export default function ScorrimentoFluido() {
       if (dentro) return;
 
       e.preventDefault();
+      /* un gesto nuovo annulla l'aggancio in corso: comanda chi scorre */
+      inAggancio = false;
+      if (e.deltaY !== 0) verso = e.deltaY > 0 ? 1 : -1;
       arrivo = Math.min(limite(), Math.max(0, arrivo + e.deltaY));
       avvia();
     };
