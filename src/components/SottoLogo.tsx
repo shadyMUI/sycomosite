@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { WHATSAPP } from "@/lib/sito";
 
 /**
  * I due modi per farsi sentire, sotto il marchio.
@@ -38,12 +39,6 @@ import { useEffect, useRef } from "react";
  * la piazza direttamente in alto a destra e ce la lascia, nuda, senza
  * filetto — è quello che sta bene quando è l'unico richiamo della pagina.
  */
-
-/* ⚠️ DA COMPLETARE con il numero vero, in formato internazionale e senza
-   spazi né simboli: 39 seguito dal numero, per esempio 393331234567.
-   Finché resta così il collegamento apre WhatsApp su un numero che non
-   esiste. */
-const WHATSAPP = "39XXXXXXXXXX";
 
 /* Il messaggio già scritto nella chat: chi apre trova la prima riga
    pronta e non deve inventarsi come cominciare, che è il momento in cui

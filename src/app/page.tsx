@@ -1,27 +1,16 @@
 import Logo from "@/components/Logo";
 import HeroArt from "@/components/HeroArt";
-import ChiSiamo from "@/components/ChiSiamo";
-import Servizi from "@/components/Servizi";
+import CheComputer from "@/components/CheComputer";
+import DueMestieri, { MESTIERI_DIGITAL } from "@/components/DueMestieri";
+import Album, { SCATTI_DIGITAL } from "@/components/Album";
+import Domande, { FAQ_DIGITAL } from "@/components/Domande";
 import Contatti from "@/components/Contatti";
 import Footer from "@/components/Footer";
 import ScrollDirector from "@/components/ScrollDirector";
 import SottoLogo from "@/components/SottoLogo";
-import { SITO, NOME, EMAIL, DESCRIZIONE, SOCIAL } from "@/lib/sito";
+import DiagonalKaomojiBackground from "@/components/DiagonalKaomojiBackground";
+import { SITO, NOME, EMAIL, DESCRIZIONE, SOCIAL, CITTA } from "@/lib/sito";
 
-/**
- * I dati strutturati: la stessa pagina, scritta per le macchine.
- *
- * I motori leggono il testo e tirano a indovinare che cosa sia questa
- * attività; questo blocco glielo dice senza ambiguità — come si chiama,
- * dove scrivere, quali sono i profili ufficiali. È ciò che permette a
- * una ricerca del nome di mostrare la scheda con i social giusti invece
- * di un risultato qualsiasi.
- *
- * `Organization` e non `LocalBusiness`: quest'ultimo richiede indirizzo
- * e orari di apertura, e dichiararli finti è peggio che non dichiararli.
- * ⚠️ Quando ci sarà una sede vera, questo è il punto in cui passare a
- * LocalBusiness aggiungendo `address` e `openingHours`.
- */
 const DATI_STRUTTURATI = {
   "@context": "https://schema.org",
   "@graph": [
@@ -32,7 +21,7 @@ const DATI_STRUTTURATI = {
       url: SITO,
       email: EMAIL,
       description: DESCRIZIONE,
-      areaServed: { "@type": "Country", name: "Italia" },
+      areaServed: { "@type": "City", name: CITTA },
       sameAs: SOCIAL,
     },
     {
@@ -48,14 +37,13 @@ const DATI_STRUTTURATI = {
 
 export default function Home() {
   return (
-    <>
-      {/* Non usa <Script>: questo blocco deve trovarsi nell'HTML alla
-          prima consegna, perché i crawler leggono la pagina servita e
-          non aspettano che il JavaScript la completi. */}
+    <div className="relative w-full min-h-screen">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(DATI_STRUTTURATI) }}
       />
+
+      <DiagonalKaomojiBackground />
 
       <ScrollDirector />
 
@@ -66,35 +54,48 @@ export default function Home() {
           scorre sopra di loro. */}
       <HeroArt />
       <Logo className="logo-fly" />
-      {/* Qui niente WhatsApp: chi cerca un sito ha una cosa da spiegare —
-          che attività ha, cosa gli serve — e il modulo la raccoglie meglio
-          di una chat. Sulla pagina dei computer resta, perché lì la
-          domanda è spesso una sola e urgente.
-          E restando una voce sola, sta meglio in alto a destra dove i
-          contatti si cercano per abitudine, che appesa sotto il marchio. */}
-      <SottoLogo whatsapp={false} dove="barra" />
-      <ChiSiamo />
-
-      {/* Dà alle scene fisse lo spazio per esistere: due schermate di
-          scorrimento, l'apertura e "chi siamo". Poi comincia il contenuto
-          vero, che scorre normalmente sopra di esse. */}
-      <div className="scroll-track" aria-hidden="true">
-        <div className="scroll-section" data-label="apertura" />
-        <div className="scroll-section" data-label="chi-siamo" data-aggancio />
-      </div>
+      <SottoLogo />
 
       <main>
-        <Servizi />
+        <CheComputer
+          titolo="siti e app costruiti da zero"
+          casi={["siti web", "app mobile", "social"]}
+          chiusura=" — scritti su misura, "
+          accento="senza modelli riciclati"
+        />
+
+        <DueMestieri mestieri={MESTIERI_DIGITAL} titolo="cosa facciamo" />
+
+        <Album
+          titolo={["Qualche progetto", "demo e dal vivo"]}
+          scatti={SCATTI_DIGITAL}
+        />
+
+        <Domande domande={FAQ_DIGITAL} titolo="Quello che ci chiedono" />
+
         <Contatti
           altra={{
-            domanda: "Vi serve anche un computer?",
-            invito: "Li montiamo su misura",
+            domanda: "Vi serve anche un PC o assistenza computer?",
+            invito: "Li montiamo su misura o ripariamo",
             href: "/pc-su-misura",
+          }}
+          frase={{
+            attivita: {
+              chiede: ", ho",
+              esempio: "un ristorante / uno studio ad Asti",
+              etichetta: "che attività avete",
+            },
+            serve: {
+              chiede: "e vorrei",
+              esempio: "un nuovo sito o un'app",
+              etichetta: "cosa vi serve",
+            },
+            mail: "nome@esempio.it",
           }}
         />
       </main>
 
       <Footer />
-    </>
+    </div>
   );
 }

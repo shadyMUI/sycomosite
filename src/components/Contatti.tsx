@@ -1,28 +1,6 @@
+import Link from "next/link";
 import ModuloContatto from "./ModuloContatto";
-
-/**
- * Parte 5 — contatti.
- *
- * Qui il rosso finisce e torna la carta: è il segnale che la parte di
- * racconto è chiusa e comincia quella in cui si fa qualcosa. Sta più in
- * alto di ogni altro strato, così copre sia il fondo rosso sia le lastre
- * bianche che restavano fisse sopra di esso.
- *
- * L'indirizzo è scritto grande e per esteso, non nascosto dietro un
- * "scrivici": chi vuole copiarlo lo vede, chi vuole cliccarlo lo clicca.
- */
-
-/* ⚠️ Da sostituire con l'indirizzo sul dominio quando ci sarà
-   (info@sycomo.it o simile): una casella sul proprio dominio dice che
-   c'è una struttura dietro, una gmail dice il contrario. Compare anche
-   nel piede di pagina e nell'informativa privacy: vanno cambiati
-   insieme, e deve restare la stessa a cui EmailJS consegna. */
-const EMAIL = "sycomodigital@gmail.com";
-
-const SOCIAL = [
-  { nome: "Instagram", url: "https://www.instagram.com/sycomo.digital" },
-  { nome: "TikTok", url: "https://www.tiktok.com/@sycomo.digital" },
-];
+import { EMAIL } from "@/lib/sito";
 
 type Props = {
   /* Due righe: vanno a capo dove lo decide chi scrive, non dove capita. */
@@ -56,7 +34,7 @@ export default function Contatti({
 
       {/* Il modulo a destra, i modi diretti a sinistra: chi vuole scrivere
           subito trova la frase da completare, chi preferisce la propria
-          posta o i social ha tutto sull'altro lato senza scorrere. */}
+          posta trova l'indirizzo sull'altro lato senza scorrere. */}
       <div className="cnt-colonne">
         <div className="cnt-diretto">
           <div className="cnt-voce">
@@ -68,31 +46,16 @@ export default function Contatti({
             </a>
           </div>
 
-          <div className="cnt-voce">
-            <span className="cnt-etichetta">
-              social<span className="cnt-duepunti">:</span>
-            </span>
-            <ul className="cnt-social">
-              {SOCIAL.map((s) => (
-                <li key={s.nome}>
-                  <a href={s.url} target="_blank" rel="noopener noreferrer">
-                    {s.nome}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-
           {altra && (
             /* Lastra di vetro nell'angolo, sopra la massa che ci passa
                sotto: è l'unico punto della pagina in cui il vetro fa da
                contenitore invece che da scenografia. */
             <aside className="cnt-altra">
               <p className="cnt-altra-domanda">{altra.domanda}</p>
-              <a className="cnt-altra-vai" href={altra.href}>
+              <Link className="cnt-altra-vai" href={altra.href}>
                 {altra.invito}
                 <span className="cnt-altra-freccia" aria-hidden="true" />
-              </a>
+              </Link>
             </aside>
           )}
         </div>

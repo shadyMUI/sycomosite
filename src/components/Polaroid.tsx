@@ -51,7 +51,7 @@ export default function Polaroid({
   useEffect(() => {
     if (!video) return;
     if (window.scrollY > 0) {
-      setCarica(true);
+      requestAnimationFrame(() => setCarica(true));
       return;
     }
     const avvia = () => setCarica(true);

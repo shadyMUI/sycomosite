@@ -1,4 +1,6 @@
+import Link from "next/link";
 import Logo from "./Logo";
+import { NOME, EMAIL } from "@/lib/sito";
 
 /**
  * Il piede della pagina, in inchiostro pieno.
@@ -12,16 +14,9 @@ import Logo from "./Logo";
  */
 
 const DATI = {
-  ragioneSociale: "Sycomo Digital",
+  ragioneSociale: NOME,
   sede: "Italia",
 };
-
-const EMAIL = "sycomodigital@gmail.com";
-
-const SOCIAL = [
-  { nome: "Instagram", url: "https://www.instagram.com/sycomo.digital" },
-  { nome: "TikTok", url: "https://www.tiktok.com/@sycomo.digital" },
-];
 
 type Props = {
   /* la riga sotto il nome nel marchio, e la frase che chiude */
@@ -46,19 +41,10 @@ export default function Footer({
           <p className="pie-claim">{claim}</p>
         </div>
 
-        <nav className="pie-nav" aria-label="Contatti e social">
+        <nav className="pie-nav" aria-label="Contatti">
           <a className="pie-mail" href={`mailto:${EMAIL}`}>
             {EMAIL}
           </a>
-          <ul>
-            {SOCIAL.map((s) => (
-              <li key={s.nome}>
-                <a href={s.url} target="_blank" rel="noopener noreferrer">
-                  {s.nome}
-                </a>
-              </li>
-            ))}
-          </ul>
         </nav>
       </div>
 
@@ -69,7 +55,7 @@ export default function Footer({
         </ul>
 
         <p className="pie-nota">
-          © {anno} — <a href="/privacy">Privacy</a>
+          © {anno} — <Link href="/privacy">Privacy</Link>
         </p>
       </div>
     </footer>

@@ -1,3 +1,5 @@
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 import { ImageResponse } from "next/og";
 import { NOME, DESCRIZIONE_BREVE } from "@/lib/sito";
 
@@ -10,10 +12,8 @@ import { NOME, DESCRIZIONE_BREVE } from "@/lib/sito";
  * schermata — carta, marchio in grande, il quadratino rosso — perché chi
  * clicca deve ritrovare quello che ha visto nell'anteprima.
  *
- * ⚠️ Qui i caratteri del sito non ci sono: `next/font` serve i font alla
- * pagina, non a questo generatore, che gira separato. Si usa quindi la
- * pila di sistema. È il motivo per cui il disegno punta su peso, colore
- * e spaziatura invece che sulla forma delle lettere.
+ * `next/font` serve la pagina, non questo generatore: qui si caricano
+ * gli stessi caratteri da TTF statici locali, compatibili con Satori.
  */
 
 export const alt = `${NOME} — siti su misura per le piccole attività`;
@@ -29,7 +29,13 @@ const INK = "#20201c";
 const RED = "#e12c1a";
 const MUTED = "#4c483f";
 
-export default function Immagine() {
+export default async function Immagine() {
+  const [geistRegular, geistBold, manropeSemiBold] = await Promise.all([
+    readFile(join(process.cwd(), "src/app/og-fonts/Geist-Regular.ttf")),
+    readFile(join(process.cwd(), "src/app/og-fonts/Geist-Bold.ttf")),
+    readFile(join(process.cwd(), "src/app/og-fonts/Manrope-SemiBold.ttf")),
+  ]);
+
   return new ImageResponse(
     (
       <div
@@ -78,7 +84,8 @@ export default function Immagine() {
           <div
             style={{
               fontSize: 132,
-              fontWeight: 800,
+              fontFamily: "Geist",
+              fontWeight: 700,
               letterSpacing: "-0.05em",
               color: INK,
               lineHeight: 1,
@@ -103,6 +110,7 @@ export default function Immagine() {
         <div
           style={{
             fontSize: 30,
+            fontFamily: "Manrope",
             fontWeight: 600,
             letterSpacing: "0.42em",
             color: INK,
@@ -117,6 +125,8 @@ export default function Immagine() {
         <div
           style={{
             fontSize: 40,
+            fontFamily: "Geist",
+            fontWeight: 400,
             color: MUTED,
             marginTop: 54,
             maxWidth: 780,
@@ -128,6 +138,28 @@ export default function Immagine() {
         </div>
       </div>
     ),
-    size
+    {
+      ...size,
+      fonts: [
+        {
+          name: "Geist",
+          data: Uint8Array.from(geistRegular).buffer,
+          weight: 400,
+          style: "normal",
+        },
+        {
+          name: "Geist",
+          data: Uint8Array.from(geistBold).buffer,
+          weight: 700,
+          style: "normal",
+        },
+        {
+          name: "Manrope",
+          data: Uint8Array.from(manropeSemiBold).buffer,
+          weight: 600,
+          style: "normal",
+        },
+      ],
+    }
   );
 }

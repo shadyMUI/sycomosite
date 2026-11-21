@@ -1,24 +1,39 @@
+"use client";
+
+import { useCallback } from "react";
+
 /**
  * Sipario d'apertura: la schermata è piena del rosso del brand e cala verso
  * il basso come un liquido che defluisce, scoprendo il sito.
  *
- * È tutto CSS: nessun JavaScript, nessun "use client". Così l'animazione
- * parte al primo fotogramma dipinto invece di aspettare l'idratazione di
- * React — che è esattamente quando si vedrebbe lo sfarfallio.
- *
- * L'onda è un SVG largo il doppio che scorre in loop: il tracciato ha
- * periodo 200 su una viewBox di 1200 (sei creste), quindi traslandolo di
- * metà larghezza — tre periodi esatti — ricombacia con sé stesso e il
- * movimento non ha giunte visibili.
- *
- * Sei creste e non due: con periodi larghi, uno solo copriva l'intero
- * schermo e la superficie sembrava piatta invece che liquida.
+ * All'uscita completa del liquido dallo schermo (evento CSS `animationend`),
+ * notifica il sistema tramite l'evento `sycomo:intro-done` affinché l'animazione
+ * del titolo inizi esattamente al termine della discesa.
  */
 export default function IntroCurtain() {
+  const handleAnimationEnd = useCallback(
+    (e: React.AnimationEvent<HTMLDivElement>) => {
+      if (
+        e.animationName === "intro-fall" ||
+        e.animationName === "intro-done"
+      ) {
+        window.dispatchEvent(new CustomEvent("sycomo:intro-done"));
+      }
+    },
+    []
+  );
+
   return (
-    <div className="intro" aria-hidden="true">
+    <div
+      className="intro"
+      aria-hidden="true"
+      onAnimationEnd={handleAnimationEnd}
+    >
       {/* la massa di liquido: cala e esce dal fondo dello schermo */}
-      <div className="intro-sheet">
+      <div
+        className="intro-sheet"
+        onAnimationEnd={handleAnimationEnd}
+      >
         {/* superficie: due onde a velocità diverse danno profondità */}
         {/* cresta lontana: più alta e più chiara, fa da schiuma */}
         <svg

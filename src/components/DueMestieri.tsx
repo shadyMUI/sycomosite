@@ -1,32 +1,20 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
-/**
- * I due mestieri, nella schermata rossa.
- *
- * Assemblare e mantenere non sono due elenchi dello stesso servizio: sono
- * due persone diverse. Chi vuole una macchina nuova e chi ne ha già una
- * che non va più come prima — e quest'ultimo, senza una porta sua, non
- * capirebbe di poterci portare il suo computer senza averlo comprato qui.
- *
- * Su schermo largo stanno affiancati: si vedono entrambi in un colpo
- * d'occhio, e il confronto dice da solo che facciamo tutte e due le cose.
- * Su telefono due colonne diventerebbero due colonne di due parole, quindi
- * se ne mostra una alla volta e in cima c'è un commutatore di vetro per
- * passare all'altra.
- *
- * Entrambe le colonne restano SEMPRE nel documento, anche quando una non
- * si vede: è il CSS a nasconderne una sul telefono. Così i motori di
- * ricerca leggono tutti i servizi — "pulizia pc", "pasta termica" sono le
- * ricerche che portano gente — e chi usa uno screen reader non perde metà
- * della pagina.
- */
+export type VoceMestiere = {
+  nome: string;
+  testo: string;
+};
 
-/* ⚠️ DA CONFERMARE: le voci sono quelle che avete elencato, con una riga
-   di spiegazione ciascuna scritta come la direste al banco. Se un
-   servizio non lo fate va tolto — prometterlo costa più di quanto renda. */
-const MESTIERI = [
+export type Mestiere = {
+  id: string;
+  nome: string;
+  guida: string;
+  voci: VoceMestiere[];
+};
+
+const MESTIERI_HARDWARE: Mestiere[] = [
   {
     id: "assemblaggio",
     nome: "Assemblaggio",
@@ -88,34 +76,150 @@ const MESTIERI = [
   },
 ];
 
-const LASTRE = ["ml-fondo", "ml-ancora", "ml-quadro", "ml-tondo", "ml-scheggia"];
+export const MESTIERI_DIGITAL: [Mestiere, Mestiere] = [
+  {
+    id: "sviluppo",
+    nome: "Siti & App",
+    guida: "Partiamo da zero, o riscriviamo quello che non vi porta clienti.",
+    voci: [
+      {
+        nome: "Siti web su misura",
+        testo:
+          "Scritti a mano, leggeri e veloci sul telefono. Niente modelli riciclati: codice pulito e fatto per durare.",
+      },
+      {
+        nome: "Web App",
+        testo:
+          "Soluzioni accessibili via browser o QR code: menù digitali interattivi, cataloghi o sistemi di prenotazione rapida.",
+      },
+      {
+        nome: "App Mobile (iOS e Android)",
+        testo:
+          "Applicazioni complete pubblicate sugli store per fidelizzare i clienti con notifiche push e funzioni dedicate.",
+      },
+      {
+        nome: "Farsi trovare (SEO)",
+        testo:
+          "Ottimizzazione per Google e posizionamento locale ad Asti per portare nuovi contatti alla vostra attività.",
+      },
+    ],
+  },
+  {
+    id: "gestione",
+    nome: "Cura & Supporto",
+    guida: "Avete già un'attività: teniamo il sito aggiornato e vi aiutiamo a farvi trovare.",
+    voci: [
+      {
+        nome: "Piano mensile 'Zero Pensieri'",
+        testo:
+          "Un canone chiaro con creazione del sito inclusa, modifiche illimitate e nessun costo a sorpresa.",
+      },
+      {
+        nome: "Profilo Google Maps",
+        testo:
+          "Foto aggiornate, orari, risposte e cura della visibilità su Maps dove i clienti locali vi cercano ogni giorno.",
+      },
+      {
+        nome: "Manutenzione & Assistenza",
+        testo:
+          "Aggiornamenti continui, backup di sicurezza e supporto prioritario diretto, anche per i vostri computer.",
+      },
+    ],
+  },
+];
 
-const TITOLO = "cosa facciamo";
 
-export default function DueMestieri() {
-  /* Quale colonna si vede sul telefono. Su schermo largo non serve a
-     niente — si vedono entrambe — ma resta impostato lo stesso, così
-     rimpicciolendo la finestra non ci si trova davanti a una schermata
-     vuota in attesa di un clic. */
-  const [attivo, setAttivo] = useState(MESTIERI[0].id);
+interface LastraSpec {
+  id: string;
+  isVetro: boolean;
+}
+
+const LASTRE_CONFIG: LastraSpec[] = [
+  { id: "ml-fondo", isVetro: false },
+  { id: "ml-ancora", isVetro: false },
+  { id: "ml-quadro", isVetro: true },
+  { id: "ml-tondo", isVetro: true },
+  { id: "ml-scheggia", isVetro: true },
+];
+
+type Props = {
+  titolo?: string;
+  mestieri?: [Mestiere, Mestiere];
+};
+
+export default function DueMestieri({
+  titolo = "cosa facciamo",
+  mestieri = [MESTIERI_HARDWARE[0], MESTIERI_HARDWARE[1]],
+}: Props) {
+  const [attivo, setAttivo] = useState(mestieri[0].id);
   const gruppo = useId();
+  const secondoAttivo = attivo === mestieri[1].id;
+  const taglioRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    let rafId: number | null = null;
+    const updateClip = () => {
+      rafId = null;
+      const rosso = document.querySelector(".rosso");
+      if (rosso && taglioRef.current) {
+        const r = rosso.getBoundingClientRect();
+        const winH = window.innerHeight;
+        if (r.bottom > 0 && r.top < winH) {
+          const top = Math.max(0, r.top);
+          const bottom = Math.max(0, winH - r.bottom);
+          taglioRef.current.style.clipPath = `inset(${Math.round(top)}px 0px ${Math.round(bottom)}px 0px)`;
+        } else {
+          taglioRef.current.style.clipPath = "inset(100% 0 0 0)";
+        }
+      }
+    };
+
+    const onScrollOrResize = () => {
+      if (rafId === null) {
+        rafId = requestAnimationFrame(updateClip);
+      }
+    };
+
+    window.addEventListener("scroll", onScrollOrResize, { passive: true });
+    window.addEventListener("resize", onScrollOrResize, { passive: true });
+    updateClip();
+
+    return () => {
+      window.removeEventListener("scroll", onScrollOrResize);
+      window.removeEventListener("resize", onScrollOrResize);
+      if (rafId !== null) cancelAnimationFrame(rafId);
+    };
+  }, []);
 
   return (
-    <div className="rosso" data-attivo={attivo} data-aggancio>
-      {/* Sensore per il ritaglio delle lastre bianche: alto esattamente una
-          schermata, quindi il suo ingresso coincide al pixel con la salita
-          del bordo rosso. */}
+    <div
+      className="rosso"
+      data-attivo={attivo}
+      data-pos={secondoAttivo ? "secondo" : "primo"}
+      data-aggancio
+    >
       <span className="rosso-sensore" aria-hidden="true" />
 
-      {/* Gruppo isolato: lastre bianche + titolo, e nient'altro. */}
+      {/* Gruppo isolato: lastre bianche + titolo.
+          L'isolamento fa sì che mix-blend-mode: difference del titolo operi
+          esclusivamente contro le lastre bianche (fondendo in nero) e contro
+          il fondo trasparente (restando bianco puro), senza MAI toccare lo
+          sfondo rosso esterno (che altrimenti causerebbe la tinta ciano/azzurro). */}
       <div className="rosso-blend">
-        <div className="taglio-alto">
-          <div className="taglio-basso">
-            <div className="rosso-massa" aria-hidden="true">
-              {LASTRE.map((c) => (
-                <span key={c} className={`ml sml ${c}`} />
-              ))}
-            </div>
+        <div
+          ref={taglioRef}
+          className="taglio-fissato hero-art"
+          style={{ clipPath: "inset(100% 0 0 0)" }}
+        >
+          <div className="massa" aria-hidden="true">
+            {LASTRE_CONFIG.map(({ id, isVetro }) => (
+              <span
+                key={id}
+                className={`ml sml ${id}${isVetro ? " ml-vetro" : ""}`}
+              />
+            ))}
           </div>
         </div>
 
@@ -123,28 +227,22 @@ export default function DueMestieri() {
           className="srv-titolo"
           style={
             {
-              "--srv-n": TITOLO.length,
-              "--srv-max": Math.max(...TITOLO.split(" ").map((w) => w.length)),
+              "--srv-n": titolo.length,
+              "--srv-max": Math.max(1, ...titolo.split(" ").map((w) => w.length)),
             } as React.CSSProperties
           }
         >
-          {TITOLO}
-          {/* il punto del marchio: quadrato, non tondo */}
+          {titolo}
           <span className="srv-dot" aria-hidden="true" />
         </h2>
       </div>
 
-      {/* schermata 1: dà l'altezza al titolo, che è disegnato nel gruppo */}
-      <section className="srv-apre" aria-label={TITOLO} />
+      <section className="srv-apre" aria-label={titolo} />
 
       <section className="duo" aria-label="I nostri servizi">
-        {/* Il commutatore esiste solo sul telefono: su schermo largo le
-            colonne si vedono entrambe e un comando per sceglierne una
-            sarebbe un clic in più per niente. `aria-hidden` no: quando è
-            visibile serve, e nasconderlo è compito del CSS. */}
         <div className="duo-scelta" role="tablist" aria-label="Cosa vi serve">
           <span className="duo-cursore" aria-hidden="true" />
-          {MESTIERI.map((m) => (
+          {mestieri.map((m) => (
             <button
               key={m.id}
               type="button"
@@ -161,11 +259,12 @@ export default function DueMestieri() {
         </div>
 
         <div className="duo-griglia">
-          {MESTIERI.map((m) => (
+          {mestieri.map((m, idx) => (
             <div
               key={m.id}
               className="duo-col"
               data-col={m.id}
+              data-idx={idx}
               id={`${gruppo}-${m.id}-pannello`}
               role="tabpanel"
               aria-labelledby={`${gruppo}-${m.id}`}
@@ -186,7 +285,6 @@ export default function DueMestieri() {
         </div>
       </section>
 
-      {/* Secondo sensore, in fondo: segna quando il rosso esce dal basso. */}
       <span className="rosso-sensore rosso-sensore--fine" aria-hidden="true" />
     </div>
   );

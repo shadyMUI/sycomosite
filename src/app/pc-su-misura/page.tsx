@@ -9,61 +9,78 @@ import SottoLogo from "@/components/SottoLogo";
 import CheComputer from "@/components/CheComputer";
 import Album from "@/components/Album";
 import Domande from "@/components/Domande";
-
-/**
- * I computer su misura.
- *
- * Stessa macchina della pagina principale — tenda, volo del logo, massa
- * di vetro, sezione rossa, contatti — con testi propri. Al posto delle
- * due frasi diagonali c'è però una domanda: chi cerca un computer ha in
- * testa una cosa precisa da farci, e chiederla apre il discorso meglio di
- * qualsiasi frase a effetto. I componenti sono
- * gli stessi: ciò che cambia sono le parole, non il modo in cui si
- * muovono. Così le due metà dello studio si somigliano senza che nessuna
- * sia la copia sbiadita dell'altra, e una correzione al meccanismo vale
- * per entrambe.
- *
- * La schermata rossa non elenca più quattro passi ma due mestieri
- * affiancati — assemblare e mantenere — perché sono due persone diverse:
- * chi la macchina non ce l'ha ancora e chi ce l'ha già e non va più.
- *
- * È anche la stessa idea, detta su un altro oggetto: là un sito costruito
- * attorno a un'attività invece di un modello comprato, qui un computer
- * costruito attorno a quello che ci dovete fare invece di uno preso dallo
- * scaffale. Il marchio lo dice cambiando una parola: HARDWARE al posto
- * di DIGITAL.
- */
-
-/* ⚠️ DA COMPLETARE con la città: compare nel titolo dei risultati di
-   ricerca, ed è la parola che chi cerca digita insieme a "assemblaggio
-   pc". Senza, la pagina non si posiziona per le ricerche locali — che
-   sono l'unica fonte di clienti che conti per questo servizio. */
-const CITTA = "[città]";
+import DiagonalKaomojiBackground from "@/components/DiagonalKaomojiBackground";
+import { SITO, NOME, EMAIL, CITTA } from "@/lib/sito";
 
 export const metadata: Metadata = {
   /* Prima il servizio, poi la città: chi cerca scrive "assemblaggio pc
      [città]", e ritrovare le stesse parole nel risultato è ciò che gli
      fa scegliere questo e non un altro. */
-  title: `Computer su misura a ${CITTA}`,
-  description: `Scelta delle componenti in base al budget, assemblaggio, messa a punto e manutenzione a ${CITTA}. Pulizia, pasta termica e sostituzione componenti.`,
+  title: `Computer su misura ad ${CITTA}`,
+  description: `Scelta delle componenti in base al budget, assemblaggio, messa a punto e manutenzione ad ${CITTA}. Pulizia, pasta termica e sostituzione componenti.`,
   alternates: { canonical: "/pc-su-misura" },
   robots: { index: true, follow: true },
   openGraph: {
     type: "website",
     locale: "it_IT",
     url: "/pc-su-misura",
-    title: `Computer su misura a ${CITTA}`,
+    title: `Computer su misura ad ${CITTA} · ${NOME}`,
     description:
       "Scegliamo le componenti col vostro budget, montiamo, mettiamo a punto e teniamo in forma.",
-    /* L'immagine va ripetuta: dichiarando un blocco openGraph proprio, la
-       pagina smette di ereditare quella generata nella radice. */
+    images: ["/opengraph-image"],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `Computer su misura ad ${CITTA} · ${NOME}`,
+    description:
+      "Scegliamo le componenti col vostro budget, montiamo, mettiamo a punto e teniamo in forma.",
     images: ["/opengraph-image"],
   },
 };
 
+const DATI_STRUTTURATI = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebPage",
+      "@id": `${SITO}/pc-su-misura`,
+      url: `${SITO}/pc-su-misura`,
+      name: `Computer su misura ad ${CITTA} · ${NOME}`,
+      description: `Scelta delle componenti in base al budget, assemblaggio, messa a punto e manutenzione ad ${CITTA}.`,
+      inLanguage: "it-IT",
+      isPartOf: {
+        "@type": "WebSite",
+        name: NOME,
+        url: SITO,
+      },
+    },
+    {
+      "@type": "Service",
+      name: `Assemblaggio e Assistenza Computer ad ${CITTA}`,
+      provider: {
+        "@type": "Organization",
+        name: NOME,
+        url: SITO,
+        email: EMAIL,
+      },
+      areaServed: {
+        "@type": "City",
+        name: CITTA,
+      },
+      serviceType: "Assemblaggio e Manutenzione PC",
+      description: `Scelta componenti in base al budget, assemblaggio PC da lavoro o da gaming, manutenzione, pulizia e cambio pasta termica ad ${CITTA}.`,
+    },
+  ],
+};
+
 export default function PcSuMisura() {
   return (
-    <>
+    <div className="relative w-full min-h-screen">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(DATI_STRUTTURATI) }}
+      />
+      <DiagonalKaomojiBackground />
       <ScrollDirector />
 
       {/* barra di vetro: si accende mentre il logo ci vola dentro */}
@@ -74,17 +91,6 @@ export default function PcSuMisura() {
       <HeroArt />
       <Logo className="logo-fly" sub="Hardware" />
       <SottoLogo />
-
-      {/* Dà all'apertura lo spazio per esistere, e poco: qui dopo il
-          marchio non c'è una scena fissa da guardare — la domanda arriva
-          col flusso — quindi un binario lungo sarebbe carta bianca da
-          attraversare. */}
-      <div className="scroll-track" aria-hidden="true">
-        <div
-          className="scroll-section scroll-section--corta"
-          data-label="apertura"
-        />
-      </div>
 
       <main>
         <CheComputer />
@@ -119,6 +125,6 @@ export default function PcSuMisura() {
       </main>
 
       <Footer sub="Hardware" claim="il computer giusto non è il più caro." />
-    </>
+    </div>
   );
 }

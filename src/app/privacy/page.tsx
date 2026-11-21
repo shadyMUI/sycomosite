@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Logo from "@/components/Logo";
 import Footer from "@/components/Footer";
+import { NOME, EMAIL } from "@/lib/sito";
 
 export const metadata: Metadata = {
   /* diventa "Privacy · Sycomo Digital" per via del modello nel layout */
@@ -22,6 +23,13 @@ export const metadata: Metadata = {
        nella radice, e il link condiviso resterebbe senza anteprima. */
     images: ["/opengraph-image"],
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "Privacy · Sycomo Digital",
+    description:
+      "Come trattiamo i dati di chi visita il sito e di chi ci scrive.",
+    images: ["/opengraph-image"],
+  },
 };
 
 /* ⚠️ DA COMPLETARE prima di pubblicare — sono gli unici punti da toccare.
@@ -29,9 +37,9 @@ export const metadata: Metadata = {
    con dati veri e verificabili, è il primo obbligo dell'articolo 13.
    Quando ci sarà la partita IVA va aggiunta qui e nel piede di pagina. */
 const TITOLARE = {
-  nome: "Sycomo Digital",
+  nome: NOME,
   indirizzo: "[via, numero civico — CAP, città, provincia], Italia",
-  email: "sycomodigital@gmail.com",
+  email: EMAIL,
 };
 
 /* Chi tratta dati per conto vostro. Da aggiornare quando scegliete dove
@@ -60,7 +68,7 @@ const FORNITORI = [
   },
 ];
 
-const AGGIORNATA = "10 agosto 2026";
+const AGGIORNATA = "9 novembre 2026";
 
 export default function Privacy() {
   return (

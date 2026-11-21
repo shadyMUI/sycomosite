@@ -1,46 +1,121 @@
+"use client";
+
+import { useEffect, useRef } from "react";
+
 /**
- * La massa di vetro.
+ * La massa di vetro (HeroArt).
  *
- * Non forme sparse per il campo — quelle facevano slide aziendale — ma un
- * unico ammasso denso, spinto nell'angolo in basso a sinistra e tagliato
- * dai bordi dello schermo, così la scena sembra continuare oltre la
- * finestra invece di finire educatamente dentro di essa.
+ * Contiene DUE copie sincronizzate al fotogramma:
+ * 1. Copia ROSSA classica (dietro, visibile su sfondo carta: Hero, Album, Contatti).
+ * 2. Copia BIANCA (.sml, visibile sulle sezioni rosse .rosso e .faq).
  *
- * Le lastre si SOVRAPPONGONO di proposito: è l'unico punto in cui il
- * liquid glass si vede davvero, perché una lastra sfoca quella sotto.
- * Isolate erano solo bolle colorate. Solo le tre superiori hanno la
- * sfocatura attiva: il vetro nasce dal contrasto fra chi smeriglia e chi
- * no, non dal metterlo ovunque.
- *
- * Ci sono DUE copie, rossa e bianca, nello stesso identico contenitore.
- * Devono stare qui insieme e non una per sezione: le lastre derivano e
- * respirano ognuna col proprio ritmo, e due gruppi montati in punti
- * diversi del documento partirebbero in momenti diversi, uscendo per
- * sempre fuori sincrono. Così invece condividono la stessa posizione e le
- * stesse animazioni, al fotogramma.
- *
- * La copia bianca è ritagliata sulla quota del bordo rosso: sopra non
- * esiste, sotto sì. L'occhio legge un oggetto solo, fermo, che cambia
- * colore mentre la schermata rossa sale.
+ * Il ritaglio (clip-path) della copia bianca segue esattamente la quota
+ * delle sezioni rosse in tempo reale:
+ * se metà figura è sul rosso e metà sul bianco, sul rosso le forme sono bianche
+ * e sul bianco sono rosse, con taglio netto a filo senza animazioni di dissolvenza.
  */
 
-const LASTRE = ["ml-fondo", "ml-ancora", "ml-quadro", "ml-tondo", "ml-scheggia"];
+interface LastraSpec {
+  id: string;
+  counterRotate: number;
+  isVetro: boolean;
+}
+
+const LASTRE_CONFIG: LastraSpec[] = [
+  { id: "ml-fondo", counterRotate: 0, isVetro: false },
+  { id: "ml-ancora", counterRotate: 0, isVetro: false },
+  { id: "ml-quadro", counterRotate: 12, isVetro: true },
+  { id: "ml-tondo", counterRotate: 0, isVetro: true },
+  { id: "ml-scheggia", counterRotate: -14, isVetro: true },
+];
 
 export default function HeroArt() {
+  const whiteLayerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    let rafId: number | null = null;
+
+    const updateClip = () => {
+      rafId = null;
+      const winH = window.innerHeight;
+      const rosso = document.querySelector(".rosso");
+      const faq = document.querySelector(".faq");
+
+      let activeSlice: { top: number; bottom: number } | null = null;
+
+      // La prima sezione rossa (.rosso) gestisce la propria copia bianca isolata (.rosso-blend)
+      // per la fusione perfetta del titolo.
+      // Qui la copia bianca si attiva con taglio al millimetro sulla seconda sezione rossa (.faq).
+      if (faq) {
+        const f = faq.getBoundingClientRect();
+        if (f.bottom > 0 && f.top < winH) {
+          activeSlice = {
+            top: Math.max(0, f.top),
+            bottom: Math.max(0, winH - f.bottom),
+          };
+        }
+      }
+
+      if (whiteLayerRef.current) {
+        if (activeSlice) {
+          whiteLayerRef.current.style.clipPath = `inset(${Math.round(activeSlice.top)}px 0px ${Math.round(activeSlice.bottom)}px 0px)`;
+        } else {
+          whiteLayerRef.current.style.clipPath = "inset(100% 0 0 0)";
+        }
+      }
+    };
+
+    const onScrollOrResize = () => {
+      if (rafId === null) {
+        rafId = requestAnimationFrame(updateClip);
+      }
+    };
+
+    window.addEventListener("scroll", onScrollOrResize, { passive: true });
+    window.addEventListener("resize", onScrollOrResize, { passive: true });
+    updateClip();
+
+    return () => {
+      window.removeEventListener("scroll", onScrollOrResize);
+      window.removeEventListener("resize", onScrollOrResize);
+      if (rafId !== null) cancelAnimationFrame(rafId);
+    };
+  }, []);
+
   return (
     <>
-      {/* copia per il fondo di carta: sta dietro a tutto */}
-      <div className="hero-art" aria-hidden="true">
+      {/* 1. Copia ROSSA classica: sta su fondo carta (Hero, Album, Contatti) */}
+      <div className="hero-art hero-art--red" aria-hidden="true">
         <div className="massa">
-          {LASTRE.map((c) => (
+          {LASTRE_CONFIG.map(({ id, isVetro }) => (
             <span
-              key={c}
-              className={`ml ${c}${c === "ml-fondo" || c === "ml-ancora" ? "" : " ml-vetro"}`}
+              key={id}
+              className={`ml ${id}${isVetro ? " ml-vetro" : ""}`}
             />
           ))}
         </div>
       </div>
 
+      {/* 2. Copia BIANCA: ritagliata al millimetro sul bordo delle sezioni rosse (effetto negativo) */}
+      <div
+        ref={whiteLayerRef}
+        className="hero-art hero-art--white"
+        aria-hidden="true"
+        style={{
+          clipPath: "inset(100% 0 0 0)",
+        }}
+      >
+        <div className="massa">
+          {LASTRE_CONFIG.map(({ id, isVetro }) => (
+            <span
+              key={id}
+              className={`ml sml ${id}${isVetro ? " ml-vetro" : ""}`}
+            />
+          ))}
+        </div>
+      </div>
     </>
   );
 }

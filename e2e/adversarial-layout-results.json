@@ -1,0 +1,600 @@
+{
+  "results": [
+    {
+      "viewport": {
+        "name": "Ultra-compact mobile (iPhone 5/SE 1st)",
+        "width": 320,
+        "height": 568,
+        "isMobile": true
+      },
+      "passed": true,
+      "errors": [],
+      "maxDocWidth": 320,
+      "winWidth": 320,
+      "layoutMetrics": {
+        "desktopTrackDisplay": "none",
+        "mobileViewDisplay": "block",
+        "mobileCardsCount": 4,
+        "desktopCardsCount": 4,
+        "allStackedVertically": true,
+        "desktopSideBySide": true,
+        "cardDetails": [
+          {
+            "index": 0,
+            "cardWidth": 288,
+            "cardHeight": 173,
+            "thumbWidth": 108,
+            "thumbHeight": 147,
+            "thumbAspectRatio": "0.73",
+            "lineClamp": "2",
+            "boxOrient": "vertical",
+            "overflow": "hidden",
+            "estimatedLines": 2
+          },
+          {
+            "index": 1,
+            "cardWidth": 288,
+            "cardHeight": 173,
+            "thumbWidth": 108,
+            "thumbHeight": 147,
+            "thumbAspectRatio": "0.73",
+            "lineClamp": "2",
+            "boxOrient": "vertical",
+            "overflow": "hidden",
+            "estimatedLines": 2
+          },
+          {
+            "index": 2,
+            "cardWidth": 288,
+            "cardHeight": 173,
+            "thumbWidth": 108,
+            "thumbHeight": 147,
+            "thumbAspectRatio": "0.73",
+            "lineClamp": "2",
+            "boxOrient": "vertical",
+            "overflow": "hidden",
+            "estimatedLines": 2
+          },
+          {
+            "index": 3,
+            "cardWidth": 288,
+            "cardHeight": 192,
+            "thumbWidth": 108,
+            "thumbHeight": 166,
+            "thumbAspectRatio": "0.65",
+            "lineClamp": "2",
+            "boxOrient": "vertical",
+            "overflow": "hidden",
+            "estimatedLines": 2
+          }
+        ]
+      }
+    },
+    {
+      "viewport": {
+        "name": "Small Android (Galaxy S5/legacy)",
+        "width": 360,
+        "height": 640,
+        "isMobile": true
+      },
+      "passed": true,
+      "errors": [],
+      "maxDocWidth": 360,
+      "winWidth": 360,
+      "layoutMetrics": {
+        "desktopTrackDisplay": "none",
+        "mobileViewDisplay": "block",
+        "mobileCardsCount": 4,
+        "desktopCardsCount": 4,
+        "allStackedVertically": true,
+        "desktopSideBySide": true,
+        "cardDetails": [
+          {
+            "index": 0,
+            "cardWidth": 328,
+            "cardHeight": 173,
+            "thumbWidth": 108,
+            "thumbHeight": 147,
+            "thumbAspectRatio": "0.73",
+            "lineClamp": "2",
+            "boxOrient": "vertical",
+            "overflow": "hidden",
+            "estimatedLines": 2
+          },
+          {
+            "index": 1,
+            "cardWidth": 328,
+            "cardHeight": 173,
+            "thumbWidth": 108,
+            "thumbHeight": 147,
+            "thumbAspectRatio": "0.73",
+            "lineClamp": "2",
+            "boxOrient": "vertical",
+            "overflow": "hidden",
+            "estimatedLines": 2
+          },
+          {
+            "index": 2,
+            "cardWidth": 328,
+            "cardHeight": 173,
+            "thumbWidth": 108,
+            "thumbHeight": 147,
+            "thumbAspectRatio": "0.73",
+            "lineClamp": "2",
+            "boxOrient": "vertical",
+            "overflow": "hidden",
+            "estimatedLines": 2
+          },
+          {
+            "index": 3,
+            "cardWidth": 328,
+            "cardHeight": 173,
+            "thumbWidth": 108,
+            "thumbHeight": 147,
+            "thumbAspectRatio": "0.73",
+            "lineClamp": "2",
+            "boxOrient": "vertical",
+            "overflow": "hidden",
+            "estimatedLines": 2
+          }
+        ]
+      }
+    },
+    {
+      "viewport": {
+        "name": "Compact mobile (iPhone SE 2nd/3rd)",
+        "width": 375,
+        "height": 667,
+        "isMobile": true
+      },
+      "passed": true,
+      "errors": [],
+      "maxDocWidth": 375,
+      "winWidth": 375,
+      "layoutMetrics": {
+        "desktopTrackDisplay": "none",
+        "mobileViewDisplay": "block",
+        "mobileCardsCount": 4,
+        "desktopCardsCount": 4,
+        "allStackedVertically": true,
+        "desktopSideBySide": true,
+        "cardDetails": [
+          {
+            "index": 0,
+            "cardWidth": 343,
+            "cardHeight": 173,
+            "thumbWidth": 108,
+            "thumbHeight": 147,
+            "thumbAspectRatio": "0.73",
+            "lineClamp": "2",
+            "boxOrient": "vertical",
+            "overflow": "hidden",
+            "estimatedLines": 2
+          },
+          {
+            "index": 1,
+            "cardWidth": 343,
+            "cardHeight": 173,
+            "thumbWidth": 108,
+            "thumbHeight": 147,
+            "thumbAspectRatio": "0.73",
+            "lineClamp": "2",
+            "boxOrient": "vertical",
+            "overflow": "hidden",
+            "estimatedLines": 2
+          },
+          {
+            "index": 2,
+            "cardWidth": 343,
+            "cardHeight": 173,
+            "thumbWidth": 108,
+            "thumbHeight": 147,
+            "thumbAspectRatio": "0.73",
+            "lineClamp": "2",
+            "boxOrient": "vertical",
+            "overflow": "hidden",
+            "estimatedLines": 2
+          },
+          {
+            "index": 3,
+            "cardWidth": 343,
+            "cardHeight": 173,
+            "thumbWidth": 108,
+            "thumbHeight": 147,
+            "thumbAspectRatio": "0.73",
+            "lineClamp": "2",
+            "boxOrient": "vertical",
+            "overflow": "hidden",
+            "estimatedLines": 2
+          }
+        ]
+      }
+    },
+    {
+      "viewport": {
+        "name": "Standard mobile (iPhone 14/15)",
+        "width": 390,
+        "height": 844,
+        "isMobile": true
+      },
+      "passed": true,
+      "errors": [],
+      "maxDocWidth": 390,
+      "winWidth": 390,
+      "layoutMetrics": {
+        "desktopTrackDisplay": "none",
+        "mobileViewDisplay": "block",
+        "mobileCardsCount": 4,
+        "desktopCardsCount": 4,
+        "allStackedVertically": true,
+        "desktopSideBySide": true,
+        "cardDetails": [
+          {
+            "index": 0,
+            "cardWidth": 358,
+            "cardHeight": 180,
+            "thumbWidth": 108,
+            "thumbHeight": 154,
+            "thumbAspectRatio": "0.70",
+            "lineClamp": "2",
+            "boxOrient": "vertical",
+            "overflow": "hidden",
+            "estimatedLines": 2
+          },
+          {
+            "index": 1,
+            "cardWidth": 358,
+            "cardHeight": 180,
+            "thumbWidth": 108,
+            "thumbHeight": 154,
+            "thumbAspectRatio": "0.70",
+            "lineClamp": "2",
+            "boxOrient": "vertical",
+            "overflow": "hidden",
+            "estimatedLines": 2
+          },
+          {
+            "index": 2,
+            "cardWidth": 358,
+            "cardHeight": 180,
+            "thumbWidth": 108,
+            "thumbHeight": 154,
+            "thumbAspectRatio": "0.70",
+            "lineClamp": "2",
+            "boxOrient": "vertical",
+            "overflow": "hidden",
+            "estimatedLines": 2
+          },
+          {
+            "index": 3,
+            "cardWidth": 358,
+            "cardHeight": 180,
+            "thumbWidth": 108,
+            "thumbHeight": 154,
+            "thumbAspectRatio": "0.70",
+            "lineClamp": "2",
+            "boxOrient": "vertical",
+            "overflow": "hidden",
+            "estimatedLines": 2
+          }
+        ]
+      }
+    },
+    {
+      "viewport": {
+        "name": "Wide mobile (Samsung S22 / Pixel)",
+        "width": 412,
+        "height": 915,
+        "isMobile": true
+      },
+      "passed": true,
+      "errors": [],
+      "maxDocWidth": 412,
+      "winWidth": 412,
+      "layoutMetrics": {
+        "desktopTrackDisplay": "none",
+        "mobileViewDisplay": "block",
+        "mobileCardsCount": 4,
+        "desktopCardsCount": 4,
+        "allStackedVertically": true,
+        "desktopSideBySide": true,
+        "cardDetails": [
+          {
+            "index": 0,
+            "cardWidth": 379,
+            "cardHeight": 182,
+            "thumbWidth": 108,
+            "thumbHeight": 156,
+            "thumbAspectRatio": "0.69",
+            "lineClamp": "2",
+            "boxOrient": "vertical",
+            "overflow": "hidden",
+            "estimatedLines": 2
+          },
+          {
+            "index": 1,
+            "cardWidth": 379,
+            "cardHeight": 163,
+            "thumbWidth": 108,
+            "thumbHeight": 137,
+            "thumbAspectRatio": "0.79",
+            "lineClamp": "2",
+            "boxOrient": "vertical",
+            "overflow": "hidden",
+            "estimatedLines": 2
+          },
+          {
+            "index": 2,
+            "cardWidth": 379,
+            "cardHeight": 163,
+            "thumbWidth": 108,
+            "thumbHeight": 137,
+            "thumbAspectRatio": "0.79",
+            "lineClamp": "2",
+            "boxOrient": "vertical",
+            "overflow": "hidden",
+            "estimatedLines": 2
+          },
+          {
+            "index": 3,
+            "cardWidth": 379,
+            "cardHeight": 182,
+            "thumbWidth": 108,
+            "thumbHeight": 156,
+            "thumbAspectRatio": "0.69",
+            "lineClamp": "2",
+            "boxOrient": "vertical",
+            "overflow": "hidden",
+            "estimatedLines": 2
+          }
+        ]
+      }
+    },
+    {
+      "viewport": {
+        "name": "Mobile landscape (iPhone 667x375)",
+        "width": 667,
+        "height": 375,
+        "isMobile": true
+      },
+      "passed": true,
+      "errors": [],
+      "maxDocWidth": 667,
+      "winWidth": 667,
+      "layoutMetrics": {
+        "desktopTrackDisplay": "none",
+        "mobileViewDisplay": "block",
+        "mobileCardsCount": 4,
+        "desktopCardsCount": 4,
+        "allStackedVertically": true,
+        "desktopSideBySide": true,
+        "cardDetails": [
+          {
+            "index": 0,
+            "cardWidth": 619,
+            "cardHeight": 155,
+            "thumbWidth": 108,
+            "thumbHeight": 129,
+            "thumbAspectRatio": "0.84",
+            "lineClamp": "2",
+            "boxOrient": "vertical",
+            "overflow": "hidden",
+            "estimatedLines": 2
+          },
+          {
+            "index": 1,
+            "cardWidth": 619,
+            "cardHeight": 155,
+            "thumbWidth": 108,
+            "thumbHeight": 129,
+            "thumbAspectRatio": "0.84",
+            "lineClamp": "2",
+            "boxOrient": "vertical",
+            "overflow": "hidden",
+            "estimatedLines": 2
+          },
+          {
+            "index": 2,
+            "cardWidth": 619,
+            "cardHeight": 155,
+            "thumbWidth": 108,
+            "thumbHeight": 129,
+            "thumbAspectRatio": "0.84",
+            "lineClamp": "2",
+            "boxOrient": "vertical",
+            "overflow": "hidden",
+            "estimatedLines": 2
+          },
+          {
+            "index": 3,
+            "cardWidth": 619,
+            "cardHeight": 155,
+            "thumbWidth": 108,
+            "thumbHeight": 129,
+            "thumbAspectRatio": "0.84",
+            "lineClamp": "2",
+            "boxOrient": "vertical",
+            "overflow": "hidden",
+            "estimatedLines": 2
+          }
+        ]
+      }
+    },
+    {
+      "viewport": {
+        "name": "Breakpoint max mobile (859px)",
+        "width": 859,
+        "height": 900,
+        "isMobile": true
+      },
+      "passed": true,
+      "errors": [],
+      "maxDocWidth": 859,
+      "winWidth": 859,
+      "layoutMetrics": {
+        "desktopTrackDisplay": "none",
+        "mobileViewDisplay": "block",
+        "mobileCardsCount": 4,
+        "desktopCardsCount": 4,
+        "allStackedVertically": true,
+        "desktopSideBySide": true,
+        "cardDetails": [
+          {
+            "index": 0,
+            "cardWidth": 672,
+            "cardHeight": 163,
+            "thumbWidth": 108,
+            "thumbHeight": 137,
+            "thumbAspectRatio": "0.79",
+            "lineClamp": "2",
+            "boxOrient": "vertical",
+            "overflow": "hidden",
+            "estimatedLines": 2
+          },
+          {
+            "index": 1,
+            "cardWidth": 672,
+            "cardHeight": 163,
+            "thumbWidth": 108,
+            "thumbHeight": 137,
+            "thumbAspectRatio": "0.79",
+            "lineClamp": "2",
+            "boxOrient": "vertical",
+            "overflow": "hidden",
+            "estimatedLines": 2
+          },
+          {
+            "index": 2,
+            "cardWidth": 672,
+            "cardHeight": 163,
+            "thumbWidth": 108,
+            "thumbHeight": 137,
+            "thumbAspectRatio": "0.79",
+            "lineClamp": "2",
+            "boxOrient": "vertical",
+            "overflow": "hidden",
+            "estimatedLines": 2
+          },
+          {
+            "index": 3,
+            "cardWidth": 672,
+            "cardHeight": 163,
+            "thumbWidth": 108,
+            "thumbHeight": 137,
+            "thumbAspectRatio": "0.79",
+            "lineClamp": "2",
+            "boxOrient": "vertical",
+            "overflow": "hidden",
+            "estimatedLines": 2
+          }
+        ]
+      }
+    },
+    {
+      "viewport": {
+        "name": "Breakpoint min desktop (860px)",
+        "width": 860,
+        "height": 900,
+        "isMobile": false
+      },
+      "passed": true,
+      "errors": [],
+      "maxDocWidth": 860,
+      "winWidth": 860,
+      "layoutMetrics": {
+        "desktopTrackDisplay": "block",
+        "mobileViewDisplay": "none",
+        "mobileCardsCount": 4,
+        "desktopCardsCount": 4,
+        "allStackedVertically": true,
+        "desktopSideBySide": true,
+        "cardDetails": []
+      }
+    },
+    {
+      "viewport": {
+        "name": "Desktop standard (1280x800)",
+        "width": 1280,
+        "height": 800,
+        "isMobile": false
+      },
+      "passed": true,
+      "errors": [],
+      "maxDocWidth": 1270,
+      "winWidth": 1280,
+      "layoutMetrics": {
+        "desktopTrackDisplay": "block",
+        "mobileViewDisplay": "none",
+        "mobileCardsCount": 4,
+        "desktopCardsCount": 4,
+        "allStackedVertically": true,
+        "desktopSideBySide": true,
+        "cardDetails": []
+      }
+    },
+    {
+      "viewport": {
+        "name": "Desktop 2K / MBP 15 (1440x900)",
+        "width": 1440,
+        "height": 900,
+        "isMobile": false
+      },
+      "passed": true,
+      "errors": [],
+      "maxDocWidth": 1430,
+      "winWidth": 1440,
+      "layoutMetrics": {
+        "desktopTrackDisplay": "block",
+        "mobileViewDisplay": "none",
+        "mobileCardsCount": 4,
+        "desktopCardsCount": 4,
+        "allStackedVertically": true,
+        "desktopSideBySide": true,
+        "cardDetails": []
+      }
+    },
+    {
+      "viewport": {
+        "name": "Desktop Full HD (1920x1080)",
+        "width": 1920,
+        "height": 1080,
+        "isMobile": false
+      },
+      "passed": true,
+      "errors": [],
+      "maxDocWidth": 1910,
+      "winWidth": 1920,
+      "layoutMetrics": {
+        "desktopTrackDisplay": "block",
+        "mobileViewDisplay": "none",
+        "mobileCardsCount": 4,
+        "desktopCardsCount": 4,
+        "allStackedVertically": true,
+        "desktopSideBySide": true,
+        "cardDetails": []
+      }
+    },
+    {
+      "viewport": {
+        "name": "Desktop Ultrawide / 4K (2560x1440)",
+        "width": 2560,
+        "height": 1440,
+        "isMobile": false
+      },
+      "passed": true,
+      "errors": [],
+      "maxDocWidth": 2550,
+      "winWidth": 2560,
+      "layoutMetrics": {
+        "desktopTrackDisplay": "block",
+        "mobileViewDisplay": "none",
+        "mobileCardsCount": 4,
+        "desktopCardsCount": 4,
+        "allStackedVertically": true,
+        "desktopSideBySide": true,
+        "cardDetails": []
+      }
+    }
+  ],
+  "totalFailures": 0
+}

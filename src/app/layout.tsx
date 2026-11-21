@@ -12,11 +12,7 @@ import { SITO, NOME, DESCRIZIONE, DESCRIZIONE_BREVE } from "@/lib/sito";
 const manrope = Manrope({
   variable: "--font-manrope",
   subsets: ["latin"],
-  /* Solo i pesi che il CSS usa davvero: ognuno è un file da scaricare.
-     L'800 è stato tolto perché non compariva in una sola regola — e
-     Google ha smesso di servire quel file, mandando in errore la
-     compilazione appena la copia locale è stata cancellata. */
-  weight: ["300", "400", "500", "600", "700"],
+  /* Font variabile: tutti i pesi 200–800, compreso 800 per le schede. */
 });
 
 const geistSans = Geist({

@@ -99,13 +99,17 @@ export default function ModuloContatto({
   const [stato, setStato] = useState<"fermo" | "invio" | "fatto" | "ripiego">(
     "fermo"
   );
+  const [copiato, setCopiato] = useState(false);
   const form = useRef<HTMLFormElement>(null);
 
 
+  const chiediAttivita = frase.attivita.chiede.replace(/^[,\s]+/, "");
+  const incipitAttivita =
+    chiediAttivita.charAt(0).toUpperCase() + chiediAttivita.slice(1);
   const testo = [
     `Ciao, sono ${nome || "…"}.`,
     ``,
-    `Ho ${attivita || "…"} ${frase.serve.chiede} ${serve || "…"}.`,
+    `${incipitAttivita} ${attivita || "…"} ${frase.serve.chiede} ${serve || "…"}.`,
     ``,
     `Potete rispondermi a ${mittente || "…"}.`,
   ].join("\n");
@@ -188,7 +192,15 @@ export default function ModuloContatto({
     }
   };
 
-  const copia = () => navigator.clipboard?.writeText(testo);
+  const copia = async () => {
+    try {
+      await navigator.clipboard?.writeText(testo);
+      setCopiato(true);
+      setTimeout(() => setCopiato(false), 2500);
+    } catch {
+      // Se gli appunti sono bloccati, l'utente può sempre selezionare il pre
+    }
+  };
 
   /* un campo si segnala come mancante solo DOPO un tentativo di invio:
      colorare di rosso ciò che non è ancora stato scritto è un rimprovero
@@ -301,7 +313,7 @@ export default function ModuloContatto({
           </p>
           <pre>{testo}</pre>
           <button type="button" onClick={copia}>
-            Copia il messaggio
+            {copiato ? "Copiato negli appunti!" : "Copia il messaggio"}
           </button>
         </div>
       )}

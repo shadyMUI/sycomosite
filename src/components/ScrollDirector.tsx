@@ -3,65 +3,123 @@
 import { useEffect } from "react";
 
 /**
- * Regia dello scorrimento.
+ * Regia dell'ingresso e dello scorrimento.
  *
- * Scrive due progressi come variabili CSS, e tutta la coreografia è scritta
- * in CSS in funzione di quei numeri — qui non si tocca mai lo stile.
+ * All'avvio della pagina (sia desktop che mobile), orchestra l'animazione
+ * d'ingresso che porta automaticamente il logo nella testata (--p da 0 a 1),
+ * accende la barra di vetro (.site-header) e svela il testo introduttivo (<CheComputer>).
  *
- *   --p  apertura: il logo vola nella header e le figure entrano in scena.
- *        È un INNESCO, non un inseguimento: basta un gesto e va da 0 a 1
- *        da sé (la transizione è nel CSS). Torna a 0 se si risale in cima.
+ * Una volta completata l'apertura, il logo rimane ancorato nella testata e non
+ * viene più resettato dal rimbalzo elastico (rubber-banding y <= 4) su mobile,
+ * garantendo uno scorrimento fluido, naturale e privo di blocchi.
  *
- *   --q  seconda sezione: quanto è salito il pannello rosso dei servizi.
- *        Questo invece SEGUE lo scorrimento di continuo, perché il
- *        pannello deve muoversi sotto il dito, non partire da solo.
+ * Se l'utente richiede "prefers-reduced-motion", l'apertura è istantanea senza attesa.
  */
-const APRE = 8;
-const CHIUDE = 2;
+const APRE_SCROLL = 10;
+// Coordinato con il sipario d'apertura (.intro nel CSS dura 1100ms = 120ms pausa + 980ms discesa fluida):
+// l'animazione del titolo parte solo DOPO che la schermata arancione/rossa ha finito di scendere.
+const DELAY_INGRESSO_MS = 1180;
 
 export default function ScrollDirector() {
   useEffect(() => {
     const root = document.documentElement;
+
+    // Se il sito è già aperto (ad es. navigazione interna client-side tra pagine), manteniamo --p = 1
+    if (
+      root.classList.contains("figs-on") ||
+      root.style.getPropertyValue("--p") === "1"
+    ) {
+      root.style.setProperty("--p", "1");
+      root.classList.add("figs-on");
+      return;
+    }
+
+    const mediaReducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    );
+
     let aperto = false;
-    let inCoda = false;
+    let timer: NodeJS.Timeout | null = null;
+    let onIntroDoneRef: (() => void) | null = null;
+    let onScrollRef: (() => void) | null = null;
 
-    const applica = () => {
-      inCoda = false;
-      const y = window.scrollY;
-      const vh = window.innerHeight;
-      // senza questa guardia i calc() diventano NaN e la pagina collassa
-      if (!vh) return;
+    const apri = (immediato = false) => {
+      if (aperto) return;
+      aperto = true;
 
-      if (!aperto && y > APRE) {
-        aperto = true;
+      if (immediato || mediaReducedMotion.matches) {
+        root.style.setProperty("transition", "none");
         root.style.setProperty("--p", "1");
         root.classList.add("figs-on");
-      } else if (aperto && y <= CHIUDE) {
-        aperto = false;
-        root.style.setProperty("--p", "0");
-        root.classList.remove("figs-on");
+        void root.offsetHeight;
+        root.style.removeProperty("transition");
+      } else {
+        root.style.setProperty("--p", "1");
+        root.classList.add("figs-on");
+      }
+    };
+
+    const avvia = () => {
+      // 1. Se l'utente preferisce meno movimento, apertura immediata
+      if (mediaReducedMotion.matches) {
+        apri(true);
+        return;
       }
 
-      /* Il taglio della massa bianca sul bordo della sezione rossa NON si
-         fa da qui: aggiornarlo a ogni scroll restava sempre un fotogramma
-         indietro e si vedeva. Lo fa il CSS con una view-timeline, che gira
-         sul compositor ed è sincronizzata per costruzione. */
+      // 2. Se la pagina è già scorsa (es. ripristino posizione browser o refresh), apertura immediata
+      if (window.scrollY > APRE_SCROLL) {
+        apri(true);
+        return;
+      }
+
+      // 3. Ascolta l'evento 'sycomo:intro-done' emesso da IntroCurtain quando il liquido è sceso del tutto
+      const onIntroDone = () => {
+        if (timer) clearTimeout(timer);
+        apri(false);
+      };
+      onIntroDoneRef = onIntroDone;
+      window.addEventListener("sycomo:intro-done", onIntroDone, { once: true });
+
+      // 4. Timer di fallback garantito sincronizzato col termine dell'intro (1450ms)
+      timer = setTimeout(() => {
+        apri(false);
+      }, DELAY_INGRESSO_MS);
+
+      // 5. Solo un vero scorrimento intenzionale dell'utente (scroll / wheel) sblocca prima dell'intro
+      const onScroll = () => {
+        if (window.scrollY > APRE_SCROLL) {
+          if (timer) clearTimeout(timer);
+          window.removeEventListener("sycomo:intro-done", onIntroDone);
+          apri(false);
+        }
+      };
+      onScrollRef = onScroll;
+      window.addEventListener("scroll", onScroll, { passive: true });
     };
 
-    const onScroll = () => {
-      if (inCoda) return;
-      inCoda = true;
-      requestAnimationFrame(applica);
-    };
+    // Attendiamo che tutti gli asset (immagini, stili, font, layout) siano caricati
+    // prima di dare il via alle animazioni sincronizzate: in questo modo tutte le copie
+    // delle lastre partono rigorosamente dallo stesso fotogramma.
+    const fontsPromise = typeof document !== "undefined" && document.fonts ? document.fonts.ready : Promise.resolve();
+    if (typeof document !== "undefined" && document.readyState === "complete") {
+      fontsPromise.then(avvia);
+    } else if (typeof window !== "undefined") {
+      window.addEventListener(
+        "load",
+        () => {
+          fontsPromise.then(avvia);
+        },
+        { once: true }
+      );
+    }
 
-    applica(); // chi ricarica a pagina già scorsa trova la scena giusta
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
     return () => {
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
+      if (timer) clearTimeout(timer);
+      if (onIntroDoneRef) window.removeEventListener("sycomo:intro-done", onIntroDoneRef);
+      if (onScrollRef) window.removeEventListener("scroll", onScrollRef);
     };
   }, []);
 
   return null;
 }
+

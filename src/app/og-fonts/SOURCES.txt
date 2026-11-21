@@ -1,0 +1,38 @@
+Static fonts used only by src/app/opengraph-image.tsx.
+The TTF binaries are unmodified upstream assets, not variable fonts or WOFF2.
+No conversion, subsetting, runtime download, or additional dependency is used.
+
+Geist Regular (400), Geist Bold (700)
+Version: 1.800
+Upstream: https://github.com/vercel/geist-font
+Pinned commit: a6d260e6cbc07eafdfad438f33601fe3c38b1e6f
+This is the Geist upstream revision recorded by Google Fonts.
+License: Geist-OFL.txt (SIL Open Font License 1.1)
+License source: https://raw.githubusercontent.com/vercel/geist-font/a6d260e6cbc07eafdfad438f33601fe3c38b1e6f/OFL.txt
+
+Geist-Regular.ttf
+Source: https://raw.githubusercontent.com/vercel/geist-font/a6d260e6cbc07eafdfad438f33601fe3c38b1e6f/fonts/Geist/ttf/Geist-Regular.ttf
+Size: 126048 bytes
+SHA-256: 85a1c6b18a6b0a06dfe9fd4f6d6a5d4979f74ec861eaef4bc7868b5492b8a117
+
+Geist-Bold.ttf
+Source: https://raw.githubusercontent.com/vercel/geist-font/a6d260e6cbc07eafdfad438f33601fe3c38b1e6f/fonts/Geist/ttf/Geist-Bold.ttf
+Size: 128824 bytes
+SHA-256: 3f21f02b827228c3f0c5fb230d027b5a1a263013618e8052bc1b3c5692812c88
+
+Manrope SemiBold (600)
+Version: 4.504
+Upstream: https://github.com/googlefonts/manrope
+Pinned commit: 6f81ebecdf65e4463b798cc07b16a4f8d5216917
+This revision supplied the Manrope variable font shipped by Google Fonts.
+The former aaronbell/manrope upstream now redirects to googlefonts/manrope.
+License: Manrope-OFL.txt (SIL Open Font License 1.1)
+License source: https://raw.githubusercontent.com/googlefonts/manrope/6f81ebecdf65e4463b798cc07b16a4f8d5216917/OFL.txt
+
+Manrope-SemiBold.ttf (upstream filename: manrope-semibold.ttf)
+Source: https://raw.githubusercontent.com/googlefonts/manrope/6f81ebecdf65e4463b798cc07b16a4f8d5216917/fonts/ttf/manrope-semibold.ttf
+Size: 144976 bytes
+SHA-256: e80a2c37e47ec09bff5a9960257bf9001e87d5fb7bf35719ef4958763a0c70ac
+
+Combined font size: 399848 bytes (below ImageResponse's documented 500KB limit).
+Verified family/style names and OS/2 weights; no fvar or gvar tables are present.

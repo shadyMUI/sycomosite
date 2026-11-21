@@ -17,7 +17,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   return [
     {
       url: SITO,
-      lastModified: new Date("2026-08-11"),
+      lastModified: new Date("2026-11-09"),
       changeFrequency: "monthly",
       priority: 1,
     },
@@ -25,13 +25,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
       /* Vale quanto la home: è l'altra metà di quello che fate, e per le
          ricerche locali è la pagina che porterà più visite delle altre. */
       url: `${SITO}/pc-su-misura`,
-      lastModified: new Date("2026-08-11"),
+      lastModified: new Date("2026-11-09"),
       changeFrequency: "monthly",
       priority: 0.9,
     },
     {
       url: `${SITO}/privacy`,
-      lastModified: new Date("2026-08-11"),
+      lastModified: new Date("2026-11-09"),
       changeFrequency: "yearly",
       priority: 0.3,
     },
