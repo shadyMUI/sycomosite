@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export type VoceFaq = {
   domanda: string;
@@ -86,6 +86,45 @@ export default function Domande({
   titolo = "Quello che ci chiedono",
   domande = FAQ_HARDWARE,
 }: Props) {
+  const faqRef = useRef<HTMLElement>(null);
+  const taglioRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    let frame = 0;
+
+    const aggiornaRitaglio = () => {
+      frame = 0;
+      const sezione = faqRef.current;
+      const taglio = taglioRef.current;
+      if (!sezione || !taglio) return;
+
+      const bounds = sezione.getBoundingClientRect();
+      const altezza = window.innerHeight;
+      if (bounds.bottom <= 0 || bounds.top >= altezza) {
+        taglio.style.clipPath = "inset(100% 0 0 0)";
+        return;
+      }
+
+      const sopra = Math.max(0, bounds.top);
+      const sotto = Math.max(0, altezza - bounds.bottom);
+      taglio.style.clipPath = `inset(${Math.round(sopra)}px 0px ${Math.round(sotto)}px 0px)`;
+    };
+
+    const programmaRitaglio = () => {
+      if (!frame) frame = requestAnimationFrame(aggiornaRitaglio);
+    };
+
+    window.addEventListener("scroll", programmaRitaglio, { passive: true });
+    window.addEventListener("resize", programmaRitaglio);
+    aggiornaRitaglio();
+
+    return () => {
+      window.removeEventListener("scroll", programmaRitaglio);
+      window.removeEventListener("resize", programmaRitaglio);
+      if (frame) cancelAnimationFrame(frame);
+    };
+  }, []);
+
   const scatta = (e: React.MouseEvent<HTMLElement>) => {
     const riga = e.currentTarget.closest("details");
     const corpo = riga?.querySelector<HTMLElement>(".faq-corpo");
@@ -130,27 +169,41 @@ export default function Domande({
   };
 
   return (
-    <section className="faq relative overflow-hidden" aria-labelledby="faq-t" data-aggancio>
-      <h2 id="faq-t" className="faq-titolo">
-        {titolo}
-        {/* il punto del marchio: quadrato, non tondo */}
-        <span className="faq-dot" aria-hidden="true" />
-      </h2>
+    <section ref={faqRef} className="faq relative overflow-hidden" aria-labelledby="faq-t" data-aggancio>
+      <div className="faq-blend">
+        <div ref={taglioRef} className="faq-taglio" aria-hidden="true">
+          <div className="massa faq-massa">
+            <span className="ml sml ml-fondo" />
+            <span className="ml sml ml-ancora" />
+            <span className="ml sml ml-quadro ml-vetro" />
+            <span className="ml sml ml-tondo ml-vetro" />
+            <span className="ml sml ml-scheggia ml-vetro" />
+          </div>
+        </div>
 
-      <div className="faq-elenco">
-        {domande.map((f) => (
-          <details key={f.domanda} className="faq-voce">
-            <summary onClick={scatta}>
-              <span>{f.domanda}</span>
-              <span className="faq-segno" aria-hidden="true" />
-            </summary>
-            {/* il corpo è quello che si anima: `details` da solo non ha
-                un elemento su cui misurare l'altezza */}
-            <div className="faq-corpo">
-              <p>{f.risposta}</p>
-            </div>
-          </details>
-        ))}
+        <div className="faq-contenuto">
+          <h2 id="faq-t" className="faq-titolo">
+            {titolo}
+            {/* il punto del marchio: quadrato, non tondo */}
+            <span className="faq-dot" aria-hidden="true" />
+          </h2>
+
+          <div className="faq-elenco">
+            {domande.map((f) => (
+              <details key={f.domanda} className="faq-voce">
+                <summary onClick={scatta}>
+                  <span>{f.domanda}</span>
+                  <span className="faq-segno" aria-hidden="true" />
+                </summary>
+                {/* il corpo è quello che si anima: `details` da solo non ha
+                    un elemento su cui misurare l'altezza */}
+                <div className="faq-corpo">
+                  <p>{f.risposta}</p>
+                </div>
+              </details>
+            ))}
+          </div>
+        </div>
       </div>
     </section>
   );

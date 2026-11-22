@@ -11,6 +11,7 @@ export type Mestiere = {
   id: string;
   nome: string;
   guida: string;
+  prezzo?: string;
   voci: VoceMestiere[];
 };
 
@@ -76,55 +77,30 @@ const MESTIERI_HARDWARE: Mestiere[] = [
   },
 ];
 
-export const MESTIERI_DIGITAL: [Mestiere, Mestiere] = [
+export const MESTIERI_DIGITAL: Mestiere[] = [
   {
-    id: "sviluppo",
-    nome: "Siti & App",
-    guida: "Partiamo da zero, o riscriviamo quello che non vi porta clienti.",
-    voci: [
-      {
-        nome: "Siti web su misura",
-        testo:
-          "Scritti a mano, leggeri e veloci sul telefono. Niente modelli riciclati: codice pulito e fatto per durare.",
-      },
-      {
-        nome: "Web App",
-        testo:
-          "Soluzioni accessibili via browser o QR code: menù digitali interattivi, cataloghi o sistemi di prenotazione rapida.",
-      },
-      {
-        nome: "App Mobile (iOS e Android)",
-        testo:
-          "Applicazioni complete pubblicate sugli store per fidelizzare i clienti con notifiche push e funzioni dedicate.",
-      },
-      {
-        nome: "Farsi trovare (SEO)",
-        testo:
-          "Ottimizzazione per Google e posizionamento locale ad Asti per portare nuovi contatti alla vostra attività.",
-      },
-    ],
+    id: "presenza",
+    nome: "Presenza & velocità",
+    prezzo: "290 €",
+    guida:
+      "Un sito personalizzato da 1–3 pagine, progettato prima di tutto per il telefono, con contatto WhatsApp diretto e profilo Google Maps. Ideale per studi medici, professionisti e attività locali.",
+    voci: [],
   },
   {
-    id: "gestione",
-    nome: "Cura & Supporto",
-    guida: "Avete già un'attività: teniamo il sito aggiornato e vi aiutiamo a farvi trovare.",
-    voci: [
-      {
-        nome: "Piano mensile 'Zero Pensieri'",
-        testo:
-          "Un canone chiaro con creazione del sito inclusa, modifiche illimitate e nessun costo a sorpresa.",
-      },
-      {
-        nome: "Profilo Google Maps",
-        testo:
-          "Foto aggiornate, orari, risposte e cura della visibilità su Maps dove i clienti locali vi cercano ogni giorno.",
-      },
-      {
-        nome: "Manutenzione & Assistenza",
-        testo:
-          "Aggiornamenti continui, backup di sicurezza e supporto prioritario diretto, anche per i vostri computer.",
-      },
-    ],
+    id: "prenotazioni",
+    nome: "Sito, prenotazioni e menù",
+    prezzo: "550 €",
+    guida:
+      "Prenotazioni sul sito senza commissioni, menù QR o preventivatore. Per ristoranti, centri estetici, dentisti e serramentisti.",
+    voci: [],
+  },
+  {
+    id: "gestionale",
+    nome: "Gestionale su misura",
+    prezzo: "950 €",
+    guida:
+      "Un pannello privato per anagrafiche, scadenze e commesse, con esportazione PDF e notifiche automatiche. Per agenzie, cantine, officine e studi tecnici.",
+    voci: [],
   },
 ];
 
@@ -144,7 +120,7 @@ const LASTRE_CONFIG: LastraSpec[] = [
 
 type Props = {
   titolo?: string;
-  mestieri?: [Mestiere, Mestiere];
+  mestieri?: Mestiere[];
 };
 
 export default function DueMestieri({
@@ -154,6 +130,7 @@ export default function DueMestieri({
   const [attivo, setAttivo] = useState(mestieri[0].id);
   const gruppo = useId();
   const secondoAttivo = attivo === mestieri[1].id;
+  const alternaServizi = mestieri.length > 2;
   const taglioRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -207,7 +184,7 @@ export default function DueMestieri({
           esclusivamente contro le lastre bianche (fondendo in nero) e contro
           il fondo trasparente (restando bianco puro), senza MAI toccare lo
           sfondo rosso esterno (che altrimenti causerebbe la tinta ciano/azzurro). */}
-      <div className="rosso-blend">
+      <div className="rosso-blend rosso-blend--servizi">
         <div
           ref={taglioRef}
           className="taglio-fissato hero-art"
@@ -235,55 +212,81 @@ export default function DueMestieri({
           {titolo}
           <span className="srv-dot" aria-hidden="true" />
         </h2>
-      </div>
-
       <section className="srv-apre" aria-label={titolo} />
 
-      <section className="duo" aria-label="I nostri servizi">
-        <div className="duo-scelta" role="tablist" aria-label="Cosa vi serve">
-          <span className="duo-cursore" aria-hidden="true" />
-          {mestieri.map((m) => (
-            <button
-              key={m.id}
-              type="button"
-              role="tab"
-              id={`${gruppo}-${m.id}`}
-              aria-selected={attivo === m.id}
-              aria-controls={`${gruppo}-${m.id}-pannello`}
-              className="duo-tasto"
-              onClick={() => setAttivo(m.id)}
-            >
-              {m.nome}
-            </button>
-          ))}
-        </div>
-
-        <div className="duo-griglia">
-          {mestieri.map((m, idx) => (
-            <div
-              key={m.id}
-              className="duo-col"
-              data-col={m.id}
-              data-idx={idx}
-              id={`${gruppo}-${m.id}-pannello`}
-              role="tabpanel"
-              aria-labelledby={`${gruppo}-${m.id}`}
-            >
-              <h3 className="duo-nome">{m.nome}</h3>
-              <p className="duo-guida">{m.guida}</p>
-
-              <ul className="duo-voci">
-                {m.voci.map((v) => (
-                  <li key={v.nome} className="duo-voce">
-                    <h4>{v.nome}</h4>
-                    <p>{v.testo}</p>
-                  </li>
-                ))}
-              </ul>
+      <section
+        className={`duo${alternaServizi ? " duo--alternato" : ""}`}
+        aria-label="I nostri servizi"
+      >
+        {alternaServizi ? (
+          <div className="duo-servizi">
+            {mestieri.map((servizio) => (
+              <article className="duo-servizio" key={servizio.id}>
+                <div className="duo-servizio__contenuto">
+                  <div className="duo-servizio__testo">
+                    <h3>{servizio.nome}</h3>
+                    <p>{servizio.guida}</p>
+                  </div>
+                  {servizio.prezzo && (
+                    <p className="duo-servizio__prezzo">
+                      <span className="sr-only">Prezzo: </span>
+                      <span className="duo-servizio__prezzo-da" aria-hidden="true">da</span>
+                      <span className="duo-servizio__prezzo-valore">{servizio.prezzo}</span>
+                    </p>
+                  )}
+                </div>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <>
+            <div className="duo-scelta" role="tablist" aria-label="Cosa vi serve">
+              <span className="duo-cursore" aria-hidden="true" />
+              {mestieri.map((m) => (
+                <button
+                  key={m.id}
+                  type="button"
+                  role="tab"
+                  id={`${gruppo}-${m.id}`}
+                  aria-selected={attivo === m.id}
+                  aria-controls={`${gruppo}-${m.id}-pannello`}
+                  className="duo-tasto"
+                  onClick={() => setAttivo(m.id)}
+                >
+                  {m.nome}
+                </button>
+              ))}
             </div>
-          ))}
-        </div>
+
+            <div className="duo-griglia">
+              {mestieri.map((m, idx) => (
+                <div
+                  key={m.id}
+                  className="duo-col"
+                  data-col={m.id}
+                  data-idx={idx}
+                  id={`${gruppo}-${m.id}-pannello`}
+                  role="tabpanel"
+                  aria-labelledby={`${gruppo}-${m.id}`}
+                >
+                  <h3 className="duo-nome">{m.nome}</h3>
+                  <p className="duo-guida">{m.guida}</p>
+
+                  <ul className="duo-voci">
+                    {m.voci.map((v) => (
+                      <li key={v.nome} className="duo-voce">
+                        <h4>{v.nome}</h4>
+                        <p>{v.testo}</p>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
       </section>
+      </div>
 
       <span className="rosso-sensore rosso-sensore--fine" aria-hidden="true" />
     </div>

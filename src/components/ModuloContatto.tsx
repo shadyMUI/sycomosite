@@ -290,7 +290,7 @@ export default function ModuloContatto({
       )}
 
       <button className="mod-invia" type="submit" disabled={stato === "invio"}>
-        {stato === "invio" ? "Un attimo…" : "Mandate il messaggio"}
+        {stato === "invio" ? "Un attimo…" : "Mandaci un messaggio"}
       </button>
 
       {stato === "fatto" && (
