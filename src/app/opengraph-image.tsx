@@ -17,6 +17,7 @@ import { NOME, DESCRIZIONE_BREVE } from "@/lib/sito";
  */
 
 export const alt = `${NOME} — siti su misura per le piccole attività`;
+export const dynamic = "force-static";
 
 /* 1200×630 è la misura che tutte le piattaforme ritagliano senza tagliare:
    sotto, l'immagine viene sgranata; con altre proporzioni viene rifilata

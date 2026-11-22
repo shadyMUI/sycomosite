@@ -9,16 +9,16 @@ import Footer from "@/components/Footer";
 import ScrollDirector from "@/components/ScrollDirector";
 import SottoLogo from "@/components/SottoLogo";
 import DiagonalKaomojiBackground from "@/components/DiagonalKaomojiBackground";
-import { SITO, NOME, EMAIL, DESCRIZIONE, SOCIAL, CITTA } from "@/lib/sito";
+import { NOME, EMAIL, DESCRIZIONE, SOCIAL, CITTA, urlSito } from "@/lib/sito";
 
 const DATI_STRUTTURATI = {
   "@context": "https://schema.org",
   "@graph": [
     {
       "@type": "Organization",
-      "@id": `${SITO}/#studio`,
+      "@id": `${urlSito("/")}#studio`,
       name: NOME,
-      url: SITO,
+      url: urlSito("/"),
       email: EMAIL,
       description: DESCRIZIONE,
       areaServed: { "@type": "City", name: CITTA },
@@ -26,11 +26,11 @@ const DATI_STRUTTURATI = {
     },
     {
       "@type": "WebSite",
-      "@id": `${SITO}/#sito`,
-      url: SITO,
+      "@id": `${urlSito("/")}#sito`,
+      url: urlSito("/"),
       name: NOME,
       inLanguage: "it-IT",
-      publisher: { "@id": `${SITO}/#studio` },
+      publisher: { "@id": `${urlSito("/")}#studio` },
     },
   ],
 };

@@ -10,7 +10,7 @@ import CheComputer from "@/components/CheComputer";
 import Album from "@/components/Album";
 import Domande from "@/components/Domande";
 import DiagonalKaomojiBackground from "@/components/DiagonalKaomojiBackground";
-import { SITO, NOME, EMAIL, CITTA } from "@/lib/sito";
+import { NOME, EMAIL, CITTA, urlSito } from "@/lib/sito";
 
 export const metadata: Metadata = {
   /* Prima il servizio, poi la città: chi cerca scrive "assemblaggio pc
@@ -18,23 +18,23 @@ export const metadata: Metadata = {
      fa scegliere questo e non un altro. */
   title: `Computer su misura ad ${CITTA}`,
   description: `Scelta delle componenti in base al budget, assemblaggio, messa a punto e manutenzione ad ${CITTA}. Pulizia, pasta termica e sostituzione componenti.`,
-  alternates: { canonical: "/pc-su-misura" },
+  alternates: { canonical: urlSito("/pc-su-misura") },
   robots: { index: true, follow: true },
   openGraph: {
     type: "website",
     locale: "it_IT",
-    url: "/pc-su-misura",
+    url: urlSito("/pc-su-misura"),
     title: `Computer su misura ad ${CITTA} · ${NOME}`,
     description:
       "Scegliamo le componenti col vostro budget, montiamo, mettiamo a punto e teniamo in forma.",
-    images: ["/opengraph-image"],
+    images: [urlSito("/opengraph-image")],
   },
   twitter: {
     card: "summary_large_image",
     title: `Computer su misura ad ${CITTA} · ${NOME}`,
     description:
       "Scegliamo le componenti col vostro budget, montiamo, mettiamo a punto e teniamo in forma.",
-    images: ["/opengraph-image"],
+    images: [urlSito("/opengraph-image")],
   },
 };
 
@@ -43,15 +43,15 @@ const DATI_STRUTTURATI = {
   "@graph": [
     {
       "@type": "WebPage",
-      "@id": `${SITO}/pc-su-misura`,
-      url: `${SITO}/pc-su-misura`,
+      "@id": urlSito("/pc-su-misura"),
+      url: urlSito("/pc-su-misura"),
       name: `Computer su misura ad ${CITTA} · ${NOME}`,
       description: `Scelta delle componenti in base al budget, assemblaggio, messa a punto e manutenzione ad ${CITTA}.`,
       inLanguage: "it-IT",
       isPartOf: {
         "@type": "WebSite",
         name: NOME,
-        url: SITO,
+        url: urlSito("/"),
       },
     },
     {
@@ -60,7 +60,7 @@ const DATI_STRUTTURATI = {
       provider: {
         "@type": "Organization",
         name: NOME,
-        url: SITO,
+        url: urlSito("/"),
         email: EMAIL,
       },
       areaServed: {

@@ -1,5 +1,7 @@
 import type { MetadataRoute } from "next";
-import { SITO } from "@/lib/sito";
+import { SITO, urlSito } from "@/lib/sito";
+
+export const dynamic = "force-static";
 
 /**
  * Cosa possono leggere i motori di ricerca.
@@ -11,7 +13,7 @@ import { SITO } from "@/lib/sito";
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: { userAgent: "*", allow: "/" },
-    sitemap: `${SITO}/sitemap.xml`,
-    host: SITO,
+    sitemap: urlSito("/sitemap.xml"),
+    host: new URL(SITO).host,
   };
 }

@@ -1,5 +1,7 @@
 import type { MetadataRoute } from "next";
-import { SITO } from "@/lib/sito";
+import { urlSito } from "@/lib/sito";
+
+export const dynamic = "force-static";
 
 /**
  * L'elenco delle pagine, per i motori di ricerca.
@@ -16,7 +18,7 @@ import { SITO } from "@/lib/sito";
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
     {
-      url: SITO,
+      url: urlSito("/"),
       lastModified: new Date("2026-11-09"),
       changeFrequency: "monthly",
       priority: 1,
@@ -24,13 +26,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
     {
       /* Vale quanto la home: è l'altra metà di quello che fate, e per le
          ricerche locali è la pagina che porterà più visite delle altre. */
-      url: `${SITO}/pc-su-misura`,
+      url: urlSito("/pc-su-misura"),
       lastModified: new Date("2026-11-09"),
       changeFrequency: "monthly",
       priority: 0.9,
     },
     {
-      url: `${SITO}/privacy`,
+      url: urlSito("/privacy"),
       lastModified: new Date("2026-11-09"),
       changeFrequency: "yearly",
       priority: 0.3,

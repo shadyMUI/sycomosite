@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { WHATSAPP } from "@/lib/sito";
+import { BASE_PATH, WHATSAPP } from "@/lib/sito";
 
 /**
  * I due modi per farsi sentire, sotto il marchio.
@@ -101,7 +101,7 @@ export default function SottoLogo({
     /* Fuori dalla pagina che ha la sezione, si lascia fare al browser:
        segue il collegamento e atterra sui contatti dell'altra. */
     if (!meta) {
-      window.location.href = "/#contatti";
+      window.location.href = `${BASE_PATH}/#contatti`;
       return;
     }
 

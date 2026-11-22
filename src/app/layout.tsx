@@ -3,11 +3,7 @@ import { Manrope, Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import IntroCurtain from "@/components/IntroCurtain";
 import ScorrimentoFluido from "@/components/ScorrimentoFluido";
-/* ⚠️ PROVVISORIO: passaggio rapido fra le due metà del sito mentre si
-   lavora. Va tolto prima di pubblicare — questa riga, l'elemento nel
-   corpo, il file del componente e il blocco `.cantiere` negli stili. */
-import PonteCantiere from "@/components/PonteCantiere";
-import { SITO, NOME, DESCRIZIONE, DESCRIZIONE_BREVE } from "@/lib/sito";
+import { BASE_PATH, SITO, NOME, DESCRIZIONE, DESCRIZIONE_BREVE, urlSito } from "@/lib/sito";
 
 const manrope = Manrope({
   variable: "--font-manrope",
@@ -47,12 +43,12 @@ export const metadata: Metadata = {
   /* L'indirizzo ufficiale della pagina. Serve a dire ai motori qual è la
      versione buona quando lo stesso contenuto è raggiungibile da più vie
      — con e senza www, con parametri di tracciamento in coda. */
-  alternates: { canonical: "/" },
+  alternates: { canonical: urlSito("/") },
 
   openGraph: {
     type: "website",
     locale: "it_IT",
-    url: "/",
+    url: urlSito("/"),
     siteName: NOME,
     title: `${NOME} — siti su misura per le piccole attività`,
     description: DESCRIZIONE_BREVE,
@@ -86,7 +82,7 @@ export const metadata: Metadata = {
 
   /* Dichiarata esplicitamente: il file favicon.ico in app/ verrebbe
      raccolto lo stesso, ma così l'icona è documentata insieme al resto. */
-  icons: { icon: "/favicon.ico" },
+  icons: { icon: `${BASE_PATH}/favicon.ico` },
 
   category: "technology",
   formatDetection: {
@@ -121,7 +117,6 @@ export default function RootLayout({
         <IntroCurtain />
         <ScorrimentoFluido />
         {children}
-        <PonteCantiere />
       </body>
     </html>
   );
