@@ -31,42 +31,22 @@ interface TrackTemplate {
 
 /**
  * Visual hierarchy for standard light paper background:
- * ESATTAMENTE 9 linee in totale (3 terzine: Large, Medium, Small).
- * - 3 Large: text-[#e12c1a] full color, text-lg lg:text-xl, height h-10 lg:h-12
- * - 3 Medium: text-[#eb6b5e] (mid-tone), text-sm, height h-8
- * - 3 Small: text-[#f4a69e] (lightest tone), text-xs, height h-6
- * Velocità molto lente da banner pubblicitario (200s - 280s) per uno scorrimento calmo e rilassato.
+ * ESATTAMENTE 3 linee grandi, in tre tonalità del marchio.
+ * Tutte usano text-6xl lg:text-8xl e mantengono l'inclinazione comune.
+ * Scorrimento molto lento (720s - 880s), a direzione alternata, con crescita graduale.
  */
 const BASE_TRACK_TEMPLATES: TrackTemplate[] = [
-  { level: "large",  colorClass: "text-[#e12c1a]", sizeClass: "text-lg lg:text-xl", heightClass: "h-10 lg:h-12", direction: "forward", speedDuration: "210s", kaomojiOffset: 0 },
-  { level: "medium", colorClass: "text-[#eb6b5e]", sizeClass: "text-sm",           heightClass: "h-8",          direction: "reverse", speedDuration: "240s", kaomojiOffset: 3 },
-  { level: "small",  colorClass: "text-[#f4a69e]", sizeClass: "text-xs",           heightClass: "h-6",          direction: "forward", speedDuration: "270s", kaomojiOffset: 6 },
-  { level: "large",  colorClass: "text-[#e12c1a]", sizeClass: "text-lg lg:text-xl", heightClass: "h-10 lg:h-12", direction: "reverse", speedDuration: "200s", kaomojiOffset: 1 },
-  { level: "medium", colorClass: "text-[#eb6b5e]", sizeClass: "text-sm",           heightClass: "h-8",          direction: "forward", speedDuration: "230s", kaomojiOffset: 4 },
-  { level: "small",  colorClass: "text-[#f4a69e]", sizeClass: "text-xs",           heightClass: "h-6",          direction: "reverse", speedDuration: "260s", kaomojiOffset: 7 },
-  { level: "large",  colorClass: "text-[#e12c1a]", sizeClass: "text-lg lg:text-xl", heightClass: "h-10 lg:h-12", direction: "forward", speedDuration: "220s", kaomojiOffset: 2 },
-  { level: "medium", colorClass: "text-[#eb6b5e]", sizeClass: "text-sm",           heightClass: "h-8",          direction: "reverse", speedDuration: "250s", kaomojiOffset: 5 },
-  { level: "small",  colorClass: "text-[#f4a69e]", sizeClass: "text-xs",           heightClass: "h-6",          direction: "forward", speedDuration: "280s", kaomojiOffset: 8 },
+  { level: "large", colorClass: "text-[#e12c1a]", sizeClass: "text-6xl lg:text-8xl", heightClass: "h-28 lg:h-36", direction: "forward", speedDuration: "720s", kaomojiOffset: 0 },
+  { level: "large", colorClass: "text-[#e12c1a]", sizeClass: "text-6xl lg:text-8xl", heightClass: "h-28 lg:h-36", direction: "reverse", speedDuration: "760s", kaomojiOffset: 3 },
+  { level: "large", colorClass: "text-[#e12c1a]", sizeClass: "text-6xl lg:text-8xl", heightClass: "h-28 lg:h-36", direction: "forward", speedDuration: "800s", kaomojiOffset: 6 },
 ];
 
-/**
- * Builds repeated kaomoji sequence strings with offset for variety across tracks.
- * Repeated 18 times with bullet separators for continuous span in monospace.
- */
-function buildTrackKaomojiString(offset: number): string {
-  const shifted: string[] = [];
-  const len = BASE_KAOMOJI_LIST.length;
-  for (let i = 0; i < len; i++) {
-    shifted.push(BASE_KAOMOJI_LIST[(i + offset) % len]);
-  }
-  const block = shifted.join("  •  ") + "  •  ";
-  return block.repeat(18);
+function buildTrackKaomojis(offset: number): string[] {
+  const shifted = Array.from({ length: BASE_KAOMOJI_LIST.length }, (_, i) =>
+    BASE_KAOMOJI_LIST[(i + offset) % BASE_KAOMOJI_LIST.length],
+  );
+  return Array.from({ length: 18 }, () => shifted).flat();
 }
-
-// Pre-computed deterministic track strings for exact SSR parity
-const TRACK_STRINGS = Array.from({ length: BASE_KAOMOJI_LIST.length }, (_, i) =>
-  buildTrackKaomojiString(i)
-);
 
 export interface DiagonalKaomojiBackgroundProps {
   theme?: "default" | "negative";
@@ -88,10 +68,79 @@ export default function DiagonalKaomojiBackground({
   const containerRef = useRef<HTMLDivElement>(null);
   const tracksLayerRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    const layer = tracksLayerRef.current;
+    if (!layer) return;
+
+    const updateBlur = () => {
+      const textRects = Array.from(
+        document.querySelectorAll<HTMLElement>(
+          ".uso-domanda, .uso-testo, .cnt-titolo, .cnt-etichetta, .cnt-mail, .cnt-altra-domanda, .cnt-altra-vai, .mod-frase, .mod-etichetta",
+        ),
+      )
+        .filter((element) => {
+          const style = getComputedStyle(element);
+          return style.visibility !== "hidden" && Number(style.opacity) > 0.01;
+        })
+        .flatMap((element) => {
+          const range = document.createRange();
+          range.selectNodeContents(element);
+          return Array.from(range.getClientRects());
+        });
+      if (!textRects.length) return;
+
+      // Misura la distanza dal glifo reale, non dal centro della sequenza:
+      // con kaomoji grandi il centro poteva trovarsi centinaia di pixel
+      // più avanti del simbolo che stava già passando sopra al testo.
+      const reach = 100;
+      layer.querySelectorAll<HTMLElement>("[data-kaomoji]").forEach((glyph) => {
+        const rect = glyph.getBoundingClientRect();
+        if (rect.bottom < -reach || rect.top > window.innerHeight + reach || rect.right < -reach || rect.left > window.innerWidth + reach) return;
+
+        const distance = Math.min(...textRects.map((text) => {
+          const dx = Math.max(text.left - rect.right, 0, rect.left - text.right);
+          const dy = Math.max(text.top - rect.bottom, 0, rect.top - text.bottom);
+          return Math.hypot(dx, dy);
+        }));
+        const proximity = Math.max(0, 1 - distance / reach);
+        // Una curva percettiva rende il blur visibile già in avvicinamento,
+        // invece di concentrare quasi tutto l'effetto sull'ultimo tratto.
+        const easedProximity = Math.pow(proximity, 0.68);
+        const blur = easedProximity * 32;
+        glyph.style.filter = blur > 0.15 ? `blur(${blur.toFixed(1)}px)` : "none";
+        glyph.style.color = easedProximity > 0.01
+          ? `color-mix(in srgb, #e12c1a ${Math.round((1 - easedProximity * 0.5) * 100)}%, #f7f4ed)`
+          : "#e12c1a";
+      });
+    };
+
+    let timer: number | undefined;
+    const schedule = () => {
+      if (timer !== undefined) return;
+      timer = window.setTimeout(() => {
+        timer = undefined;
+        updateBlur();
+      }, 32);
+    };
+    updateBlur();
+    const observer = new ResizeObserver(schedule);
+    observer.observe(document.documentElement);
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule, { passive: true });
+    const animation = window.setInterval(schedule, 48);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("resize", schedule);
+      window.clearInterval(animation);
+      if (timer !== undefined) window.clearTimeout(timer);
+    };
+  }, []);
+
   // SSR initial baseline: exact deterministic defaults
   const [geometry, setGeometry] = useState<GeometryState>(() => {
     const initW = 1920;
-    const initH = 6000;
+    const initH = 7000;
     const initWinH = 950;
     const initL = Math.sqrt(initW * initW + initH * initH);
     return {
@@ -236,21 +285,22 @@ export default function DiagonalKaomojiBackground({
   const angleDeg = angleRad * (180 / Math.PI);
 
   // Vettore normale unitario perpendicolare alla diagonale (ruotato di +90deg: [ -sin(a), cos(a) ])
-  // Spazia le 9 tracce in modo perfettamente parallelo ed equidistante
+  // Spazia le 3 tracce in modo perfettamente parallelo ed equidistante
   const nx = -Math.sin(angleRad);
   const ny = Math.cos(angleRad);
 
   /**
-   * ESATTAMENTE 9 linee in totale (indices 0..8, i - 4 da -4 a +4).
-   * Disposte a fascia diagonale sull'intera altezza della pagina fisica.
+   * ESATTAMENTE 3 linee, centrate attorno al tracciato principale.
    */
   const tracks = useMemo(() => {
     return templates.map((template, i) => {
-      const d = (i - 4) * spacing;
+      // La spaziatura extra è solo verticale: non cambia la posizione X delle strisce.
+      const d = (i - 1) * spacing;
+      const rowGap = viewWidth < 768 ? 240 : 340;
       const localCenterX = midX + d * nx;
-      const localCenterY = midY + d * ny;
+      const localCenterY = midY + d * ny + (i - 1) * rowGap;
 
-      const trackString = TRACK_STRINGS[template.kaomojiOffset % TRACK_STRINGS.length];
+      const trackKaomojis = buildTrackKaomojis(template.kaomojiOffset);
       const animationClass =
         template.direction === "forward"
           ? "animate-marquee-forward"
@@ -261,7 +311,7 @@ export default function DiagonalKaomojiBackground({
         localCenterX,
         localCenterY,
         template,
-        trackString,
+        trackKaomojis,
         animationClass,
       };
     });
@@ -270,7 +320,7 @@ export default function DiagonalKaomojiBackground({
   return (
     <div
       ref={containerRef}
-      className={className || "absolute inset-x-0 top-0 z-0 overflow-hidden pointer-events-none select-none"}
+      className={`${className || "absolute inset-x-0 top-0 z-0 overflow-hidden pointer-events-none select-none"} kaomoji-background`}
       style={{ height: `${viewHeight}px` }}
       aria-hidden="true"
     >
@@ -278,7 +328,7 @@ export default function DiagonalKaomojiBackground({
         {tracks.map((track) => (
           <div
             key={track.id}
-            className={`absolute pointer-events-none select-none flex items-center font-mono whitespace-nowrap overflow-visible ${track.template.heightClass} ${track.template.sizeClass} ${track.template.colorClass}`}
+            className={`absolute pointer-events-none select-none flex items-center font-mono font-bold whitespace-nowrap overflow-visible ${track.template.heightClass} ${track.template.sizeClass} ${track.template.colorClass}`}
             style={{
               left: `${track.localCenterX}px`,
               top: `${track.localCenterY}px`,
@@ -297,9 +347,21 @@ export default function DiagonalKaomojiBackground({
               style={{ animationDuration: track.template.speedDuration }}
             >
               {/* Set A */}
-              <span className="inline-block shrink-0 px-4">{track.trackString}</span>
+              <span className="inline-flex shrink-0 items-center px-4">
+                {track.trackKaomojis.map((kaomoji, index) => (
+                  <span key={`a-${index}`} className="kaomoji-glyph">
+                    <span data-kaomoji className="kaomoji-face">{kaomoji}</span><span data-kaomoji className="kaomoji-separator">•</span>
+                  </span>
+                ))}
+              </span>
               {/* Set B */}
-              <span className="inline-block shrink-0 px-4">{track.trackString}</span>
+              <span className="inline-flex shrink-0 items-center px-4">
+                {track.trackKaomojis.map((kaomoji, index) => (
+                  <span key={`b-${index}`} className="kaomoji-glyph">
+                    <span data-kaomoji className="kaomoji-face">{kaomoji}</span><span data-kaomoji className="kaomoji-separator">•</span>
+                  </span>
+                ))}
+              </span>
             </div>
           </div>
         ))}

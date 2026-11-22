@@ -13,7 +13,7 @@ export default function MobileVerticalAlbum({
   scatti,
   onSelectProject,
 }: Props) {
-  const isDigital = titolo[0].toLowerCase().includes("progetto");
+  const isDigital = titolo[0].toLowerCase().includes("progett");
   const eyebrowLabel = isDigital
     ? "ARCHIVIO DIGITALE · SYCOMO STUDIO"
     : "OFFICINA HARDWARE · SYCOMO LAB";
@@ -27,19 +27,18 @@ export default function MobileVerticalAlbum({
     >
       {/* Testata della sezione per viewport mobile */}
       <header className="alb-m-header">
-        <div className="alb-m-eyebrow">
-          <span className="alb-m-eyebrow-dot" aria-hidden="true" />
-          <span>{eyebrowLabel}</span>
-        </div>
+        {!isDigital && (
+          <div className="alb-m-eyebrow">
+            <span className="alb-m-eyebrow-dot" aria-hidden="true" />
+            <span>{eyebrowLabel}</span>
+          </div>
+        )}
         <h2 className="alb-m-title">
           {titolo[0]}
           <br />
           <span className="alb-m-title-sub">{titolo[1]}</span>
           <span className="alb-dot" aria-hidden="true" />
         </h2>
-        <div className="alb-m-counter-pill">
-          <span>{scatti.length} PROGETTI SELEZIONATI</span>
-        </div>
       </header>
 
       {/* Lista verticale naturale di schede rettangolari (zero sticky pinning, zero trappole di scroll) */}
@@ -53,7 +52,7 @@ export default function MobileVerticalAlbum({
                 s.categoria?.toLowerCase().includes("piattaforma")
             );
 
-          const primaryMetric = s.metriche?.[0] || "";
+          const primaryMetric = cardIsDigital ? "" : s.metriche?.[0] || "";
           const metricShort = primaryMetric.split(" ")[0] || "";
 
           return (
@@ -96,15 +95,9 @@ export default function MobileVerticalAlbum({
                       <div className="alb-m-mockup-url">sycomo.it</div>
                     </div>
                     <div className="alb-m-mockup-canvas">
-                      <span className="alb-m-mockup-tag">
-                        {s.categoria?.split("·")[0]?.trim() || "WEB"}
-                      </span>
                       <div className="alb-m-mockup-glyph" aria-hidden="true">
                         {idx === 0 ? "⚡" : idx === 1 ? "📱" : idx === 2 ? "🍷" : "✨"}
                       </div>
-                      <span className="alb-m-mockup-badge">
-                        {metricShort || "LIVE"}
-                      </span>
                     </div>
                   </div>
                 ) : (
@@ -136,13 +129,14 @@ export default function MobileVerticalAlbum({
                 data-info="true"
               >
                 <div className="alb-m-card-kicker">
-                  <span className="alb-m-card-cat">
-                    {s.categoria?.split("·")[0]?.trim() ||
-                      (cardIsDigital ? "DIGITALE" : "HARDWARE")}
-                  </span>
+                  {!cardIsDigital && (
+                    <span className="alb-m-card-cat">
+                      {s.categoria?.split("·")[0]?.trim() || "HARDWARE"}
+                    </span>
+                  )}
                   {s.cliente && (
                     <span className="alb-m-card-client">
-                      {" · "}
+                      {cardIsDigital ? "" : " · "}
                       {s.cliente.split("·")[0].trim()}
                     </span>
                   )}
@@ -155,10 +149,8 @@ export default function MobileVerticalAlbum({
                 <p className="alb-m-card-desc">{s.descrizione || s.alt}</p>
 
                 <div className="alb-m-card-footer">
-                  {primaryMetric ? (
+                  {primaryMetric && (
                     <span className="alb-m-card-metric">{primaryMetric}</span>
-                  ) : (
-                    <span />
                   )}
                   <span className="alb-m-card-affordance">
                     Dettagli <span aria-hidden="true">→</span>

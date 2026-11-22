@@ -516,7 +516,7 @@ export default function HorizontalPinAlbum({ titolo, scatti, onSelectCard }: Pro
   };
 
   // Determina etichetta del contesto (Digital vs Hardware)
-  const isDigital = titolo[0].toLowerCase().includes("progetto");
+  const isDigital = titolo[0].toLowerCase().includes("progett");
   const eyebrowLabel = isDigital
     ? "ARCHIVIO DIGITALE · SYCOMO STUDIO"
     : "OFFICINA HARDWARE · SYCOMO LAB";
@@ -535,10 +535,12 @@ export default function HorizontalPinAlbum({ titolo, scatti, onSelectCard }: Pro
         {/* Top Header Bar con tipografia monumentale Sycomo */}
         <header className="alb-pin-header">
           <div className="alb-pin-header-left">
-            <div className="alb-pin-eyebrow">
-              <span className="alb-pin-eyebrow-dot" aria-hidden="true" />
-              <span>{eyebrowLabel}</span>
-            </div>
+            {!isDigital && (
+              <div className="alb-pin-eyebrow">
+                <span className="alb-pin-eyebrow-dot" aria-hidden="true" />
+                <span>{eyebrowLabel}</span>
+              </div>
+            )}
             <h2 className="alb-pin-title" id="alb-t">
               {titolo[0]}
               <br />
@@ -547,19 +549,6 @@ export default function HorizontalPinAlbum({ titolo, scatti, onSelectCard }: Pro
             </h2>
           </div>
 
-          <div className="alb-pin-header-right">
-            {/* Contatore monumentale in alto a destra */}
-            <div className="alb-pin-counter-top" aria-live="polite">
-              <span className="alb-pin-counter-tag">PROGETTO</span>
-              <span className="alb-pin-counter-big">
-                {String(activeIndex + 1).padStart(2, "0")}
-              </span>
-              <span className="alb-pin-counter-sep">/</span>
-              <span className="alb-pin-counter-small">
-                {String(total).padStart(2, "0")}
-              </span>
-            </div>
-          </div>
         </header>
 
         {/* Palcoscenico del nastro orizzontale con touch & mouse direct drag */}
@@ -583,11 +572,6 @@ export default function HorizontalPinAlbum({ titolo, scatti, onSelectCard }: Pro
                   : idx === 2
                   ? "Consulta Menù"
                   : "Prenota Trattamento";
-
-              const digitalStatNum = s.metriche?.[0]?.split(" ")[0] || "< 0.4s";
-              const digitalStatLbl = s.metriche?.[0]
-                ? s.metriche[0].replace(digitalStatNum, "").trim()
-                : "Velocità";
 
               const hwGaugeVal = s.metriche?.[0]?.split(" ")[0] || "64°C";
               const hwGaugeLbl = s.metriche?.[0]
@@ -636,18 +620,22 @@ export default function HorizontalPinAlbum({ titolo, scatti, onSelectCard }: Pro
                   {/* Header interno della card */}
                   <div className="alb-card-head">
                     <div className="alb-card-badges">
-                      <span className="alb-card-cat-badge">
-                        <span className="alb-card-live-dot" />
-                        {s.categoria || (isDigital ? "PIATTAFORMA DIGITALE" : "CUSTOM RIG")}
-                      </span>
+                      {!isDigital && (
+                        <span className="alb-card-cat-badge">
+                          <span className="alb-card-live-dot" />
+                          {s.categoria || "CUSTOM RIG"}
+                        </span>
+                      )}
                       <span className="alb-card-client-badge">
                         {s.cliente || "SYCOMO LAB"}
                       </span>
                     </div>
 
-                    <div className="alb-card-status-badge">
-                      <span>{s.stato || "ONLINE DAL VIVO"}</span>
-                    </div>
+                    {!isDigital && (
+                      <div className="alb-card-status-badge">
+                        <span>{s.stato || "ONLINE DAL VIVO"}</span>
+                      </div>
+                    )}
                   </div>
 
                   {/* Corpo principale della card: Layout editoriale e mockup visivo */}
@@ -660,7 +648,7 @@ export default function HorizontalPinAlbum({ titolo, scatti, onSelectCard }: Pro
                         {s.descrizione || s.alt}
                       </p>
 
-                      {s.ruolo && (
+                      {!isDigital && s.ruolo && (
                         <div className="alb-card-role">
                           <span className="alb-card-role-kicker">RUOLO SYCOMO:</span>
                           <span className="alb-card-role-val">{s.ruolo}</span>
@@ -668,7 +656,7 @@ export default function HorizontalPinAlbum({ titolo, scatti, onSelectCard }: Pro
                       )}
 
                       {/* Metriche chiave in rilievo */}
-                      {s.metriche && s.metriche.length > 0 && (
+                      {!isDigital && s.metriche && s.metriche.length > 0 && (
                         <div className="alb-card-metrics">
                           {s.metriche.map((m) => (
                             <div key={m} className="alb-card-metric-item">
@@ -680,7 +668,7 @@ export default function HorizontalPinAlbum({ titolo, scatti, onSelectCard }: Pro
                       )}
 
                       {/* Specifiche tecniche / Chip */}
-                      {s.specifiche && s.specifiche.length > 0 && (
+                      {!isDigital && s.specifiche && s.specifiche.length > 0 && (
                         <div className="alb-card-specs">
                           {s.specifiche.map((spec) => (
                             <span key={spec} className="alb-card-spec-pill">
@@ -733,9 +721,6 @@ export default function HorizontalPinAlbum({ titolo, scatti, onSelectCard }: Pro
 
                             <div className="alb-preview-canvas">
                               <div className="alb-preview-hero-art">
-                                <div className="alb-preview-badge-mini">
-                                  {s.categoria || "WEB APPLICATION"}
-                                </div>
                                 <h4 className="alb-preview-mini-title">
                                   {s.didascalia.split("·")[0]}
                                 </h4>
@@ -748,12 +733,6 @@ export default function HorizontalPinAlbum({ titolo, scatti, onSelectCard }: Pro
                                 </div>
                               </div>
 
-                              <div className="alb-preview-floating-card">
-                                <div className="alb-floating-stat">
-                                  <span className="alb-stat-num">{digitalStatNum}</span>
-                                  <span className="alb-stat-lbl">{digitalStatLbl}</span>
-                                </div>
-                              </div>
                             </div>
                           </div>
                         ) : (

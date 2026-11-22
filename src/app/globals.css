@@ -1426,13 +1426,26 @@ body::after {
   display: grid;
   align-content: center;
   padding: clamp(84px, 12vh, 120px) 6vw clamp(56px, 8vh, 110px);
-  opacity: var(--p);
-  transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-  will-change: transform;
+}
+
+.uso-riga {
+  position: relative;
+  z-index: 0;
+  width: fit-content;
+  max-width: 100%;
+}
+
+.uso-riga--titolo {
+  margin-bottom: clamp(28px, 4.5vh, 64px);
+}
+
+.uso-riga--testo {
+  width: min(52vw, 100%);
 }
 
 .uso-domanda {
-  margin: 0 0 clamp(28px, 4.5vh, 64px);
+  position: relative;
+  margin: 0;
   font-family: var(--font-sans);
   font-weight: 700;
   /* Due limiti, e vince il più stretto: la misura voluta e quella che il
@@ -1481,6 +1494,7 @@ body::after {
    staccano dal resto per il peso dell'inchiostro, e il prezzo per il
    rosso — gli unici due strumenti che il sito usa per dare accento. */
 .uso-testo {
+  position: relative;
   margin: 0;
   max-width: 20ch;
   font-family: var(--font-sans);
@@ -1575,7 +1589,13 @@ body::after {
       clamp(28px, 10vw, 76px),
       calc(86vw / (var(--dom-max, 8) * 0.56 + 0.35))
     );
+    margin-bottom: 0;
+  }
+  .uso-riga--titolo {
     margin-bottom: 22px;
+  }
+  .uso-riga--testo {
+    width: min(86vw, 300px);
   }
   .uso-testo {
     font-size: 22px;
@@ -1970,43 +1990,6 @@ body::after {
   height: 0.13em;
   margin-left: 0.09em;
   background: var(--red);
-}
-
-.alb-pin-counter-top {
-  display: flex;
-  align-items: baseline;
-  gap: 5px;
-  font-family: var(--font-title);
-  font-feature-settings: "tnum";
-  font-weight: 700;
-  padding: 8px 16px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--lift) 82%, transparent);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid color-mix(in srgb, var(--hair) 85%, transparent);
-  box-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.95),
-    0 8px 24px -10px color-mix(in srgb, var(--red-deep) 18%, transparent);
-}
-.alb-pin-counter-tag {
-  font-size: 10px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--muted);
-  margin-right: 4px;
-}
-.alb-pin-counter-big {
-  font-size: 20px;
-  color: var(--red);
-}
-.alb-pin-counter-sep {
-  font-size: 13px;
-  color: var(--muted);
-}
-.alb-pin-counter-small {
-  font-size: 13px;
-  color: var(--ink-soft);
 }
 
 /* ── Stage e Nastro di Card ── */
@@ -2792,19 +2775,6 @@ body::after {
 .alb-m-title-sub {
   color: var(--ink-soft);
   font-weight: 600;
-}
-
-.alb-m-counter-pill {
-  display: inline-block;
-  font-family: var(--font-mono);
-  font-size: 9.5px;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  color: var(--muted);
-  background: rgba(0, 0, 0, 0.04);
-  padding: 4px 10px;
-  border-radius: 999px;
-  border: 1px solid var(--hair);
 }
 
 .alb-m-card-list {
@@ -4856,30 +4826,63 @@ body::after {
 
 @keyframes marquee-forward {
   0% {
-    transform: translate3d(-50%, 0, 0);
+    transform: translate3d(-41%, 0, 0) scale(0.82);
+  }
+  50% {
+    transform: translate3d(-30%, 0, 0) scale(1.2);
   }
   100% {
-    transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0) scale(0.82);
   }
 }
 
 @keyframes marquee-reverse {
   0% {
-    transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0) scale(0.82);
+  }
+  50% {
+    transform: translate3d(-30%, 0, 0) scale(1.2);
   }
   100% {
-    transform: translate3d(-50%, 0, 0);
+    transform: translate3d(-41%, 0, 0) scale(0.82);
   }
 }
 
 .animate-marquee-forward {
   animation: marquee-forward var(--marquee-duration, 42s) linear infinite;
+  transform-origin: left center;
   will-change: transform;
 }
 
 .animate-marquee-reverse {
   animation: marquee-reverse var(--marquee-duration, 42s) linear infinite;
+  transform-origin: left center;
   will-change: transform;
+}
+
+.kaomoji-glyph {
+  display: inline-block;
+  flex: 0 0 auto;
+  white-space: pre;
+}
+
+.kaomoji-face {
+  display: inline-block;
+  color: #e12c1a;
+  filter: none;
+  transition: color 120ms linear, filter 120ms linear;
+  will-change: filter, color;
+}
+
+.kaomoji-separator {
+  display: inline-block;
+  margin: 0 0.8em;
+}
+
+@media (max-width: 860px) {
+  .kaomoji-background {
+    display: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -4888,29 +4891,3 @@ body::after {
     animation-play-state: paused !important;
   }
 }
-
-/* ── R5: Legibility Halos over Diagonal Kaomojis ───────────────────────────
-   Soft fade/blur protection applied to foreground content containers
-   (Hero text, Calcolatore, Cards) ensuring kaomojis dissolve smoothly
-   under text and maintain pristine contrast. ────────────────────────────── */
-
-.content-halo,
-.uso > .uso-domanda,
-.uso > .uso-testo {
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  background-color: color-mix(in srgb, var(--paper, #f7f4ed) 75%, transparent);
-  box-shadow: 0 0 40px 25px var(--paper, #f7f4ed);
-  border-radius: 1.5rem;
-  max-width: fit-content;
-}
-
-@supports not (color-mix(in srgb, var(--paper) 75%, transparent)) {
-  .content-halo,
-  .uso > .uso-domanda,
-  .uso > .uso-testo {
-    background-color: rgba(247, 244, 237, 0.75);
-    box-shadow: 0 0 40px 25px #f7f4ed;
-  }
-}
-

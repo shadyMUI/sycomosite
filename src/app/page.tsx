@@ -67,7 +67,7 @@ export default function Home() {
         <DueMestieri mestieri={MESTIERI_DIGITAL} titolo="cosa facciamo" />
 
         <Album
-          titolo={["Qualche progetto", "demo e dal vivo"]}
+          titolo={["Progetti digitali", "e casi studio"]}
           scatti={SCATTI_DIGITAL}
         />
 
