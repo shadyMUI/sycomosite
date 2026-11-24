@@ -2874,7 +2874,7 @@ body::after {
   padding: clamp(28px, 6vw, 44px) clamp(16px, 4vw, 24px);
   box-sizing: border-box;
   position: relative;
-  z-index: 20;
+  z-index: 40;
 }
 
 .alb-m-header {
@@ -2943,7 +2943,8 @@ body::after {
   align-items: stretch;
   gap: 12px;
   padding: 12px;
-  background: linear-gradient(135deg, rgba(255, 254, 251, 0.94) 0%, rgba(247, 244, 237, 0.88) 100%);
+  /* Fondo opaco: le figure decorative restano dietro e non traspaiono nelle card. */
+  background: linear-gradient(135deg, var(--lift) 0%, var(--paper) 100%);
   border: 1px solid color-mix(in srgb, var(--lift) 85%, var(--hair));
   border-radius: 18px;
   box-shadow: 0 4px 18px -4px rgba(32, 32, 28, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.95);
@@ -4985,6 +4986,6 @@ body::after {
   .rosso-massa,
   .faq-massa {
     --w: 20rem;
-    bottom: -1rem;
+    bottom: -8rem;
   }
 }
