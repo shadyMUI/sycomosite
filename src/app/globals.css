@@ -530,13 +530,9 @@ html {
 
 
 .massa {
-  /* misure esplicite invece di aspect-ratio: --h serve al calcolo del
-     ritaglio della copia bianca, e un rapporto d'aspetto non è un numero
-     che si possa usare dentro un calc() */
-  /* Scala sul viewport del browser: si riduce nelle finestre più piccole,
-     mantenendo il limite della composizione sui desktop. */
-  --w: min(48vw, 780px, 70vh);
-  --h: calc(var(--w) * 0.82);
+  /* La hero-art copre tutta la finestra: la percentuale segue la sua
+     larghezza e aspect-ratio mantiene le proporzioni della composizione. */
+  --w: 35%;
 
   position: absolute;
   z-index: 5; /* dietro al contenuto, e sotto al pannello rosso */
@@ -544,7 +540,8 @@ html {
   left: -7vw;
   bottom: -12vh;
   width: var(--w);
-  height: var(--h);
+  height: auto;
+  aspect-ratio: 100 / 82;
   /* entra scivolando dall'angolo; torna indietro se si risale */
   translate: calc((1 - var(--p)) * -14%) calc((1 - var(--p)) * 16%);
   opacity: calc(0.25 + var(--p) * 0.75);
