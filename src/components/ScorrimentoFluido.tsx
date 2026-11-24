@@ -37,7 +37,36 @@ export default function ScorrimentoFluido() {
     );
     // il puntatore grossolano è il dito: lì l'inerzia la mette il sistema
     const tocco = window.matchMedia("(pointer: coarse)");
-    if (menoMovimento.matches || tocco.matches) return;
+
+    /* Alcune scene lasciano altezza di scorrimento dopo il footer a certe
+       dimensioni. Il bordo finale reale è quello del footer: limita sia la
+       rotella animata sia lo scorrimento nativo touch/tastiera a quel punto. */
+    const limiteFooter = () => {
+      const limiteDocumento = Math.max(
+        0,
+        document.documentElement.scrollHeight - window.innerHeight
+      );
+      const footer = document.querySelector<HTMLElement>(".pie");
+      if (!footer) return limiteDocumento;
+
+      const fondoFooter = footer.getBoundingClientRect().bottom + window.scrollY;
+      const limiteContenuto = Math.max(0, fondoFooter - window.innerHeight);
+      return Math.min(limiteDocumento, limiteContenuto);
+    };
+
+    if (menoMovimento.matches || tocco.matches) {
+      const bloccaDopoFooter = () => {
+        const massimo = limiteFooter();
+        if (window.scrollY > massimo + 1) window.scrollTo(0, massimo);
+      };
+      window.addEventListener("scroll", bloccaDopoFooter, { passive: true });
+      window.addEventListener("resize", bloccaDopoFooter);
+      bloccaDopoFooter();
+      return () => {
+        window.removeEventListener("scroll", bloccaDopoFooter);
+        window.removeEventListener("resize", bloccaDopoFooter);
+      };
+    }
 
     let arrivo = window.scrollY;
     /* La posizione viene tenuta QUI, con i decimali, e non riletta da
@@ -50,8 +79,7 @@ export default function ScorrimentoFluido() {
     let nostro = false;
     let frame = 0;
 
-    const limite = () =>
-      Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+    const limite = limiteFooter;
 
     const passo = () => {
       corrente += (arrivo - corrente) * AVVICINAMENTO;
@@ -98,6 +126,13 @@ export default function ScorrimentoFluido() {
        Home/Fine, un'ancora — la posizione di arrivo va riallineata, o al
        gesto successivo la pagina tornerebbe indietro di scatto. */
     const onScroll = () => {
+      const massimo = limite();
+      if (window.scrollY > massimo + 1) {
+        arrivo = massimo;
+        corrente = massimo;
+        window.scrollTo(0, massimo);
+        return;
+      }
       if (!nostro && !inCorsa) {
         arrivo = window.scrollY;
         corrente = arrivo;
@@ -112,6 +147,7 @@ export default function ScorrimentoFluido() {
     window.addEventListener("wheel", onWheel, { passive: false });
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onResize);
+    onScroll();
 
     return () => {
       cancelAnimationFrame(frame);
