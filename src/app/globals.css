@@ -553,6 +553,15 @@ html {
   opacity: calc(0.25 + var(--p) * 0.75);
 }
 
+/* Fino al 1080p riduce l'ingombro della massa; sopra questa soglia
+   conserva la scala ampia pensata per i display 2K e superiori. */
+@media (max-width: 1920px), (max-height: 1080px) {
+  .massa,
+  .rosso-massa {
+    --w: 11.5em;
+  }
+}
+
 /* base condivisa delle lastre */
 .ml {
   position: absolute;
