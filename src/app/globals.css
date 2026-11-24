@@ -689,10 +689,9 @@ html {
 
 @media (max-width: 860px) {
   .massa {
-    /* Usa la stessa larghezza sia per il box sia per l'altezza calcolata:
-       così i cerchi restano proporzionati anche su schermi stretti. */
-    --w: min(76vw, 520px, 75.6vh);
-    left: -18vw;
+    /* La massa occupa al massimo metà della larghezza disponibile; altezza
+       e posizione continuano a seguire --w, così le forme restano uguali. */
+    --w: min(50vw, 440px, 75.6vh);
   }
 }
 
