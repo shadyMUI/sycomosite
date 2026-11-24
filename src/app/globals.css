@@ -533,10 +533,9 @@ html {
   /* misure esplicite invece di aspect-ratio: --h serve al calcolo del
      ritaglio della copia bianca, e un rapporto d'aspetto non è un numero
      che si possa usare dentro un calc() */
-  /* Scala con la larghezza, ma non può diventare troppo alta sui display
-     piccoli o in orientamento orizzontale. Il terzo limite mantiene l'altezza
-     della massa entro il 68% della finestra. */
-  --w: min(52vw, 780px, 82.93vh);
+  /* La larghezza viene calcolata una sola volta sulle dimensioni dello
+     schermo, così zoom e larghezza della finestra non cambiano la scala. */
+  --w: var(--massa-w, min(58vw, 780px));
   --h: calc(var(--w) * 0.82);
 
   position: absolute;
@@ -684,14 +683,6 @@ html {
   }
   50% {
     scale: 1.035;
-  }
-}
-
-@media (max-width: 860px) {
-  .massa {
-    /* La massa occupa al massimo metà della larghezza disponibile; altezza
-       e posizione continuano a seguire --w, così le forme restano uguali. */
-    --w: min(50vw, 440px, 75.6vh);
   }
 }
 

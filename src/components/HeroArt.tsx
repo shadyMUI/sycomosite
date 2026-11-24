@@ -35,6 +35,19 @@ export default function HeroArt() {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
+    // Usa le dimensioni dello schermo, non il viewport: lo zoom e il
+    // ridimensionamento della finestra non devono alterare la scala delle figure.
+    const updateMassaSize = () => {
+      const screenWidth = window.screen.width || window.innerWidth;
+      const screenHeight = window.screen.height || window.innerHeight;
+      const screenScale = Math.min(screenWidth / 1920, screenHeight / 1080);
+      const massaWidth = Math.min(780, 780 * screenScale);
+      document.documentElement.style.setProperty("--massa-w", `${massaWidth}px`);
+    };
+
+    updateMassaSize();
+    window.addEventListener("resize", updateMassaSize, { passive: true });
+
     let rafId: number | null = null;
 
     const updateClip = () => {
@@ -78,6 +91,7 @@ export default function HeroArt() {
     updateClip();
 
     return () => {
+      window.removeEventListener("resize", updateMassaSize);
       window.removeEventListener("scroll", onScrollOrResize);
       window.removeEventListener("resize", onScrollOrResize);
       if (rafId !== null) cancelAnimationFrame(rafId);
