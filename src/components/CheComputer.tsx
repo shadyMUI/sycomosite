@@ -10,10 +10,10 @@ type Props = {
 };
 
 export default function CheComputer({
-  titolo = "un pc per ogni vostra esigenza",
+  titolo = "Un PC per ogni vostra esigenza",
   casi = ["gaming", "lavoro", "studio"],
-  chiusura = "? qualunque utilizzo! ",
-  accento = "al prezzo migliore",
+  chiusura = "? Qualunque utilizzo! ",
+  accento = "Al prezzo migliore",
 }: Props) {
   const [isPastHero, setIsPastHero] = useState(false);
 

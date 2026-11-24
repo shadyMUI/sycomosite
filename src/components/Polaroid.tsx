@@ -90,7 +90,7 @@ export default function Polaroid({
           /* Tratteggiato di proposito: si vede che manca una foto, e
              nessuno lo scambia per una scelta grafica. */
           <div className="pol-dafare" role="presentation">
-            <span>foto da fare</span>
+            <span>Foto da fare</span>
             <small>{daFare}</small>
           </div>
         ) : (

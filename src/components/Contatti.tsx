@@ -39,7 +39,7 @@ export default function Contatti({
         <div className="cnt-diretto">
           <div className="cnt-voce">
             <span className="cnt-etichetta">
-              email<span className="cnt-duepunti">:</span>
+              Email<span className="cnt-duepunti">:</span>
             </span>
             <a className="cnt-mail" href={`mailto:${EMAIL}`}>
               {EMAIL}

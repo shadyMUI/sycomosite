@@ -58,13 +58,13 @@ export default function Home() {
 
       <main>
         <CheComputer
-          titolo="siti e app costruiti da zero"
+          titolo="Siti e app costruiti da zero"
           casi={["siti web", "app mobile", "social"]}
           chiusura=" — scritti su misura, "
           accento="senza modelli riciclati"
         />
 
-        <DueMestieri mestieri={MESTIERI_DIGITAL} titolo="cosa facciamo" />
+        <DueMestieri mestieri={MESTIERI_DIGITAL} titolo="Cosa facciamo" />
 
         <Album
           titolo={["Progetti digitali", "e casi studio"]}

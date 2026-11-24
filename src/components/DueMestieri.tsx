@@ -124,7 +124,7 @@ type Props = {
 };
 
 export default function DueMestieri({
-  titolo = "cosa facciamo",
+  titolo = "Cosa facciamo",
   mestieri = [MESTIERI_HARDWARE[0], MESTIERI_HARDWARE[1]],
 }: Props) {
   const [attivo, setAttivo] = useState(mestieri[0].id);

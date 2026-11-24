@@ -26,7 +26,7 @@ type Props = {
 
 export default function Footer({
   sub = "Digital",
-  claim = "le piccole attività meritano grandi progetti.",
+  claim = "Le piccole attività meritano grandi progetti.",
 }: Props) {
   const anno = new Date().getFullYear();
 

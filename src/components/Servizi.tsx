@@ -58,7 +58,7 @@ type Props = {
 };
 
 export default function Servizi({
-  titolo = "che cosa facciamo",
+  titolo = "Cosa facciamo",
   voci = SERVIZI,
 }: Props) {
   return (

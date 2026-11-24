@@ -530,7 +530,10 @@ html {
   /* misure esplicite invece di aspect-ratio: --h serve al calcolo del
      ritaglio della copia bianca, e un rapporto d'aspetto non è un numero
      che si possa usare dentro un calc() */
-  --w: min(52vw, 780px);
+  /* Scala con la larghezza, ma non può diventare troppo alta sui display
+     piccoli o in orientamento orizzontale. Il terzo limite mantiene l'altezza
+     della massa entro il 68% della finestra. */
+  --w: min(52vw, 780px, 82.93vh);
   --h: calc(var(--w) * 0.82);
 
   position: absolute;
@@ -683,7 +686,9 @@ html {
 
 @media (max-width: 860px) {
   .massa {
-    width: 92vw;
+    /* Usa la stessa larghezza sia per il box sia per l'altezza calcolata:
+       così i cerchi restano proporzionati anche su schermi stretti. */
+    --w: min(76vw, 520px, 75.6vh);
     left: -18vw;
   }
 }

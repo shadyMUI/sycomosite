@@ -124,7 +124,7 @@ export default function PcSuMisura() {
         />
       </main>
 
-      <Footer sub="Hardware" claim="il computer giusto non è il più caro." />
+      <Footer sub="Hardware" claim="Il computer giusto non è il più caro." />
     </div>
   );
 }

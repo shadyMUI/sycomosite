@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     /* Sulla home resta il nome nudo; le altre pagine si scrivono da sé
        come "Privacy · Sycomo Digital", senza ripetere il suffisso a mano
        ogni volta. */
-    default: `${NOME} — siti su misura per le piccole attività`,
+    default: `${NOME} — Siti su misura per le piccole attività`,
     template: `%s · ${NOME}`,
   },
   description: DESCRIZIONE,
@@ -50,7 +50,7 @@ export const metadata: Metadata = {
     locale: "it_IT",
     url: urlSito("/"),
     siteName: NOME,
-    title: `${NOME} — siti su misura per le piccole attività`,
+    title: `${NOME} — Siti su misura per le piccole attività`,
     description: DESCRIZIONE_BREVE,
     /* L'immagine non è dichiarata qui: la genera opengraph-image.tsx, e
        Next la aggiunge da sé con misure e tipo corretti. Elencarla anche
@@ -61,7 +61,7 @@ export const metadata: Metadata = {
     /* card grande: l'immagine occupa tutta la larghezza del riquadro
        invece di stare in un quadratino di lato */
     card: "summary_large_image",
-    title: `${NOME} — siti su misura per le piccole attività`,
+    title: `${NOME} — Siti su misura per le piccole attività`,
     description: DESCRIZIONE_BREVE,
   },
 

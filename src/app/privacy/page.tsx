@@ -80,7 +80,7 @@ export default function Privacy() {
       </header>
 
       <main className="doc">
-        <p className="doc-occhiello">informativa privacy</p>
+        <p className="doc-occhiello">Informativa privacy</p>
         <h1 className="doc-titolo">
           Come trattiamo
           <br />i vostri dati
