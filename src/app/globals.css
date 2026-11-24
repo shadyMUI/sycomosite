@@ -66,6 +66,9 @@ body {
    possa rompersi. */
 html {
   scrollbar-width: thin;
+  /* Evita il rimbalzo elastico oltre l'inizio e la fine della pagina:
+     il footer resta il limite visivo dello scorrimento anche al touch. */
+  overscroll-behavior-y: none;
   /* prima il pollice, poi il binario */
   scrollbar-color: var(--red) var(--paper-2);
 }
