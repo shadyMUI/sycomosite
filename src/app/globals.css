@@ -19,6 +19,9 @@
   /* Rosso — brand */
   --red: #e12c1a;
   --red-deep: #8f2014;
+
+  /* La massa e il titolo condividono la stessa scala tipografica. */
+  --hero-type-size: clamp(30px, 7.1vw, 136px);
 }
 
 @theme inline {
@@ -529,11 +532,14 @@ html {
 }
 
 
-.massa {
-  /* La hero-art copre tutta la finestra: la percentuale segue la sua
-     larghezza e aspect-ratio mantiene le proporzioni della composizione. */
-  --w: 35%;
+.massa,
+.rosso-massa {
+  /* La massa scala con il titolo e mantiene questa misura in ogni sezione. */
+  font-size: var(--hero-type-size);
+  --w: 5.5em;
+}
 
+.massa {
   position: absolute;
   z-index: 5; /* dietro al contenuto, e sotto al pannello rosso */
   /* ancorata all'angolo e debordante: niente cornice d'aria attorno */
@@ -735,7 +741,7 @@ html {
   /* una riga sola, distesa: la misura in vw fa sì che la riga resti
      intera a ogni larghezza invece di spezzarsi a metà frase */
   white-space: nowrap;
-  font-size: clamp(30px, 7.1vw, 136px);
+  font-size: var(--hero-type-size);
   color: var(--ink-soft);
   translate: 0 calc((1 - var(--p)) * 30px);
 }
@@ -773,6 +779,13 @@ html {
 /* Schermi stretti: la diagonale non ci sta. Le due frasi si impilano al
    centro e tornano entrambe a bandiera sinistra. */
 @media (max-width: 860px) {
+  :root {
+    --hero-type-size: clamp(34px, 11vw, 76px);
+  }
+  .massa,
+  .rosso-massa {
+    --w: 3.2em;
+  }
   .chi {
     display: grid;
     place-content: center;
@@ -1229,10 +1242,6 @@ body::after {
   .srv-colonne {
     grid-template-columns: 1fr;
   }
-  .rosso-massa {
-    width: 92vw;
-    left: -18vw;
-  }
 }
 
 /* ── Il gruppo che rende possibile il titolo in negativo ────────────────
@@ -1258,6 +1267,15 @@ body::after {
   inset: auto;
   width: 100%;
   pointer-events: auto;
+}
+
+.rosso-massa {
+  position: absolute;
+  left: -7vw;
+  bottom: -12vh;
+  width: var(--w);
+  height: auto;
+  aspect-ratio: 100 / 82;
 }
 
 /* Le lastre all'interno di .rosso-blend usano ora .massa di .hero-art
@@ -3846,8 +3864,6 @@ body::after {
   position: fixed;
   left: -7vw;
   bottom: -12vh;
-  width: min(52vw, 780px);
-  height: calc(min(52vw, 780px) * 0.82);
   /* Evita che il browser appiattisca tutto il contenitore in un rettangolo. */
   opacity: 1;
   translate: none;
