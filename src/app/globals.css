@@ -533,9 +533,9 @@ html {
   /* misure esplicite invece di aspect-ratio: --h serve al calcolo del
      ritaglio della copia bianca, e un rapporto d'aspetto non è un numero
      che si possa usare dentro un calc() */
-  /* La larghezza viene calcolata una sola volta sulle dimensioni dello
-     schermo, così zoom e larghezza della finestra non cambiano la scala. */
-  --w: var(--massa-w, min(58vw, 780px));
+  /* Scala sul viewport del browser: si riduce nelle finestre più piccole,
+     mantenendo il limite della composizione sui desktop. */
+  --w: min(48vw, 780px, 70vh);
   --h: calc(var(--w) * 0.82);
 
   position: absolute;
