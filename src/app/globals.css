@@ -523,14 +523,6 @@ html {
   overflow: hidden;
   pointer-events: none;
 }
-@media (pointer: coarse) {
-  /* Usa il viewport minimo del telefono: la barra del browser può sparire
-     durante lo scroll senza spostare il riferimento delle figure. */
-  .hero-art {
-    inset: 0 0 auto;
-    height: 100svh;
-  }
-}
 .hero-art--red {
   z-index: 31;
 }
@@ -4974,5 +4966,25 @@ body::after {
   .animate-marquee-forward,
   .animate-marquee-reverse {
     animation-play-state: paused !important;
+  }
+}
+
+@media (pointer: coarse) {
+  /* Il contenitore segue il bordo inferiore visibile del telefono; la
+     dimensione delle figure resta fissa quando la barra del browser cambia. */
+  .hero-art,
+  .taglio-alto,
+  .taglio-basso,
+  .taglio-fissato,
+  .faq-taglio {
+    inset: 0 0 auto;
+    height: 100dvh;
+  }
+
+  .massa,
+  .rosso-massa,
+  .faq-massa {
+    --w: 20rem;
+    bottom: -1rem;
   }
 }
