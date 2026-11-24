@@ -523,6 +523,14 @@ html {
   overflow: hidden;
   pointer-events: none;
 }
+@media (pointer: coarse) {
+  /* Usa il viewport minimo del telefono: la barra del browser può sparire
+     durante lo scroll senza spostare il riferimento delle figure. */
+  .hero-art {
+    inset: 0 0 auto;
+    height: 100svh;
+  }
+}
 .hero-art--red {
   z-index: 31;
 }
@@ -1440,7 +1448,6 @@ body::after {
   z-index: 25;
   height: 100vh;
   height: 100svh;
-  height: 100dvh;
   box-sizing: border-box;
   display: grid;
   align-content: center;
@@ -1594,7 +1601,6 @@ body::after {
   .uso {
     min-height: 100vh;
     min-height: 100svh;
-    min-height: 100dvh;
     box-sizing: border-box;
     align-content: center;
     padding: clamp(74px, 10vh, 90px) 7vw clamp(36px, 5vh, 60px);
