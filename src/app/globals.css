@@ -21,7 +21,7 @@
   --red-deep: #8f2014;
 
   /* La massa segue la scala della frase sotto al titolo della hero. */
-  --hero-claim-size: clamp(22px, 2.6vw, 52px);
+  --hero-claim-size: 3.125rem;
 }
 
 @theme inline {
@@ -534,32 +534,22 @@ html {
 
 .massa,
 .rosso-massa {
-  /* Scala in proporzione a "su misura, senza modelli riciclati". */
-  font-size: var(--hero-claim-size);
-  --w: 14.4em;
+  /* La misura è calcolata in base allo spazio libero sotto la frase della hero. */
+  --w: var(--massa-w, 36.6vh);
 }
 
 .massa {
   position: absolute;
   z-index: 5; /* dietro al contenuto, e sotto al pannello rosso */
   /* ancorata all'angolo e debordante: niente cornice d'aria attorno */
-  left: -7vw;
-  bottom: -12vh;
+  left: -5vw;
+  bottom: calc(var(--massa-bottom, 0px) - 1rem);
   width: var(--w);
   height: auto;
   aspect-ratio: 100 / 82;
   /* entra scivolando dall'angolo; torna indietro se si risale */
   translate: calc((1 - var(--p)) * -14%) calc((1 - var(--p)) * 16%);
   opacity: calc(0.25 + var(--p) * 0.75);
-}
-
-/* Fino al 1080p riduce l'ingombro della massa; sopra questa soglia
-   conserva la scala ampia pensata per i display 2K e superiori. */
-@media (max-width: 1920px), (max-height: 1080px) {
-  .massa,
-  .rosso-massa {
-    --w: 11.5em;
-  }
 }
 
 /* base condivisa delle lastre */
@@ -788,13 +778,6 @@ html {
 /* Schermi stretti: la diagonale non ci sta. Le due frasi si impilano al
    centro e tornano entrambe a bandiera sinistra. */
 @media (max-width: 860px) {
-  :root {
-    --hero-claim-size: 22px;
-  }
-  .massa,
-  .rosso-massa {
-    --w: 11em;
-  }
   .chi {
     display: grid;
     place-content: center;
@@ -828,6 +811,12 @@ html {
        risalita di mezza altezza la faceva salire sopra la prima — a tre
        righe si sovrapponevano del tutto. Resta la sola salita d'ingresso. */
     translate: 0 calc((1 - var(--p)) * 52px);
+  }
+}
+
+@media (pointer: coarse) {
+  :root {
+    --hero-claim-size: 1.375rem;
   }
 }
 
@@ -1280,8 +1269,8 @@ body::after {
 
 .rosso-massa {
   position: absolute;
-  left: -7vw;
-  bottom: -12vh;
+  left: -5vw;
+  bottom: calc(var(--massa-bottom, 0px) - 1rem);
   width: var(--w);
   height: auto;
   aspect-ratio: 100 / 82;
@@ -1628,7 +1617,7 @@ body::after {
     width: min(86vw, 300px);
   }
   .uso-testo {
-    font-size: 22px;
+    font-size: var(--hero-claim-size);
     /* misura in px e non in ch: `ch` si calcola sul carattere di questo
        elemento e a corpo grande lascerebbe righe di due parole */
     max-width: 300px;
@@ -3871,8 +3860,8 @@ body::after {
 
 .faq-massa {
   position: fixed;
-  left: -7vw;
-  bottom: -12vh;
+  left: -5vw;
+  bottom: calc(var(--massa-bottom, 0px) - 1rem);
   /* Evita che il browser appiattisca tutto il contenitore in un rettangolo. */
   opacity: 1;
   translate: none;
