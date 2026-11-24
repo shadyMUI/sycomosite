@@ -20,8 +20,8 @@
   --red: #e12c1a;
   --red-deep: #8f2014;
 
-  /* La massa e il titolo condividono la stessa scala tipografica. */
-  --hero-type-size: clamp(30px, 7.1vw, 136px);
+  /* La massa segue la scala della frase sotto al titolo della hero. */
+  --hero-claim-size: clamp(22px, 2.6vw, 52px);
 }
 
 @theme inline {
@@ -534,9 +534,9 @@ html {
 
 .massa,
 .rosso-massa {
-  /* La massa scala con il titolo e mantiene questa misura in ogni sezione. */
-  font-size: var(--hero-type-size);
-  --w: 5.5em;
+  /* Scala in proporzione a "su misura, senza modelli riciclati". */
+  font-size: var(--hero-claim-size);
+  --w: 14.4em;
 }
 
 .massa {
@@ -741,7 +741,7 @@ html {
   /* una riga sola, distesa: la misura in vw fa sì che la riga resti
      intera a ogni larghezza invece di spezzarsi a metà frase */
   white-space: nowrap;
-  font-size: var(--hero-type-size);
+  font-size: clamp(30px, 7.1vw, 136px);
   color: var(--ink-soft);
   translate: 0 calc((1 - var(--p)) * 30px);
 }
@@ -780,11 +780,11 @@ html {
    centro e tornano entrambe a bandiera sinistra. */
 @media (max-width: 860px) {
   :root {
-    --hero-type-size: clamp(34px, 11vw, 76px);
+    --hero-claim-size: 22px;
   }
   .massa,
   .rosso-massa {
-    --w: 3.2em;
+    --w: 11em;
   }
   .chi {
     display: grid;
@@ -1520,7 +1520,7 @@ body::after {
   max-width: 40ch;
   font-family: var(--font-sans);
   font-weight: 500;
-  font-size: clamp(22px, 2.6vw, 52px);
+  font-size: var(--hero-claim-size);
   letter-spacing: -0.025em;
   line-height: 1.25;
   color: var(--ink-soft);
