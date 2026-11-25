@@ -93,7 +93,7 @@ export default function PcSuMisura() {
       <SottoLogo />
 
       <main>
-        <CheComputer />
+        <CheComputer className="uso--centrato" mostraAzioni />
         <DueMestieri />
         <Album />
         <Domande />
