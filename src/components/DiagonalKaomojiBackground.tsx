@@ -69,6 +69,10 @@ export default function DiagonalKaomojiBackground({
   const tracksLayerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    /* Chi ha chiesto meno movimento non deve subire nessun effetto:
+       l'intervallo sparirebbe del tutto, non solo la marcia del CSS. */
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
     const layer = tracksLayerRef.current;
     if (!layer) return;
 
@@ -127,12 +131,26 @@ export default function DiagonalKaomojiBackground({
     observer.observe(document.documentElement);
     window.addEventListener("scroll", schedule, { passive: true });
     window.addEventListener("resize", schedule, { passive: true });
-    const animation = window.setInterval(schedule, 48);
+    /* Intervallo rado: il blur serve solo per far sembrare il testo
+       leggibile davanti al flusso, una correzione ogni ~120ms è
+       indistinguibile e costa un terzo di prima. La scheda nascosta
+       fa fermare tutto il ciclo. */
+    let animation: number | null = window.setInterval(schedule, 120);
+    const onVisibility = () => {
+      if (document.hidden) {
+        if (animation !== null) window.clearInterval(animation);
+        animation = null;
+      } else if (animation === null) {
+        animation = window.setInterval(schedule, 120);
+      }
+    };
+    window.addEventListener("visibilitychange", onVisibility);
     return () => {
       observer.disconnect();
       window.removeEventListener("scroll", schedule);
       window.removeEventListener("resize", schedule);
-      window.clearInterval(animation);
+      window.removeEventListener("visibilitychange", onVisibility);
+      if (animation !== null) window.clearInterval(animation);
       if (timer !== undefined) window.clearTimeout(timer);
     };
   }, []);
@@ -315,7 +333,7 @@ export default function DiagonalKaomojiBackground({
         animationClass,
       };
     });
-  }, [midX, midY, nx, ny, spacing, templates]);
+  }, [midX, midY, nx, ny, spacing, templates, viewWidth]);
 
   return (
     <div
