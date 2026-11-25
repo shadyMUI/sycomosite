@@ -1646,6 +1646,7 @@ body::after {
 @media (prefers-reduced-motion: reduce) {
   .uso,
   .uso-domanda,
+  .uso-parola,
   .uso-dot,
   .uso-testo,
   .uso-testo > span,
@@ -5055,6 +5056,24 @@ body::after {
   }
 }
 
+.uso-domanda.uso-domanda--parole {
+  opacity: 1;
+  transform: none;
+  transition: none;
+}
+.uso-domanda--parole .uso-parola {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.52s cubic-bezier(0.16, 1, 0.3, 1), transform 0.52s cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: var(--ritardo-parola, 0ms);
+  will-change: opacity, transform;
+}
+.figs-on .uso-domanda.uso-domanda--parole .uso-parola {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 .uso-azioni {
   position: relative;
   z-index: 1;
@@ -5064,6 +5083,14 @@ body::after {
   flex-wrap: wrap;
   gap: 14px;
   margin-top: clamp(22px, 3.2vh, 38px);
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: var(--ritardo-azioni, 950ms);
+}
+.figs-on .uso-azioni {
+  opacity: 1;
+  transform: translateY(0);
 }
 /* Effetto del pulsante adattato alla palette Sycomo.
    From Uiverse.io by gharsh11032000 - https://uiverse.io/gharsh11032000/loud-chicken-53
@@ -5170,13 +5197,19 @@ body::after {
 
 @media (max-width: 860px) {
   .uso-azioni {
+    width: min(86vw, 400px);
     gap: 10px;
     margin-top: 24px;
   }
   .hero-action {
     min-height: 48px;
+    min-width: 120px;
+    flex: 0 0 auto;
     padding: 12px 18px;
     font-size: 15px;
+  }
+  .hero-action--lavori-mobile {
+    min-width: 190px;
   }
   .hero-action--lavori-desktop {
     display: none;
@@ -5187,6 +5220,11 @@ body::after {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .uso-azioni {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
   .hero-action,
   .hero-action__arrow,
   .hero-action__circle,

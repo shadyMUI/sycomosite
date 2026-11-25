@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import type { MouseEvent } from "react";
 
 /* From Uiverse.io by gharsh11032000 - https://uiverse.io/gharsh11032000/loud-chicken-53
@@ -89,6 +89,8 @@ export default function CheComputer({
   className = "",
   mostraAzioni = false,
 }: Props) {
+  const paroleTitolo = titolo.trim().split(/\s+/);
+  const ritardoAzioni = `${(paroleTitolo.length - 1) * 70 + 600}ms`;
   const [isPastHero, setIsPastHero] = useState(false);
 
   useEffect(() => {
@@ -117,7 +119,7 @@ export default function CheComputer({
       <div className="uso-riga uso-riga--titolo">
         <h1
           id="uso-t"
-          className="uso-domanda pl-3 sm:pl-6 lg:pl-10"
+          className="uso-domanda uso-domanda--parole pl-3 sm:pl-6 lg:pl-10"
           style={
             {
               "--dom-n": titolo.length,
@@ -125,8 +127,22 @@ export default function CheComputer({
             } as React.CSSProperties
           }
         >
-          {titolo}
-          <span className="uso-dot" aria-hidden="true" />
+          {paroleTitolo.map((parola, indice) => (
+            <Fragment key={`${parola}-${indice}`}>
+              <span
+                className="uso-parola"
+                style={{ "--ritardo-parola": `${indice * 70}ms` } as React.CSSProperties}
+              >
+                {parola}
+              </span>
+              {indice < paroleTitolo.length - 1 ? " " : null}
+            </Fragment>
+          ))}
+          <span
+            className="uso-dot"
+            aria-hidden="true"
+            style={{ transitionDelay: `${(paroleTitolo.length - 1) * 70}ms` }}
+          />
         </h1>
       </div>
 
@@ -144,7 +160,7 @@ export default function CheComputer({
       </div>
 
       {mostraAzioni && (
-        <div className="uso-azioni">
+        <div className="uso-azioni" style={{ "--ritardo-azioni": ritardoAzioni } as React.CSSProperties}>
           <HeroAction href="#servizi" label="Servizi" />
           <HeroAction
             className="hero-action--lavori-desktop"
