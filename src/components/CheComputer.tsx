@@ -1,6 +1,7 @@
 "use client";
 
 import { Fragment, useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import type { MouseEvent } from "react";
 
 /* From Uiverse.io by gharsh11032000 - https://uiverse.io/gharsh11032000/loud-chicken-53
@@ -90,8 +91,62 @@ export default function CheComputer({
   mostraAzioni = false,
 }: Props) {
   const paroleTitolo = titolo.trim().split(/\s+/);
-  const ritardoAzioni = `${(paroleTitolo.length - 1) * 70 + 600}ms`;
+  const contaParole = (testo: string) =>
+    testo.trim().split(/\s+/).filter(Boolean).length;
+  const totaleParoleTesto =
+    casi.reduce((totale, caso) => totale + contaParole(caso), 0) +
+    contaParole(chiusura) +
+    contaParole(accento);
+  const fineTitolo = (paroleTitolo.length - 1) * 45 + 70;
+  const ritardoInizioTesto = fineTitolo + 25;
+  const fineTesto = ritardoInizioTesto + (totaleParoleTesto - 1) * 40 + 70;
+  const ritardoAzioni = `${Math.max(fineTitolo, fineTesto) + 80}ms`;
+  const pathname = usePathname();
+  const [entrataPath, setEntrataPath] = useState<string | null>(null);
+  const entrataCompletata = entrataPath === pathname;
+  let indiceParolaTesto = 0;
+  const testoParole = (testo: string, forte = false) =>
+    testo.split(/(\s+)/).map((pezzo) => {
+      if (!pezzo || /^\s+$/.test(pezzo)) return pezzo;
+      const indice = indiceParolaTesto++;
+      return (
+        <span
+          key={`${indice}-${pezzo}`}
+          className="uso-parola-testo"
+          style={{ "--ritardo-testo": `${ritardoInizioTesto + indice * 40}ms` } as React.CSSProperties}
+        >
+          {forte ? <strong>{pezzo}</strong> : pezzo}
+        </span>
+      );
+    });
   const [isPastHero, setIsPastHero] = useState(false);
+
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const root = document.documentElement;
+    let timer = 0;
+    const entra = () => {
+      window.clearTimeout(timer);
+      setEntrataPath(pathname);
+    };
+    const controllaApertura = () => {
+      if (root.classList.contains("figs-on")) entra();
+    };
+
+    window.addEventListener("sycomo:intro-done", entra);
+    const osservatore = new MutationObserver(controllaApertura);
+    osservatore.observe(root, { attributes: true, attributeFilter: ["class"] });
+    /* Rete di sicurezza per browser che non consegnano animationend o
+       hanno già completato il sipario prima dell'idratazione. */
+    timer = window.setTimeout(entra, 1300);
+
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener("sycomo:intro-done", entra);
+      osservatore.disconnect();
+    };
+  }, [pathname]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -113,7 +168,7 @@ export default function CheComputer({
 
   return (
     <section
-      className={`uso${className ? ` ${className}` : ""} ${isPastHero ? "invisible pointer-events-none" : ""}`}
+      className={`uso${className ? ` ${className}` : ""}${entrataCompletata ? " uso--entrato" : ""} ${isPastHero ? "invisible pointer-events-none" : ""}`}
       aria-labelledby="uso-t"
     >
       <div className="uso-riga uso-riga--titolo">
@@ -131,7 +186,7 @@ export default function CheComputer({
             <Fragment key={`${parola}-${indice}`}>
               <span
                 className="uso-parola"
-                style={{ "--ritardo-parola": `${indice * 70}ms` } as React.CSSProperties}
+                style={{ "--ritardo-parola": `${indice * 45}ms` } as React.CSSProperties}
               >
                 {parola}
               </span>
@@ -141,21 +196,21 @@ export default function CheComputer({
           <span
             className="uso-dot"
             aria-hidden="true"
-            style={{ transitionDelay: `${(paroleTitolo.length - 1) * 70}ms` }}
+            style={{ transitionDelay: `${(paroleTitolo.length - 1) * 45}ms` }}
           />
         </h1>
       </div>
 
       <div className="uso-riga uso-riga--testo">
-        <p className="uso-testo pl-3 sm:pl-6 lg:pl-10">
+        <p className="uso-testo uso-testo--parole pl-3 sm:pl-6 lg:pl-10">
           {casi.map((c, i) => (
-            <span key={c}>
-              <strong>{c}</strong>
+            <span key={c} className="uso-testo-caso">
+              {testoParole(c, true)}
               {i < casi.length - 1 && <span className="uso-barra">/</span>}
             </span>
           ))}
-          {chiusura}
-          <em>{accento}</em>
+          {testoParole(chiusura)}
+          <em>{testoParole(accento)}</em>
         </p>
       </div>
 

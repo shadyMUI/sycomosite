@@ -1504,7 +1504,7 @@ body::after {
   transition-delay: 0ms;
 }
 
-.figs-on .uso-domanda {
+.uso--entrato .uso-domanda {
   opacity: 1;
   transform: translateY(0);
 }
@@ -1524,7 +1524,7 @@ body::after {
   transition-delay: 50ms;
 }
 
-.figs-on .uso-dot {
+.uso--entrato .uso-dot {
   opacity: 1;
   transform: scale(1);
 }
@@ -1550,7 +1550,7 @@ body::after {
   transition-delay: 80ms;
 }
 
-.figs-on .uso-testo {
+.uso--entrato .uso-testo {
   opacity: 1;
   transform: translateY(0);
 }
@@ -1563,19 +1563,19 @@ body::after {
   transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.figs-on .uso-testo > span:nth-of-type(1) {
+.uso--entrato .uso-testo > span:nth-of-type(1) {
   opacity: 1;
   transform: translateY(0);
   transition-delay: 110ms;
 }
 
-.figs-on .uso-testo > span:nth-of-type(2) {
+.uso--entrato .uso-testo > span:nth-of-type(2) {
   opacity: 1;
   transform: translateY(0);
   transition-delay: 150ms;
 }
 
-.figs-on .uso-testo > span:nth-of-type(3) {
+.uso--entrato .uso-testo > span:nth-of-type(3) {
   opacity: 1;
   transform: translateY(0);
   transition-delay: 190ms;
@@ -1605,7 +1605,7 @@ body::after {
   transition-delay: 230ms;
 }
 
-.figs-on .uso-testo em {
+.uso--entrato .uso-testo em {
   opacity: 1;
   transform: translateY(0);
 }
@@ -1650,11 +1650,17 @@ body::after {
   .uso-dot,
   .uso-testo,
   .uso-testo > span,
+  .uso-parola-testo,
   .uso-testo em {
     opacity: 1 !important;
     transform: none !important;
     translate: none !important;
     transition: none !important;
+  }
+  .uso-parola,
+  .uso-parola-testo,
+  .uso-azioni {
+    animation: none !important;
   }
 }
 
@@ -5061,17 +5067,52 @@ body::after {
   transform: none;
   transition: none;
 }
+.uso-testo.uso-testo--parole {
+  opacity: 1;
+  transform: none;
+  transition: none;
+}
+.uso-testo.uso-testo--parole .uso-testo-caso,
+.uso-testo.uso-testo--parole em {
+  display: inline;
+  opacity: 1;
+  transform: none;
+  transition: none;
+}
+.uso-parola-testo {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(12px);
+  will-change: opacity, transform;
+}
+@keyframes uso-parola-entrata {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.uso--entrato .uso-testo.uso-testo--parole .uso-testo-caso,
+.uso--entrato .uso-testo.uso-testo--parole em {
+  opacity: 1;
+  transform: none;
+}
+.uso--entrato .uso-testo--parole .uso-parola-testo {
+  animation: uso-parola-entrata 0.07s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: var(--ritardo-testo, 0ms);
+}
 .uso-domanda--parole .uso-parola {
   display: inline-block;
   opacity: 0;
   transform: translateY(16px);
-  transition: opacity 0.52s cubic-bezier(0.16, 1, 0.3, 1), transform 0.52s cubic-bezier(0.16, 1, 0.3, 1);
-  transition-delay: var(--ritardo-parola, 0ms);
   will-change: opacity, transform;
 }
-.figs-on .uso-domanda.uso-domanda--parole .uso-parola {
-  opacity: 1;
-  transform: translateY(0);
+.uso--entrato .uso-domanda.uso-domanda--parole .uso-parola {
+  animation: uso-parola-entrata 0.07s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: var(--ritardo-parola, 0ms);
 }
 
 .uso-azioni {
@@ -5088,9 +5129,9 @@ body::after {
   transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
   transition-delay: var(--ritardo-azioni, 950ms);
 }
-.figs-on .uso-azioni {
-  opacity: 1;
-  transform: translateY(0);
+.uso--entrato .uso-azioni {
+  animation: uso-parola-entrata 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: var(--ritardo-azioni, 950ms);
 }
 /* Effetto del pulsante adattato alla palette Sycomo.
    From Uiverse.io by gharsh11032000 - https://uiverse.io/gharsh11032000/loud-chicken-53
