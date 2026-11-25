@@ -75,7 +75,7 @@ export default function SottoLogo({
      movimento sia continuo: il punto di partenza e quello di arrivo
      restano esatti, ed è quello che si vede. */
   useEffect(() => {
-    if (dove === "barra" || !whatsapp) return;
+    if (dove === "barra" || !whatsapp || !WHATSAPP) return;
 
     const misura = () => {
       const el = primaVoce.current;
@@ -135,7 +135,7 @@ export default function SottoLogo({
       ref={blocco}
       className={`sotto-logo${dove === "barra" ? " sotto-logo--barra" : ""}`}
     >
-      {whatsapp && (
+      {whatsapp && WHATSAPP && (
         <a
           ref={primaVoce}
           className="sotto-voce sotto-voce--wa"
@@ -160,7 +160,7 @@ export default function SottoLogo({
       )}
 
       <a
-        className={`sotto-voce${whatsapp && dove !== "barra" ? " sotto-voce--scivola" : ""}`}
+        className={`sotto-voce${whatsapp && WHATSAPP && dove !== "barra" ? " sotto-voce--scivola" : ""}`}
         href="#contatti"
         onClick={vaiAiContatti}
       >
