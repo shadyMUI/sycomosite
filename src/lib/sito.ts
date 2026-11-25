@@ -27,8 +27,11 @@ export const DESCRIZIONE_BREVE =
   "Siti web e app su misura per le attività di Asti. " +
   "Scritti da zero, veloci, fatti per farvi trovare.";
 
+/* Senza numero configurato resta la stringa vuota: la voce WhatsApp
+   scompare del tutto dai chiamiamoci invece di portare in giro un
+   numero fittizio che non va in nessuna casella di chat. */
 export const WHATSAPP =
-  process.env.NEXT_PUBLIC_WHATSAPP?.replace(/\D/g, "") || "39XXXXXXXXXX";
+  process.env.NEXT_PUBLIC_WHATSAPP?.replace(/\D/g, "") || "";
 
 export const SOCIAL = [
   "https://www.instagram.com/sycomo.digital",

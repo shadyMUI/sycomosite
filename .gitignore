@@ -1,3 +1,9 @@
 /node_modules
 /.next
 /.next-pages
+/tsconfig.tsbuildinfo
+/.agents/
+/unsloth-tmp/
+/studio_exec_*.py
+/nextjs-nodejs/
+/npm-cache/
