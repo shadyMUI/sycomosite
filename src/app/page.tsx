@@ -58,6 +58,8 @@ export default function Home() {
 
       <main>
         <CheComputer
+          className="uso--centrato"
+          mostraAzioni
           titolo="Siti e app costruiti da zero"
           casi={["siti web", "app mobile", "social"]}
           chiusura=" — scritti su misura, "

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { BASE_PATH, WHATSAPP } from "@/lib/sito";
+import TestoRiempimento from "./TestoRiempimento";
 
 /**
  * I due modi per farsi sentire, sotto il marchio.
@@ -160,11 +161,16 @@ export default function SottoLogo({
       )}
 
       <a
-        className={`sotto-voce${whatsapp && WHATSAPP && dove !== "barra" ? " sotto-voce--scivola" : ""}`}
+        className={`sotto-voce testo-riempimento-hover${whatsapp && WHATSAPP && dove !== "barra" ? " sotto-voce--scivola" : ""}`}
         href="#contatti"
+        aria-label="Contatti"
+        style={{
+          "--testo-colore-base": "var(--ink)",
+          "--testo-colore-hover": "var(--red)",
+        } as React.CSSProperties}
         onClick={vaiAiContatti}
       >
-        Contatti
+        <TestoRiempimento testo="Contatti" />
       </a>
     </div>
   );

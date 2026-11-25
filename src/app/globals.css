@@ -158,6 +158,16 @@ html {
      1.12s = 0.12s di attesa + 0.98s di caduta fluida + margine */
   animation: intro-done 0s linear 1.12s forwards;
 }
+/* Nella navigazione il sipario risale dal basso e copre la pagina; dopo
+   l'animazione la schermata resta coperta finché parte la nuova pagina. */
+.intro--chiudi {
+  display: block !important;
+  visibility: visible !important;
+  animation: none !important;
+}
+.intro--chiudi .intro-sheet {
+  animation: intro-cover 0.98s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
 @keyframes intro-done {
   to {
     visibility: hidden;
@@ -196,6 +206,17 @@ html {
        sparisce ~40ms prima che l'animazione finisca, così anche perdendo
        un fotogramma su una macchina lenta non si vede saltare nulla. */
     translate: 0 calc(104% + var(--onda));
+  }
+}
+
+/* In uscita il sipario sale dal basso e copre tutta la pagina prima che
+   cambi route; dopo il commit, `intro-fall` lo fa ricadere sulla nuova. */
+@keyframes intro-cover {
+  from {
+    translate: 0 calc(104% + var(--onda));
+  }
+  to {
+    translate: 0 0;
   }
 }
 
@@ -4145,8 +4166,8 @@ body::after {
 }
 .cnt-mail:hover,
 .cnt-mail:focus-visible {
-  color: var(--red-deep);
-  border-color: var(--red-deep);
+  color: var(--red);
+  border-color: var(--red);
 }
 
 /* ── Il rimando all'altra metà dello studio ──
@@ -4232,7 +4253,24 @@ body::after {
 }
 .cnt-altra-vai:hover,
 .cnt-altra-vai:focus-visible {
-  color: var(--red);
+  color: var(--ink);
+}
+/* Il colore si riempie da sinistra a destra lettera per lettera; al ritorno
+   le lettere si spengono nell'ordine opposto. */
+.testo-riempimento {
+  display: inline;
+  white-space: inherit;
+}
+.testo-riempimento__lettera {
+  color: var(--testo-colore-base, currentColor);
+  transition: color 120ms linear;
+  transition-delay: var(--ritardo-ritorno, 0ms);
+}
+.testo-riempimento-hover:hover .testo-riempimento__lettera,
+.testo-riempimento-hover:focus .testo-riempimento__lettera,
+.testo-riempimento-hover:active .testo-riempimento__lettera {
+  color: var(--testo-colore-hover, var(--red));
+  transition-delay: var(--ritardo-lettera, 0ms);
 }
 /* la punta di freccia: due lati di un quadrato ruotato */
 .cnt-altra-freccia {
@@ -4265,6 +4303,7 @@ body::after {
 
 @media (prefers-reduced-motion: reduce) {
   .cnt-altra-vai,
+  .testo-riempimento__lettera,
   .cnt-altra-freccia {
     transition: none;
   }
@@ -4371,33 +4410,18 @@ body::after {
   background: var(--red);
 }
 
-.mod-invia {
-  font-family: var(--font-title);
-  font-weight: 700;
-  font-size: clamp(13px, 1.05vw, 18px);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--paper);
-  background: var(--red);
-  border: 0;
-  border-radius: 4px;
-  padding: 0.9em 1.6em;
-  cursor: pointer;
-  transition:
-    background 0.25s ease,
-    translate 0.25s ease;
-}
-.mod-invia:hover,
-.mod-invia:focus-visible {
-  background: var(--red-deep);
-  translate: 0 -2px;
-}
-/* durante l'invio: spento e fermo, così si vede che sta lavorando e un
-   secondo clic non parte */
+/* Durante l'invio il pulsante resta spento e fermo, così si capisce che
+   sta lavorando e un secondo clic non parte. */
 .mod-invia:disabled {
+  border-color: color-mix(in srgb, var(--red) 45%, var(--paper));
   background: color-mix(in srgb, var(--red) 45%, var(--paper));
+  box-shadow: none;
+  color: var(--ink-soft);
   cursor: wait;
-  translate: none;
+  transform: none;
+}
+.mod-invia:disabled .hero-action__circle {
+  opacity: 0;
 }
 
 /* la conferma, quando il messaggio è partito davvero.
@@ -4988,4 +5012,221 @@ body::after {
     --w: 20rem;
     bottom: -8rem;
   }
+}
+
+.uso--centrato {
+  justify-items: center;
+  text-align: center;
+}
+.uso--centrato .uso-riga {
+  width: min(100%, 1550px);
+  max-width: 100%;
+}
+.uso--centrato .uso-riga--titolo {
+  margin-bottom: clamp(20px, 3vh, 38px);
+}
+.uso--centrato .uso-domanda {
+  padding-inline: 0 !important;
+  text-wrap: balance;
+}
+.uso--centrato .uso-riga--testo {
+  width: min(88vw, 1500px);
+  margin-inline: auto;
+}
+.uso--centrato .uso-testo {
+  max-width: none;
+  margin-inline: auto;
+  font-size: clamp(19px, 2vw, 32px);
+  line-height: 1.4;
+}
+
+@media (max-width: 860px) {
+  .uso--centrato .uso-domanda {
+    font-size: clamp(32px, 8.6vw, 64px);
+  }
+  .uso--centrato .uso-riga--testo {
+    width: 86vw;
+  }
+  .uso--centrato .uso-testo {
+    font-size: clamp(18px, 4.6vw, 25px);
+  }
+  .hero-action--lavori-desktop {
+    display: none;
+  }
+}
+
+.uso-azioni {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: clamp(22px, 3.2vh, 38px);
+}
+/* Effetto del pulsante adattato alla palette Sycomo.
+   From Uiverse.io by gharsh11032000 - https://uiverse.io/gharsh11032000/loud-chicken-53
+   MIT License, Copyright (c) gharsh11032000 (Harsh Gupta) */
+.hero-action {
+  position: relative;
+  min-height: 54px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 14px 30px;
+  overflow: hidden;
+  border: 2px solid var(--red);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink);
+  box-shadow: none;
+  cursor: pointer;
+  font-family: var(--font-title);
+  font-size: clamp(15px, 1.15vw, 18px);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  appearance: none;
+  text-decoration: none;
+  transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+}
+.hero-action__arrow {
+  position: absolute;
+  z-index: 9;
+  width: 24px;
+  fill: currentColor;
+  transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+}
+.hero-action__arrow svg {
+  display: block;
+  width: 100%;
+}
+.hero-action__arrow--exit {
+  right: 16px;
+}
+.hero-action__arrow--enter {
+  left: -25%;
+}
+.hero-action__circle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--red);
+  opacity: 0;
+  transform: translate(-50%, -50%);
+  transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+}
+.hero-action__text {
+  position: relative;
+  z-index: 1;
+  transform: translateX(-12px);
+  transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+}
+.hero-action:hover {
+  border-radius: 4px;
+  background: transparent;
+  box-shadow: 0 0 0 12px transparent;
+  color: var(--paper);
+}
+.hero-action:hover .hero-action__arrow--exit {
+  right: -25%;
+}
+.hero-action:hover .hero-action__arrow--enter {
+  left: 16px;
+}
+.hero-action:hover .hero-action__text {
+  transform: translateX(12px);
+}
+.hero-action:hover .hero-action__circle {
+  width: 220px;
+  height: 220px;
+  opacity: 1;
+}
+.hero-action:active {
+  border-radius: 4px;
+  background: transparent;
+  box-shadow: 0 0 0 4px var(--paper), 0 0 0 7px var(--red);
+  color: var(--paper);
+  transform: scale(0.95);
+}
+.hero-action:active .hero-action__circle {
+  width: 220px;
+  height: 220px;
+  background: var(--red);
+  opacity: 1;
+}
+.hero-action:focus-visible {
+  outline: 2px solid var(--red);
+  outline-offset: 4px;
+}
+.hero-action--lavori-mobile {
+  display: none;
+}
+
+@media (max-width: 860px) {
+  .uso-azioni {
+    gap: 10px;
+    margin-top: 24px;
+  }
+  .hero-action {
+    min-height: 48px;
+    padding: 12px 18px;
+    font-size: 15px;
+  }
+  .hero-action--lavori-desktop {
+    display: none;
+  }
+  .hero-action--lavori-mobile {
+    display: inline-flex;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-action,
+  .hero-action__arrow,
+  .hero-action__circle,
+  .hero-action__text {
+    transition: none;
+  }
+  .hero-action:active {
+    transform: none;
+  }
+}
+
+/* Il testo del modulo è più lungo dei CTA hero: il cerchio deve coprirlo
+   tutto durante l'espansione. */
+.mod-invia:hover .hero-action__circle,
+.mod-invia:active .hero-action__circle {
+  width: 360px;
+  height: 360px;
+}
+.hero-action.mod-invia:disabled,
+.hero-action.mod-invia:disabled:hover {
+  border-radius: 999px;
+  border-color: color-mix(in srgb, var(--red) 45%, var(--paper));
+  background: color-mix(in srgb, var(--red) 45%, var(--paper));
+  box-shadow: none;
+  color: var(--ink-soft);
+  cursor: wait;
+  transform: none;
+}
+.hero-action.mod-invia:disabled .hero-action__circle,
+.hero-action.mod-invia:disabled:hover .hero-action__circle {
+  width: 20px;
+  height: 20px;
+  opacity: 0;
+}
+.hero-action.mod-invia:disabled:hover .hero-action__arrow--enter {
+  left: -25%;
+}
+.hero-action.mod-invia:disabled:hover .hero-action__arrow--exit {
+  right: 16px;
+}
+.hero-action.mod-invia:disabled:hover .hero-action__text {
+  transform: translateX(-12px);
 }

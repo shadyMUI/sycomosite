@@ -172,6 +172,7 @@ export default function DueMestieri({
 
   return (
     <div
+      id="servizi"
       className="rosso"
       data-attivo={attivo}
       data-pos={secondoAttivo ? "secondo" : "primo"}

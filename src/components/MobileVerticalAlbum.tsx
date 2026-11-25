@@ -20,7 +20,7 @@ export default function MobileVerticalAlbum({
 
   return (
     <section
-      id="lavori"
+      id="lavori-mobile"
       className="alb-mobile-view mobile-portfolio alb-vertical-list"
       data-mobile-carousel="true"
       aria-label="Galleria progetti"

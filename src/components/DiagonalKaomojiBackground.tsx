@@ -76,6 +76,28 @@ export default function DiagonalKaomojiBackground({
     const layer = tracksLayerRef.current;
     if (!layer) return;
 
+    /* La sfocatura può interessare solo glifi entro 100px dal viewport.
+       IntersectionObserver tiene questo insieme aggiornato mentre le
+       tracce scorrono via CSS: evitiamo di interrogare il layout di tutti
+       i glifi fuori schermo a ogni aggiornamento. */
+    const glifiVisibili = new Set<HTMLElement>();
+    const glifiObserver = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          const glyph = entry.target as HTMLElement;
+          if (entry.isIntersecting) glifiVisibili.add(glyph);
+          else glifiVisibili.delete(glyph);
+        }
+        schedule();
+      },
+      { rootMargin: "100px" },
+    );
+    layer.querySelectorAll<HTMLElement>("[data-kaomoji]").forEach((glyph) => {
+      glifiObserver.observe(glyph);
+    });
+
+    const stiliApplicati = new WeakMap<HTMLElement, { filter: string; color: string }>();
+
     const updateBlur = () => {
       const textRects = Array.from(
         document.querySelectorAll<HTMLElement>(
@@ -97,24 +119,37 @@ export default function DiagonalKaomojiBackground({
       // con kaomoji grandi il centro poteva trovarsi centinaia di pixel
       // più avanti del simbolo che stava già passando sopra al testo.
       const reach = 100;
-      layer.querySelectorAll<HTMLElement>("[data-kaomoji]").forEach((glyph) => {
+      glifiVisibili.forEach((glyph) => {
         const rect = glyph.getBoundingClientRect();
-        if (rect.bottom < -reach || rect.top > window.innerHeight + reach || rect.right < -reach || rect.left > window.innerWidth + reach) return;
 
-        const distance = Math.min(...textRects.map((text) => {
+        /* Evita hypot per i riquadri sicuramente fuori dal raggio. Se un
+           glifo tocca il testo la distanza minima è zero: ulteriori
+           confronti non possono cambiare il risultato. */
+        let distance = reach;
+        for (const text of textRects) {
           const dx = Math.max(text.left - rect.right, 0, rect.left - text.right);
+          if (dx >= distance) continue;
           const dy = Math.max(text.top - rect.bottom, 0, rect.top - text.bottom);
-          return Math.hypot(dx, dy);
-        }));
+          if (dy >= distance) continue;
+          const candidate = Math.hypot(dx, dy);
+          if (candidate < distance) {
+            distance = candidate;
+            if (distance === 0) break;
+          }
+        }
         const proximity = Math.max(0, 1 - distance / reach);
         // Una curva percettiva rende il blur visibile già in avvicinamento,
         // invece di concentrare quasi tutto l'effetto sull'ultimo tratto.
         const easedProximity = Math.pow(proximity, 0.68);
         const blur = easedProximity * 32;
-        glyph.style.filter = blur > 0.15 ? `blur(${blur.toFixed(1)}px)` : "none";
-        glyph.style.color = easedProximity > 0.01
+        const filter = blur > 0.15 ? `blur(${blur.toFixed(1)}px)` : "none";
+        const color = easedProximity > 0.01
           ? `color-mix(in srgb, #e12c1a ${Math.round((1 - easedProximity * 0.5) * 100)}%, #f7f4ed)`
           : "#e12c1a";
+        const previous = stiliApplicati.get(glyph);
+        if (!previous || previous.filter !== filter) glyph.style.filter = filter;
+        if (!previous || previous.color !== color) glyph.style.color = color;
+        stiliApplicati.set(glyph, { filter, color });
       });
     };
 
@@ -147,6 +182,8 @@ export default function DiagonalKaomojiBackground({
     window.addEventListener("visibilitychange", onVisibility);
     return () => {
       observer.disconnect();
+      glifiObserver.disconnect();
+      glifiVisibili.clear();
       window.removeEventListener("scroll", schedule);
       window.removeEventListener("resize", schedule);
       window.removeEventListener("visibilitychange", onVisibility);
@@ -166,7 +203,7 @@ export default function DiagonalKaomojiBackground({
       viewHeight: initH,
       winHeight: initWinH,
       trackWidth: Math.max(initL * 2.5, 35000),
-      spacing: 60,
+      spacing: 180,
     };
   });
 
@@ -184,7 +221,10 @@ export default function DiagonalKaomojiBackground({
       );
       const L = Math.sqrt(winWidth * winWidth + totalPageHeight * totalPageHeight);
       const trackWidth = Math.max(L * 2.5, 35000);
-      const spacing = winWidth < 768 ? 44 : 60;
+      /* Distanza perpendicolare fra le tre diagonali: 200px lascia aria
+         anche quando i glifi crescono sul desktop. Il livello è nascosto
+         sui telefoni, ma manteniamo una misura più contenuta in fallback. */
+      const spacing = winWidth < 768 ? 140 : 180;
 
       setGeometry((prev) => {
         if (
@@ -287,13 +327,12 @@ export default function DiagonalKaomojiBackground({
 
   const templates = BASE_TRACK_TEMPLATES;
 
-  // Calcolo dell'orientamento:
-  // - In alto (inizio pagina): la striscia entra da destra leggermente rientrata (0.80 * viewWidth)
-  // - In basso (footer): la striscia arriva dritta all'angolo in basso a sinistra (0.08 * viewWidth)
-  const xTop = viewWidth * 0.80;
-  const xBottom = viewWidth * 0.08;
+  // La diagonale centrale attraversa l'intera pagina: dal bordo alto
+  // quasi all'angolo destro a quello basso quasi all'angolo sinistro.
+  const xTop = viewWidth * 0.98;
+  const xBottom = viewWidth * 0.02;
   const deltaX = xTop - xBottom;
-  const effectiveH = Math.max(1000, viewHeight - 2 * winHeight);
+  const effectiveH = Math.max(1000, viewHeight);
 
   const midX = (xTop + xBottom) / 2;
   const midY = effectiveH / 2;
@@ -312,11 +351,11 @@ export default function DiagonalKaomojiBackground({
    */
   const tracks = useMemo(() => {
     return templates.map((template, i) => {
-      // La spaziatura extra è solo verticale: non cambia la posizione X delle strisce.
+      // Ogni linea è traslata solo lungo la normale: così restano
+      // parallele e davvero distanziate, senza slittare una sull'altra.
       const d = (i - 1) * spacing;
-      const rowGap = viewWidth < 768 ? 240 : 340;
       const localCenterX = midX + d * nx;
-      const localCenterY = midY + d * ny + (i - 1) * rowGap;
+      const localCenterY = midY + d * ny;
 
       const trackKaomojis = buildTrackKaomojis(template.kaomojiOffset);
       const animationClass =
@@ -333,7 +372,7 @@ export default function DiagonalKaomojiBackground({
         animationClass,
       };
     });
-  }, [midX, midY, nx, ny, spacing, templates, viewWidth]);
+  }, [midX, midY, nx, ny, spacing, templates]);
 
   return (
     <div

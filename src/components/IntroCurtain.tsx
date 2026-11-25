@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 
 /**
  * Sipario d'apertura: la schermata è piena del rosso del brand e cala verso
@@ -11,29 +12,56 @@ import { useCallback } from "react";
  * del titolo inizi esattamente al termine della discesa.
  */
 export default function IntroCurtain() {
+  const pathname = usePathname();
+  const percorsoPrecedente = useRef(pathname);
+  const [chiusuraInCorso, setChiusuraInCorso] = useState(false);
+  const [riavvio, setRiavvio] = useState(0);
+
+  useEffect(() => {
+    const avviaChiusura = () => {
+      setChiusuraInCorso(true);
+      setRiavvio((corrente) => corrente + 1);
+    };
+
+    window.addEventListener("sycomo:navigation-start", avviaChiusura);
+    return () => window.removeEventListener("sycomo:navigation-start", avviaChiusura);
+  }, []);
+
+  /* Il layout persiste durante la navigazione client-side: quando cambia
+     pagina, riavvia il sipario al contrario per scoprire la nuova scena. */
+  useEffect(() => {
+    if (percorsoPrecedente.current === pathname) return;
+    percorsoPrecedente.current = pathname;
+    setChiusuraInCorso(false);
+    setRiavvio((corrente) => corrente + 1);
+  }, [pathname]);
+
   const handleAnimationEnd = useCallback(
     (e: React.AnimationEvent<HTMLDivElement>) => {
       if (
-        e.animationName === "intro-fall" ||
-        e.animationName === "intro-done"
-      ) {
+        (e.animationName !== "intro-fall" && e.animationName !== "intro-cover") ||
+        !(e.target instanceof HTMLElement) ||
+        !e.target.classList.contains("intro-sheet")
+      ) return;
+
+      if (chiusuraInCorso) {
+        window.dispatchEvent(new CustomEvent("sycomo:navigation-covered"));
+      } else {
         window.dispatchEvent(new CustomEvent("sycomo:intro-done"));
       }
     },
-    []
+    [chiusuraInCorso]
   );
 
   return (
     <div
-      className="intro"
+      key={riavvio}
+      className={`intro${chiusuraInCorso ? " intro--chiudi" : ""}`}
       aria-hidden="true"
       onAnimationEnd={handleAnimationEnd}
     >
       {/* la massa di liquido: cala e esce dal fondo dello schermo */}
-      <div
-        className="intro-sheet"
-        onAnimationEnd={handleAnimationEnd}
-      >
+      <div className="intro-sheet">
         {/* superficie: due onde a velocità diverse danno profondità */}
         {/* cresta lontana: più alta e più chiara, fa da schiuma */}
         <svg

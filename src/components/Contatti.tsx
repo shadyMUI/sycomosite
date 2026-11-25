@@ -1,6 +1,10 @@
-import Link from "next/link";
+import TransizioneLink from "./TransizioneLink";
 import ModuloContatto from "./ModuloContatto";
+import TestoRiempimento from "./TestoRiempimento";
 import { EMAIL } from "@/lib/sito";
+
+/* From Uiverse.io by satyamchaudharydev - https://uiverse.io/satyamchaudharydev/quick-chicken-50
+   MIT License, Copyright (c) satyamchaudharydev (satyam) */
 
 type Props = {
   /* Due righe: vanno a capo dove lo decide chi scrive, non dove capita. */
@@ -41,8 +45,16 @@ export default function Contatti({
             <span className="cnt-etichetta">
               Email<span className="cnt-duepunti">:</span>
             </span>
-            <a className="cnt-mail" href={`mailto:${EMAIL}`}>
-              {EMAIL}
+            <a
+              className="cnt-mail testo-riempimento-hover"
+              href={`mailto:${EMAIL}`}
+              aria-label={EMAIL}
+              style={{
+                "--testo-colore-base": "var(--ink)",
+                "--testo-colore-hover": "var(--red)",
+              } as React.CSSProperties}
+            >
+              <TestoRiempimento testo={EMAIL} />
             </a>
           </div>
 
@@ -52,10 +64,18 @@ export default function Contatti({
                contenitore invece che da scenografia. */
             <aside className="cnt-altra">
               <p className="cnt-altra-domanda">{altra.domanda}</p>
-              <Link className="cnt-altra-vai" href={altra.href}>
-                {altra.invito}
+              <TransizioneLink
+                className="cnt-altra-vai testo-riempimento-hover"
+                href={altra.href}
+                ariaLabel={altra.invito}
+                style={{
+                  "--testo-colore-base": "var(--ink)",
+                  "--testo-colore-hover": "var(--red)",
+                } as React.CSSProperties}
+              >
+                <TestoRiempimento testo={altra.invito} />
                 <span className="cnt-altra-freccia" aria-hidden="true" />
-              </Link>
+              </TransizioneLink>
             </aside>
           )}
         </div>

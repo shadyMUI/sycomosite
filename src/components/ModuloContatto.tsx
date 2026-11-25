@@ -3,6 +3,9 @@
 import { useRef, useState } from "react";
 import emailjs from "@emailjs/browser";
 
+/* From Uiverse.io by gharsh11032000 - https://uiverse.io/gharsh11032000/loud-chicken-53
+   MIT License, Copyright (c) gharsh11032000 (Harsh Gupta) */
+
 /**
  * Il modulo di contatto, scritto come una frase da completare.
  *
@@ -289,8 +292,25 @@ export default function ModuloContatto({
         </p>
       )}
 
-      <button className="mod-invia" type="submit" disabled={stato === "invio"}>
-        {stato === "invio" ? "Un attimo…" : "Mandaci un messaggio"}
+      <button
+        className="hero-action mod-invia"
+        type="submit"
+        disabled={stato === "invio"}
+      >
+        <span className="hero-action__arrow hero-action__arrow--enter" aria-hidden="true">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M16.1716 10.9999L10.8076 5.63589L12.2218 4.22168L20 11.9999L12.2218 19.778L10.8076 18.3638L16.1716 12.9999H4V10.9999H16.1716Z" />
+          </svg>
+        </span>
+        <span className="hero-action__text">
+          {stato === "invio" ? "Un attimo…" : "Mandaci un messaggio"}
+        </span>
+        <span className="hero-action__circle" aria-hidden="true" />
+        <span className="hero-action__arrow hero-action__arrow--exit" aria-hidden="true">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M16.1716 10.9999L10.8076 5.63589L12.2218 4.22168L20 11.9999L12.2218 19.778L10.8076 18.3638L16.1716 12.9999H4V10.9999H16.1716Z" />
+          </svg>
+        </span>
       </button>
 
       {stato === "fatto" && (

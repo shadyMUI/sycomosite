@@ -523,6 +523,7 @@ export default function HorizontalPinAlbum({ titolo, scatti, onSelectCard }: Pro
 
   return (
     <section
+      id="lavori-desktop"
       ref={trackRef}
       className={`alb-pin-track alb-desktop-view ${isPastAlbum ? "invisible pointer-events-none" : ""}`}
       data-desktop-carousel="true"
