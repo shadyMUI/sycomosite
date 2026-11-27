@@ -62,66 +62,81 @@ interface GeometryState {
   spacing: number;
 }
 
+// Complemento esatto della media query che nasconde lo sfondo in globals.css.
+const VISIBLE = "(width > 860px)";
+
+function whileMatching(query: string, start: () => void | (() => void)) {
+  const media = window.matchMedia(query);
+  let stop = media.matches ? start() : undefined;
+  const sync = () => {
+    stop?.();
+    stop = media.matches ? start() : undefined;
+  };
+  media.addEventListener("change", sync);
+  return () => {
+    media.removeEventListener("change", sync);
+    stop?.();
+  };
+}
+
 export default function DiagonalKaomojiBackground({
   className,
 }: DiagonalKaomojiBackgroundProps): React.JSX.Element {
   const containerRef = useRef<HTMLDivElement>(null);
   const tracksLayerRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    /* Chi ha chiesto meno movimento non deve subire nessun effetto:
-       l'intervallo sparirebbe del tutto, non solo la marcia del CSS. */
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-
+  useEffect(() => whileMatching(`${VISIBLE} and (prefers-reduced-motion: no-preference)`, () => {
     const layer = tracksLayerRef.current;
-    if (!layer) return;
+    const sfondo = containerRef.current;
+    if (!layer || !sfondo?.parentElement) return;
 
-    /* La sfocatura può interessare solo glifi entro 100px dal viewport.
-       IntersectionObserver tiene questo insieme aggiornato mentre le
-       tracce scorrono via CSS: evitiamo di interrogare il layout di tutti
-       i glifi fuori schermo a ogni aggiornamento. */
-    const glifiVisibili = new Set<HTMLElement>();
-    const glifiObserver = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          const glyph = entry.target as HTMLElement;
-          if (entry.isIntersecting) glifiVisibili.add(glyph);
-          else glifiVisibili.delete(glyph);
-        }
-        schedule();
-      },
-      { rootMargin: "100px" },
+    const testi = sfondo.parentElement.querySelectorAll<HTMLElement>(
+      ".uso-domanda, .uso-testo, .cnt-titolo, .cnt-etichetta, .cnt-mail, .cnt-altra-domanda, .cnt-altra-vai, .mod-frase, .mod-etichetta",
     );
-    layer.querySelectorAll<HTMLElement>("[data-kaomoji]").forEach((glyph) => {
-      glifiObserver.observe(glyph);
-    });
+    const range = document.createRange();
 
-    const stiliApplicati = new WeakMap<HTMLElement, { filter: string; color: string }>();
+    const righe = Array.from(layer.children, track => track.querySelectorAll<HTMLElement>("[data-kaomoji]"));
+    const reach = 100;
+    let inVista = false;
+    const stiliApplicati = new Map<HTMLElement, { filter: string; color: string }>();
 
     const updateBlur = () => {
-      const textRects = Array.from(
-        document.querySelectorAll<HTMLElement>(
-          ".uso-domanda, .uso-testo, .cnt-titolo, .cnt-etichetta, .cnt-mail, .cnt-altra-domanda, .cnt-altra-vai, .mod-frase, .mod-etichetta",
-        ),
-      )
-        .filter((element) => {
-          const style = getComputedStyle(element);
-          return style.visibility !== "hidden" && Number(style.opacity) > 0.01;
-        })
-        .flatMap((element) => {
-          const range = document.createRange();
-          range.selectNodeContents(element);
-          return Array.from(range.getClientRects());
-        });
+      if (!inVista || document.hidden) return;
+      const right = window.innerWidth + reach;
+      const bottom = window.innerHeight + reach;
+      const glyphRects: { glyph: HTMLElement; rect: DOMRect }[] = [];
+      for (const riga of righe) {
+        // Ogni riga sale da sinistra verso destra anche quando il nastro scorre al contrario.
+        // Cerca il primo glifo vicino allo schermo senza osservare l'intero nastro a ogni frame.
+        let i = 0;
+        let end = riga.length;
+        while (i < end) {
+          const mid = Math.floor((i + end) / 2);
+          const rect = riga[mid].getBoundingClientRect();
+          if (rect.right < -reach || rect.top > bottom) i = mid + 1;
+          else end = mid;
+        }
+        for (; i < riga.length; i++) {
+          const glyph = riga[i];
+          const rect = glyph.getBoundingClientRect();
+          if (rect.left > right || rect.bottom < -reach) break;
+          glyphRects.push({ glyph, rect });
+        }
+      }
+      if (!glyphRects.length) return;
+      const textRects: DOMRect[] = [];
+      for (const element of testi) {
+        const style = getComputedStyle(element);
+        if (style.visibility === "hidden" || Number(style.opacity) <= 0.01) continue;
+        range.selectNodeContents(element);
+        textRects.push(...range.getClientRects());
+      }
       if (!textRects.length) return;
 
       // Misura la distanza dal glifo reale, non dal centro della sequenza:
       // con kaomoji grandi il centro poteva trovarsi centinaia di pixel
       // più avanti del simbolo che stava già passando sopra al testo.
-      const reach = 100;
-      glifiVisibili.forEach((glyph) => {
-        const rect = glyph.getBoundingClientRect();
-
+      for (const { glyph, rect } of glyphRects) {
         /* Evita hypot per i riquadri sicuramente fuori dal raggio. Se un
            glifo tocca il testo la distanza minima è zero: ulteriori
            confronti non possono cambiare il risultato. */
@@ -147,21 +162,21 @@ export default function DiagonalKaomojiBackground({
           ? `color-mix(in srgb, #e12c1a ${Math.round((1 - easedProximity * 0.5) * 100)}%, #f7f4ed)`
           : "#e12c1a";
         const previous = stiliApplicati.get(glyph);
+        if (previous?.filter === filter && previous.color === color) continue;
         if (!previous || previous.filter !== filter) glyph.style.filter = filter;
         if (!previous || previous.color !== color) glyph.style.color = color;
         stiliApplicati.set(glyph, { filter, color });
-      });
+      }
     };
 
     let timer: number | undefined;
     const schedule = () => {
-      if (timer !== undefined) return;
+      if (timer !== undefined || !inVista || document.hidden) return;
       timer = window.setTimeout(() => {
         timer = undefined;
         updateBlur();
       }, 32);
     };
-    updateBlur();
     const observer = new ResizeObserver(schedule);
     observer.observe(document.documentElement);
     window.addEventListener("scroll", schedule, { passive: true });
@@ -170,27 +185,37 @@ export default function DiagonalKaomojiBackground({
        leggibile davanti al flusso, una correzione ogni ~120ms è
        indistinguibile e costa un terzo di prima. La scheda nascosta
        fa fermare tutto il ciclo. */
-    let animation: number | null = window.setInterval(schedule, 120);
-    const onVisibility = () => {
-      if (document.hidden) {
+    let animation: number | null = null;
+    const syncAnimation = () => {
+      if (document.hidden || !inVista) {
         if (animation !== null) window.clearInterval(animation);
         animation = null;
-      } else if (animation === null) {
-        animation = window.setInterval(schedule, 120);
+      } else {
+        if (animation === null) animation = window.setInterval(schedule, 120);
+        schedule();
       }
     };
-    window.addEventListener("visibilitychange", onVisibility);
+    const viewportObserver = new IntersectionObserver((entries) => {
+      inVista = entries[entries.length - 1].isIntersecting;
+      syncAnimation();
+    }, { rootMargin: `${reach}px` });
+    viewportObserver.observe(sfondo);
+    document.addEventListener("visibilitychange", syncAnimation);
     return () => {
       observer.disconnect();
-      glifiObserver.disconnect();
-      glifiVisibili.clear();
+      viewportObserver.disconnect();
+      viewportObserver.takeRecords();
       window.removeEventListener("scroll", schedule);
       window.removeEventListener("resize", schedule);
-      window.removeEventListener("visibilitychange", onVisibility);
+      document.removeEventListener("visibilitychange", syncAnimation);
       if (animation !== null) window.clearInterval(animation);
       if (timer !== undefined) window.clearTimeout(timer);
+      for (const glyph of stiliApplicati.keys()) {
+        glyph.style.removeProperty("filter");
+        glyph.style.removeProperty("color");
+      }
     };
-  }, []);
+  }), []);
 
   // SSR initial baseline: exact deterministic defaults
   const [geometry, setGeometry] = useState<GeometryState>(() => {
@@ -207,9 +232,7 @@ export default function DiagonalKaomojiBackground({
     };
   });
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
+  useEffect(() => whileMatching(VISIBLE, () => {
     const measureAndAdjust = () => {
       const winWidth = document.documentElement.clientWidth || window.innerWidth;
       const winH = window.innerHeight || 950;
@@ -256,7 +279,7 @@ export default function DiagonalKaomojiBackground({
       ro.disconnect();
       window.removeEventListener("resize", measureAndAdjust);
     };
-  }, []);
+  }), []);
 
   /**
    * Sincronizzazione:
@@ -265,17 +288,15 @@ export default function DiagonalKaomojiBackground({
    * Negli altri momenti (hero, navigazione interna ai contenuti, discesa verso il footer),
    * le linee scorrono fluidamente terminando esattamente nell'angolo in basso a sinistra.
    */
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
+  useEffect(() => whileMatching(VISIBLE, () => {
     let rafId: number | null = null;
+    const page = containerRef.current?.parentElement;
+    const rosso = page?.querySelector(".rosso");
+    const faq = page?.querySelector(".faq");
 
     const updatePin = () => {
       rafId = null;
       const winH = window.innerHeight;
-      const rosso = document.querySelector(".rosso");
-      const faq = document.querySelector(".faq");
-
       const rossoRect = rosso ? rosso.getBoundingClientRect() : null;
       const faqRect = faq ? faq.getBoundingClientRect() : null;
 
@@ -321,7 +342,7 @@ export default function DiagonalKaomojiBackground({
       window.removeEventListener("resize", onScrollOrResize);
       if (rafId !== null) cancelAnimationFrame(rafId);
     };
-  }, []);
+  }), []);
 
   const { viewWidth, viewHeight, winHeight, trackWidth, spacing } = geometry;
 

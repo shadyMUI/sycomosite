@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useState } from "react";
-import emailjs from "@emailjs/browser";
 
 /* From Uiverse.io by gharsh11032000 - https://uiverse.io/gharsh11032000/loud-chicken-53
    MIT License, Copyright (c) gharsh11032000 (Harsh Gupta) */
@@ -165,7 +164,8 @@ export default function ModuloContatto({
 
     setStato("invio");
     try {
-      await emailjs.send(
+      const { send } = await import("@emailjs/browser");
+      await send(
         SERVIZIO,
         idModello,
         {

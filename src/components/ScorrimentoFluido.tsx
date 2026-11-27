@@ -38,36 +38,9 @@ export default function ScorrimentoFluido() {
     // il puntatore grossolano è il dito: lì l'inerzia la mette il sistema
     const tocco = window.matchMedia("(pointer: coarse)");
 
-    /* Alcune scene lasciano altezza di scorrimento dopo il footer a certe
-       dimensioni. Il bordo finale reale è quello del footer: limita sia la
-       rotella animata sia lo scorrimento nativo touch/tastiera a quel punto. */
-    const limiteFooter = () => {
-      const limiteDocumento = Math.max(
-        0,
-        document.documentElement.scrollHeight - window.innerHeight
-      );
-      const footer = document.querySelector<HTMLElement>(".pie");
-      if (!footer) return limiteDocumento;
-
-      const fondoFooter = footer.getBoundingClientRect().bottom + window.scrollY;
-      const limiteContenuto = Math.max(0, fondoFooter - window.innerHeight);
-      return Math.min(limiteDocumento, limiteContenuto);
-    };
-
-    if (menoMovimento.matches || tocco.matches) {
-      const bloccaDopoFooter = () => {
-        const massimo = limiteFooter();
-        if (window.scrollY > massimo + 1) window.scrollTo(0, massimo);
-      };
-      window.addEventListener("scroll", bloccaDopoFooter, { passive: true });
-      window.addEventListener("resize", bloccaDopoFooter);
-      bloccaDopoFooter();
-      return () => {
-        window.removeEventListener("scroll", bloccaDopoFooter);
-        window.removeEventListener("resize", bloccaDopoFooter);
-      };
-    }
-
+    const inerzia = !menoMovimento.matches && !tocco.matches;
+    const footer = document.querySelector<HTMLElement>(".pie");
+    let massimo = 0;
     let arrivo = window.scrollY;
     /* La posizione viene tenuta QUI, con i decimali, e non riletta da
        window.scrollY: il browser la arrotonda al pixel, e sul finale —
@@ -78,8 +51,6 @@ export default function ScorrimentoFluido() {
     let inCorsa = false;
     let nostro = false;
     let frame = 0;
-
-    const limite = limiteFooter;
 
     const passo = () => {
       corrente += (arrivo - corrente) * AVVICINAMENTO;
@@ -118,7 +89,7 @@ export default function ScorrimentoFluido() {
       if (dentro) return;
 
       e.preventDefault();
-      arrivo = Math.min(limite(), Math.max(0, arrivo + e.deltaY));
+      arrivo = Math.min(massimo, Math.max(0, arrivo + e.deltaY));
       avvia();
     };
 
@@ -126,7 +97,6 @@ export default function ScorrimentoFluido() {
        Home/Fine, un'ancora — la posizione di arrivo va riallineata, o al
        gesto successivo la pagina tornerebbe indietro di scatto. */
     const onScroll = () => {
-      const massimo = limite();
       if (window.scrollY > massimo + 1) {
         arrivo = massimo;
         corrente = massimo;
@@ -139,21 +109,36 @@ export default function ScorrimentoFluido() {
       }
     };
 
-    const onResize = () => {
-      arrivo = Math.min(limite(), arrivo);
-      corrente = Math.min(limite(), corrente);
+    // Il limite cambia con l'impaginazione (anche durante l'apertura delle FAQ),
+    // non con la rotella: nessuna lettura di layout nel percorso di scroll.
+    const aggiornaLimite = () => {
+      const altezza = window.innerHeight;
+      const fondoDocumento = document.documentElement.scrollHeight;
+      const fondo = footer ? footer.getBoundingClientRect().bottom + window.scrollY : fondoDocumento;
+      massimo = Math.max(0, Math.min(fondo, fondoDocumento) - altezza);
+      arrivo = Math.min(massimo, arrivo);
+      corrente = Math.min(massimo, corrente);
+      onScroll();
     };
 
-    window.addEventListener("wheel", onWheel, { passive: false });
+    const observer = new ResizeObserver(aggiornaLimite);
+    observer.observe(document.body);
+    const main = document.querySelector("main");
+    if (main) observer.observe(main);
+    if (footer) observer.observe(footer);
+    document.fonts.addEventListener("loadingdone", aggiornaLimite);
+    if (inerzia) window.addEventListener("wheel", onWheel, { passive: false });
     window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onResize);
-    onScroll();
+    window.addEventListener("resize", aggiornaLimite);
+    aggiornaLimite();
 
     return () => {
       cancelAnimationFrame(frame);
+      observer.disconnect();
+      document.fonts.removeEventListener("loadingdone", aggiornaLimite);
       window.removeEventListener("wheel", onWheel);
       window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onResize);
+      window.removeEventListener("resize", aggiornaLimite);
     };
   }, [pathname]);
 
