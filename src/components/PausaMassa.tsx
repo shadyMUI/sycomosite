@@ -3,15 +3,6 @@
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 
-/**
- * Le lastre di vetro (.ml) hanno due animazioni infinite ciascuna. Quando la
- * loro scena è fuori schermo continuano comunque a essere calcolate: tenerle
- * ferme non cambia nulla di visibile e toglie lavoro al main thread.
- *
- * La copia rossa vive dietro la hero; la copia bianca serve alle sezioni
- * rosse. Un unico osservatore sulle scene evita di far girare le copie
- * mentre sono ritagliate fuori schermo (e viceversa).
- */
 export default function PausaMassa() {
   const pathname = usePathname();
 
@@ -20,61 +11,39 @@ export default function PausaMassa() {
     if (!gruppi.length) return;
 
     const hero = document.querySelector<HTMLElement>(".uso");
-    const rosso = document.querySelector<HTMLElement>(".rosso");
-    const faq = document.querySelector<HTMLElement>(".faq");
-
-    const rossi = gruppi.filter((g) => g.closest(".hero-art--red"));
-    const bianchi = gruppi.filter((g) => g.closest(".hero-art--white"));
-    const servizi = gruppi.filter((g) => !g.closest(".hero-art") && g.closest(".rosso"));
-    const domande = gruppi.filter((g) => g.closest(".faq"));
-
-    const visibili = new Set<Element>();
-    const ferma = (lista: HTMLElement[], ferme: boolean) => {
-      for (const g of lista) g.classList.toggle("massa--ferma", ferme);
-    };
-
-    for (const g of gruppi) g.classList.add("massa--ferma");
+    const scene = new Map<Element, HTMLElement>();
+    for (const gruppo of gruppi) {
+      const scena = gruppo.closest(".rosso, .faq") ?? hero;
+      if (scena) scene.set(scena, gruppo);
+      gruppo.classList.add("massa--ferma");
+    }
 
     const observer = new IntersectionObserver(
       (voci) => {
-        for (const voce of voci) {
-          if (voce.isIntersecting) visibili.add(voce.target);
-          else visibili.delete(voce.target);
+        // Una copia che rientra deve mostrare lo stesso fotogramma di quella
+        // visibile, non riprendere la scala e la deriva da dove si era fermata.
+        const riferimento = gruppi.find((g) => !g.classList.contains("massa--ferma")) ?? gruppi[0];
+        const moto = riferimento.querySelector(".ml")?.getAnimations()[0];
+        const inizio = moto?.startTime ?? Number(document.timeline.currentTime) - Number(moto?.currentTime ?? 0);
+
+        for (const { target, isIntersecting } of voci) {
+          const gruppo = scene.get(target);
+          if (!gruppo) continue;
+          gruppo.classList.toggle("massa--ferma", !isIntersecting);
+          if (isIntersecting) {
+            for (const animazione of gruppo.getAnimations({ subtree: true })) {
+              if (animazione.playState === "running") animazione.startTime = inizio;
+            }
+          }
         }
-        ferma(rossi, !(hero && visibili.has(hero)));
-        ferma(bianchi, !((rosso && visibili.has(rosso)) || (faq && visibili.has(faq))));
-        ferma(servizi, !(rosso && visibili.has(rosso)));
-        ferma(domande, !(faq && visibili.has(faq)));
       },
       { rootMargin: "200px 0px" }
     );
 
-    for (const scena of [hero, rosso, faq]) {
-      if (scena) observer.observe(scena);
-    }
-
-    /* Il vetro si muove all'ingresso e mentre si scorre; fermo a riposo.
-       `sycomo-muove` è la finestra in cui l'animazione può girare. */
-    const root = document.documentElement;
-    let timer = 0;
-    const risveglia = (durata: number) => {
-      root.classList.add("sycomo-muove");
-      window.clearTimeout(timer);
-      timer = window.setTimeout(() => root.classList.remove("sycomo-muove"), durata);
-    };
-    risveglia(3000);
-    const alGesto = () => risveglia(1500);
-    window.addEventListener("scroll", alGesto, { passive: true });
-    window.addEventListener("wheel", alGesto, { passive: true });
-    window.addEventListener("touchmove", alGesto, { passive: true });
+    for (const scena of scene.keys()) observer.observe(scena);
 
     return () => {
       observer.disconnect();
-      window.clearTimeout(timer);
-      window.removeEventListener("scroll", alGesto);
-      window.removeEventListener("wheel", alGesto);
-      window.removeEventListener("touchmove", alGesto);
-      root.classList.remove("sycomo-muove");
       for (const g of gruppi) g.classList.remove("massa--ferma");
     };
   }, [pathname]);

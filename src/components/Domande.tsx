@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
+import { MassaVetro } from "./HeroArt";
 
 export type VoceFaq = {
   domanda: string;
@@ -68,8 +69,6 @@ export const FAQ_DIGITAL: VoceFaq[] = [
       "Per un sito vetrina o una landing page bastano dai 7 ai 14 giorni. Veniamo direttamente noi nella vostra sede ad Asti per raccogliere le informazioni e scattare foto o video se vi mancano, così non dovete perdere ore di lavoro.",
   },
 ];
-
-const LASTRE = ["ml-fondo", "ml-ancora", "ml-quadro", "ml-tondo", "ml-scheggia"];
 
 /* Aprire dura un filo più che chiudere: entrando si guarda, uscendo si è
    già passati oltre. La curva è quella del resto del sito. */
@@ -171,14 +170,8 @@ export default function Domande({
   return (
     <section ref={faqRef} className="faq relative overflow-hidden" aria-labelledby="faq-t" data-aggancio>
       <div className="faq-blend">
-        <div ref={taglioRef} className="faq-taglio" aria-hidden="true">
-          <div className="massa faq-massa">
-            <span className="ml sml ml-fondo" />
-            <span className="ml sml ml-ancora" />
-            <span className="ml sml ml-quadro ml-vetro" />
-            <span className="ml sml ml-tondo ml-vetro" />
-            <span className="ml sml ml-scheggia ml-vetro" />
-          </div>
+        <div ref={taglioRef} className="taglio-fissato hero-art" aria-hidden="true">
+          <MassaVetro bianca />
         </div>
 
         <div className="faq-contenuto">

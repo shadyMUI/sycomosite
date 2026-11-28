@@ -560,17 +560,6 @@ html {
 .hero-art--red {
   z-index: 31;
 }
-.hero-art--white {
-  z-index: 34;
-  will-change: clip-path;
-}
-
-
-.massa,
-.rosso-massa {
-  /* La misura è calcolata in base allo spazio libero sotto la frase della hero. */
-  --w: var(--massa-w, 36.6vh);
-}
 
 .massa {
   position: absolute;
@@ -578,7 +567,7 @@ html {
   /* ancorata all'angolo e debordante: niente cornice d'aria attorno */
   left: -5vw;
   bottom: calc(var(--massa-bottom, 0px) - 1rem);
-  width: var(--w);
+  width: var(--massa-w, 36.6vh);
   height: auto;
   aspect-ratio: 100 / 82;
   /* entra scivolando dall'angolo; torna indietro se si risale */
@@ -607,23 +596,17 @@ html {
     /* ombre calde: contatto + alone */
     0 10px 24px -14px color-mix(in srgb, var(--red-deep) 34%, transparent),
     0 34px 80px -32px color-mix(in srgb, var(--red-deep) 40%, transparent);
+  /* Durata unica per tutte le lastre: partono nello stesso istante,
+     restano in fase e l'ammasso non si sfuora mai. */
   animation:
-    ml-deriva var(--d, 16s) ease-in-out infinite,
-    ml-respiro var(--r, 13s) ease-in-out infinite;
+    ml-deriva 16s ease-in-out infinite,
+    ml-respiro 13s ease-in-out infinite;
   animation-play-state: paused;
 }
-/* Il vetro si muove durante l'ingresso e mentre si scorre; a riposo si
-   ferma. Il movimento è decorativo e lentissimo, ma le due animazioni
-   per lastra costavano ~3 s di main thread ogni 4 s. */
+/* Si muovono appena il sito è aperto; si fermano solo quando la loro
+   scena è fuori schermo (vedi PausaMassa). */
 .figs-on .ml {
-  animation-play-state: paused;
-}
-/* Sul touch il vetro resta fermo: il movimento non si vede e il costo
-   del main thread durante lo scroll è più importante. */
-@media (hover: hover) and (pointer: fine) {
-  .figs-on.sycomo-muove .ml {
-    animation-play-state: running;
-  }
+  animation-play-state: running;
 }
 .figs-on .massa--ferma .ml {
   animation-play-state: paused;
@@ -662,8 +645,6 @@ html {
     color-mix(in srgb, var(--red-deep) 26%, transparent) 100%
   );
   box-shadow: none;
-  --d: 19s;
-  --r: 15s;
 }
 
 /* l'ancora: la lastra grande, esce dal bordo sinistro */
@@ -673,8 +654,6 @@ html {
   width: 66%;
   aspect-ratio: 1;
   border-radius: 50%;
-  --d: 16s;
-  --r: 13s;
 }
 
 /* interseca l'ancora sull'angolo alto-destro */
@@ -685,8 +664,6 @@ html {
   aspect-ratio: 1;
   border-radius: 20%;
   rotate: -12deg;
-  --d: 14s;
-  --r: 17s;
 }
 
 /* passa sopra ancora e quadrato: è qui che il vetro si vede di più */
@@ -696,8 +673,6 @@ html {
   width: 34%;
   aspect-ratio: 1;
   border-radius: 50%;
-  --d: 18s;
-  --r: 11s;
 }
 
 /* piccola, appoggiata sul bordo dell'ancora */
@@ -708,8 +683,6 @@ html {
   aspect-ratio: 1;
   border-radius: 26%;
   rotate: 14deg;
-  --d: 13s;
-  --r: 19s;
 }
 
 /* derive in pixel fissi: la massa respira uguale a ogni taglia di schermo */
@@ -1186,6 +1159,7 @@ body::after {
     color-mix(in srgb, var(--lift) 30%, transparent) 0%,
     color-mix(in srgb, var(--lift) 16%, transparent) 100%
   );
+  box-shadow: none;
 }
 
 /* ── schermata 1: il titolo ── */
@@ -1314,18 +1288,6 @@ body::after {
   pointer-events: auto;
 }
 
-.rosso-massa {
-  position: absolute;
-  left: -5vw;
-  bottom: calc(var(--massa-bottom, 0px) - 1rem);
-  width: var(--w);
-  height: auto;
-  aspect-ratio: 100 / 82;
-}
-
-/* Le lastre all'interno di .rosso-blend usano ora .massa di .hero-art
-   per garantire coincidenza millimetrica su qualsiasi risoluzione */
-
 /* ── I due ritagli ──
    Due gusci a tutta finestra, uno dentro l'altro. Essendo grandi quanto
    la finestra, `inset()` si misura direttamente in coordinate schermo: il
@@ -1341,7 +1303,8 @@ body::after {
   pointer-events: none;
 }
 /* prima che il rosso arrivi, niente lastre bianche */
-.taglio-alto {
+.taglio-alto,
+.taglio-fissato {
   clip-path: inset(100% 0 0 0);
 }
 @supports (animation-timeline: view()) {
@@ -2102,10 +2065,10 @@ body::after {
    Torna la carta dopo il rosso: là si racconta come si lavora, qui lo si
    dimostra. Stampe appoggiate sul tavolo, non una griglia di immagini —
    la cornice è la stessa polaroid dell'altra pagina. ─────────────────── */
-/* ══ L'ALBUM · Scorrimento Orizzontale a Pieno Schermo (Awwwards-Tier) ═════
-   Sticky viewport pinning a piena altezza (100vh) agganciato al naturale
-   scorrimento verticale della traccia esterna (380vh). Traduce il gesto in
-   transito fluido su asse X con parallasse multi-strato, liquid-glass,
+/* ══ L'ALBUM · Carosello Orizzontale a Pieno Schermo (Awwwards-Tier) ══════
+   La vista resta sticky per una sola schermata; il nastro si muove con
+   trascinamento, rotella orizzontale e controlli, non con lo scroll
+   verticale della pagina. Parallasse multi-strato, liquid-glass,
    micro-interazioni 3D e rotaia di avanzamento. ──────────────────────── */
 .alb-pin-track {
   position: sticky;
@@ -3918,26 +3881,6 @@ html.sycomo-modal-aperto {
   pointer-events: auto;
 }
 
-.faq-taglio {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  clip-path: inset(0);
-  pointer-events: none;
-}
-
-.faq-massa {
-  position: fixed;
-  left: -5vw;
-  bottom: calc(var(--massa-bottom, 0px) - 1rem);
-  /* Evita che il browser appiattisca tutto il contenitore in un rettangolo. */
-  opacity: 1;
-  translate: none;
-}
-
-/* La massa di vetro nella sua copia chiara, come nella schermata dei
-   servizi. Ancorata alla sezione e non allo schermo: questa è più bassa
-   di una schermata, quindi si vede per intero senza doverla inseguire. */
 .faq-titolo {
   position: relative;
   z-index: 1;
@@ -5047,16 +4990,13 @@ html.sycomo-modal-aperto {
   .hero-art,
   .taglio-alto,
   .taglio-basso,
-  .taglio-fissato,
-  .faq-taglio {
+  .taglio-fissato {
     inset: 0 0 auto;
     height: 100dvh;
   }
 
-  .massa,
-  .rosso-massa,
-  .faq-massa {
-    --w: 20rem;
+  .massa {
+    width: 20rem;
     bottom: -8rem;
   }
 }

@@ -422,7 +422,7 @@ export const tier2Tests = [
     id: "F3-T2-01",
     tier: 2,
     feature: "F3",
-    name: "Breakpoint Boundary 860px: Exactly 860px renders desktop pinned carousel",
+    name: "Breakpoint Boundary 860px: Exactly 860px renders desktop carousel at normal viewport height",
     async run(driver, { baseUrl }) {
       await driver.setViewport({ width: 860, height: 900 });
       await driver.goto(baseUrl);
@@ -445,8 +445,8 @@ export const tier2Tests = [
         throw new Error("At 860px boundary, desktop pinned carousel is not active");
       }
 
-      if (bp860.heightVh < 180) {
-        throw new Error(`At 860px, track height is insufficient: ${bp860.heightVh.toFixed(1)}vh`);
+      if (bp860.heightVh < 90 || bp860.heightVh > 130) {
+        throw new Error(`At 860px, track height should stay around one viewport: ${bp860.heightVh.toFixed(1)}vh`);
       }
 
       return {

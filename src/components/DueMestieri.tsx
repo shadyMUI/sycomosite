@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
+import { MassaVetro } from "./HeroArt";
 
 export type VoceMestiere = {
   nome: string;
@@ -104,20 +105,6 @@ export const MESTIERI_DIGITAL: Mestiere[] = [
   },
 ];
 
-
-interface LastraSpec {
-  id: string;
-  isVetro: boolean;
-}
-
-const LASTRE_CONFIG: LastraSpec[] = [
-  { id: "ml-fondo", isVetro: false },
-  { id: "ml-ancora", isVetro: false },
-  { id: "ml-quadro", isVetro: true },
-  { id: "ml-tondo", isVetro: true },
-  { id: "ml-scheggia", isVetro: true },
-];
-
 type Props = {
   titolo?: string;
   mestieri?: Mestiere[];
@@ -186,19 +173,8 @@ export default function DueMestieri({
           il fondo trasparente (restando bianco puro), senza MAI toccare lo
           sfondo rosso esterno (che altrimenti causerebbe la tinta ciano/azzurro). */}
       <div className="rosso-blend rosso-blend--servizi">
-        <div
-          ref={taglioRef}
-          className="taglio-fissato hero-art"
-          style={{ clipPath: "inset(100% 0 0 0)" }}
-        >
-          <div className="massa" aria-hidden="true">
-            {LASTRE_CONFIG.map(({ id, isVetro }) => (
-              <span
-                key={id}
-                className={`ml sml ${id}${isVetro ? " ml-vetro" : ""}`}
-              />
-            ))}
-          </div>
+        <div ref={taglioRef} className="taglio-fissato hero-art" aria-hidden="true">
+          <MassaVetro bianca />
         </div>
 
         <h2

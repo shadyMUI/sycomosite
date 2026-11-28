@@ -473,7 +473,7 @@ export const tier1Tests = [
     id: "F3-T1-01",
     tier: 1,
     feature: "F3",
-    name: "Desktop Carousel Active: Pinned horizontal carousel is active on viewports >= 860px",
+    name: "Desktop Carousel Active: Horizontal carousel is active on viewports >= 860px without scroll pinning",
     async run(driver, { baseUrl }) {
       await driver.setViewport({ width: 1280, height: 800 });
       await driver.goto(baseUrl);
@@ -503,15 +503,15 @@ export const tier1Tests = [
         throw new Error("Desktop pinned track is hidden (display: none) at 1280px");
       }
 
-      if (desktopTrack.heightVh < 180) {
+      if (desktopTrack.heightVh < 90 || desktopTrack.heightVh > 130) {
         throw new Error(
-          `Desktop track height is insufficient for pinning: ${desktopTrack.heightVh.toFixed(1)}vh (expected >= 200vh)`
+          `Desktop track should stay a normal viewport-height carousel: ${desktopTrack.heightVh.toFixed(1)}vh (expected 90–130vh)`
         );
       }
 
       return {
         passed: true,
-        details: `Desktop pinned track active: height=${desktopTrack.heightVh.toFixed(1)}vh (${desktopTrack.heightPx}px)`,
+        details: `Desktop carousel active without a tall pin track: height=${desktopTrack.heightVh.toFixed(1)}vh (${desktopTrack.heightPx}px)`,
       };
     },
   },
@@ -520,7 +520,7 @@ export const tier1Tests = [
     id: "F3-T1-02",
     tier: 1,
     feature: "F3",
-    name: "Desktop Scroll Translation: Scrolling through desktop track translates cards horizontally",
+    name: "Desktop Scroll Stability: Vertical page scroll leaves the carousel in place (no horizontal hijack)",
     async run(driver, { baseUrl }) {
       await driver.setViewport({ width: 1280, height: 800 });
       await driver.goto(baseUrl);
@@ -549,17 +549,22 @@ export const tier1Tests = [
         return card ? card.getBoundingClientRect().left : 0;
       });
 
-      // Horizontal position should have changed (shifted left)
+      // Vertical page scroll must not move the carousel horizontally.
       const diff = Math.abs(scrolledLeft - initialLeft);
-      if (diff < 20) {
+      if (diff > 2) {
         throw new Error(
-          `Desktop carousel did not translate horizontally: initialLeft=${initialLeft}, scrolledLeft=${scrolledLeft}, diff=${diff}`
+          `Desktop carousel moved horizontally during page scroll: initialLeft=${initialLeft}, scrolledLeft=${scrolledLeft}, diff=${diff}`
         );
+      }
+
+      const pageScrollX = await driver.evaluate(() => window.scrollX);
+      if (pageScrollX !== 0) {
+        throw new Error(`Unexpected horizontal page scroll: scrollX=${pageScrollX}`);
       }
 
       return {
         passed: true,
-        details: `Horizontal translation confirmed: shifted by ${diff.toFixed(1)}px (from ${initialLeft.toFixed(1)} to ${scrolledLeft.toFixed(1)})`,
+        details: `Scroll stability confirmed: card left=${scrolledLeft.toFixed(1)}px, page scrollX=${pageScrollX}`,
       };
     },
   },

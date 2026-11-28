@@ -6,6 +6,7 @@
  * - T3-03: Modal Open during Viewport Resize across 860px
  * - T3-04: Reduced motion mode across all features
  * - T3-05: Complete full-page mobile user flow
+ * - T3-06: Glass silhouettes across section boundaries
  */
 
 export const tier3Tests = [
@@ -297,6 +298,45 @@ export const tier3Tests = [
         passed: true,
         details: `Full mobile journey traversed smoothly to scrollY=${finalState.scrollY}px with 0 errors`,
       };
+    },
+  },
+
+  {
+    id: "T3-06",
+    tier: 3,
+    feature: "Cross",
+    name: "Glass shapes keep their animated bounds across red section boundaries",
+    async run(driver, { baseUrl }) {
+      await driver.setViewport({ width: 1440, height: 900 });
+      await driver.setReducedMotion(false);
+      await driver.goto(baseUrl);
+      await driver.waitForFunction(() => {
+        const motion = document.querySelector(".hero-art--red .ml")?.getAnimations()[0];
+        return motion?.playState === "running" && motion.currentTime > 1500;
+      });
+
+      for (const selector of [".rosso", ".faq", ".rosso"]) {
+        await driver.evaluate(async (selector) => {
+          const section = document.querySelector(selector);
+          const red = document.querySelector(".hero-art--red");
+          const circle = red.querySelector(".ml-fondo").getBoundingClientRect();
+          const seam = circle.top + circle.height / 2;
+          window.scrollBy({ top: section.getBoundingClientRect().top - seam, behavior: "instant" });
+          await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+
+          for (const shape of [".ml-fondo", ".ml-ancora", ".ml-quadro", ".ml-tondo", ".ml-scheggia"]) {
+            const reference = red.querySelector(shape).getBoundingClientRect();
+            const white = section.querySelector(shape).getBoundingClientRect();
+            if (!reference.width) throw new Error(`Missing geometry for ${shape}`);
+            for (const key of ["x", "y", "width", "height"]) {
+              if (Math.abs(white[key] - reference[key]) > 0.25) {
+                throw new Error(`${selector} ${shape} ${key}: ${white[key]} vs red ${reference[key]}`);
+              }
+            }
+          }
+        }, selector);
+      }
+      return { passed: true, details: "All five silhouettes match on entry to services, FAQ and back" };
     },
   },
 ];

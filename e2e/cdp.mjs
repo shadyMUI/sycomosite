@@ -32,7 +32,12 @@ export async function getFreePort(startPort = 9333) {
  * Launches Chrome in headless mode with remote debugging enabled
  */
 export async function launchChrome(options = {}) {
-  const chromePath = options.chromePath || "/usr/bin/google-chrome";
+  const chromePath =
+    options.chromePath ||
+    process.env.CHROME_PATH ||
+    (process.platform === "win32"
+      ? "C:/Program Files/Google/Chrome/Application/chrome.exe"
+      : "/usr/bin/google-chrome");
   const port = options.port || (await getFreePort(9333));
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "sycomo-e2e-"));
 

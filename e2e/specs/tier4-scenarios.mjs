@@ -161,7 +161,7 @@ export const tier4Tests = [
     id: "T4-03",
     tier: 4,
     feature: "Scenario",
-    name: "Desktop Workstation Visitor Journey (1440x900): Pinned carousel exploration and case study dialog",
+    name: "Desktop Workstation Visitor Journey (1440x900): Carousel exploration and case study dialog",
     async run(driver, { baseUrl }) {
       await driver.setViewport({ width: 1440, height: 900 });
       await driver.goto(baseUrl);
@@ -177,7 +177,7 @@ export const tier4Tests = [
       );
       if (!navHeader) throw new Error("Desktop header did not fade in");
 
-      // Step 2: Scroll into horizontal pinned carousel track
+      // Step 2: Scroll into the carousel
       const trackTop = await driver.evaluate(() => {
         const track = document.querySelector(".alb-pin-track, .alb-desktop-view");
         return track ? track.getBoundingClientRect().top + window.scrollY : 1200;
@@ -191,18 +191,29 @@ export const tier4Tests = [
         return card ? card.getBoundingClientRect().left : 0;
       });
 
-      // Step 3: Scroll further across track to test horizontal glide
-      await driver.scrollTo({ top: trackTop + 900 });
-      await driver.sleep(400);
-
-      const shiftedLeft = await driver.evaluate(() => {
+      // Step 3: A further vertical scroll must advance the page without
+      // hijacking the carousel into a horizontal translation.
+      const beforeScroll = await driver.evaluate(() => window.scrollY);
+      await driver.scrollBy({ top: 120 });
+      await driver.sleep(250);
+      const afterScroll = await driver.evaluate(() => {
         const card = document.querySelector(".alb-card, [data-desktop-card]");
-        return card ? card.getBoundingClientRect().left : 0;
+        return {
+          y: window.scrollY,
+          x: window.scrollX,
+          cardLeft: card ? card.getBoundingClientRect().left : 0,
+        };
       });
 
-      const shift = Math.abs(shiftedLeft - initialLeft);
-      if (shift < 20) {
-        throw new Error(`Horizontal glide did not respond to scroll: shift=${shift}px`);
+      if (afterScroll.y <= beforeScroll) {
+        throw new Error(`Page scroll was trapped at y=${beforeScroll}px`);
+      }
+      if (afterScroll.x !== 0) {
+        throw new Error(`Unexpected horizontal page scroll: scrollX=${afterScroll.x}`);
+      }
+      const shift = Math.abs(afterScroll.cardLeft - initialLeft);
+      if (shift > 2) {
+        throw new Error(`Vertical scroll moved the carousel horizontally: shift=${shift}px`);
       }
 
       // Step 4: Click project card to inspect full workstation specifications
@@ -218,7 +229,7 @@ export const tier4Tests = [
 
       return {
         passed: true,
-        details: `Desktop workstation flow passed: glide shift=${shift.toFixed(1)}px, case study dialog inspected`,
+        details: `Desktop workstation flow passed: vertical scroll advanced to ${afterScroll.y}px without carousel shift, case study dialog inspected`,
       };
     },
   },
