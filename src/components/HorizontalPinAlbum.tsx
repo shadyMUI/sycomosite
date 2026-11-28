@@ -213,14 +213,16 @@ export default function HorizontalPinAlbum({ titolo, scatti, onSelectCard }: Pro
         }
       }
 
-      // 4. Calcola scheda più vicina al centro ottico
+      // 4. Calcola la scheda attiva dalla posizione del nastro, non dal
+      // centro del viewport: su schermi molto larghi due schede stanno
+      // entrambe vicine al centro e la prima veniva scavalcata dalla
+      // seconda pur essendo il nastro ancora a zero.
       let closestIdx = 0;
       let minDiff = Infinity;
       for (let i = 0; i < total; i++) {
         const cMetric = metrics.cardMetrics[i];
         if (!cMetric) continue;
-        const cardCenter = cMetric.offsetLeft + cMetric.width / 2 - state.currentX;
-        const diff = Math.abs(cardCenter - vCenter);
+        const diff = Math.abs(cMetric.idealTargetX - state.currentX);
         if (diff < minDiff) {
           minDiff = diff;
           closestIdx = i;

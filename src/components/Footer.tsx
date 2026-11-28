@@ -55,7 +55,7 @@ export default function Footer({
         </ul>
 
         <p className="pie-nota">
-          © {anno} — <Link href="/privacy">Privacy</Link>
+          © {anno} — <Link href="/privacy" prefetch={false}>Privacy</Link>
         </p>
       </div>
     </footer>

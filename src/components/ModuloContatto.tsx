@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { memo, useRef, useState } from "react";
 
 /* From Uiverse.io by gharsh11032000 - https://uiverse.io/gharsh11032000/loud-chicken-53
    MIT License, Copyright (c) gharsh11032000 (Harsh Gupta) */
@@ -82,6 +82,50 @@ const MODELLI = {
 };
 
 type Campo = { id: string; valore: string; nome: string; mail?: boolean };
+
+type CampoInputProps = {
+  id: string;
+  etichetta: string;
+  valore: string;
+  onChange: (valore: string) => void;
+  placeholder?: string;
+  type?: string;
+  autoComplete?: string;
+  manca?: boolean;
+  largo?: boolean;
+};
+
+/* Un campo isolato: quando si scrive in uno, gli altri tre non hanno motivo
+   di essere ri-renderizzati. I setter sono stabili, quindi memo li salta. */
+const CampoInput = memo(function CampoInput({
+  id,
+  etichetta,
+  valore,
+  onChange,
+  placeholder,
+  type,
+  autoComplete,
+  manca = false,
+  largo = false,
+}: CampoInputProps) {
+  return (
+    <span className={`mod-campo${largo ? " mod-campo--largo" : ""}`}>
+      <label className="mod-etichetta" htmlFor={id}>
+        {etichetta}
+      </label>
+      <input
+        id={id}
+        type={type}
+        value={valore}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        autoComplete={autoComplete}
+        aria-invalid={manca || undefined}
+        className={manca ? "manca" : undefined}
+      />
+    </span>
+  );
+});
 
 export default function ModuloContatto({
   email,
@@ -214,72 +258,47 @@ export default function ModuloContatto({
     <form className="mod" onSubmit={invia} noValidate ref={form}>
       <p className="mod-frase">
         Ciao, sono{" "}
-        <span className="mod-campo">
-          <label className="mod-etichetta" htmlFor="c-nome">
-            il vostro nome
-          </label>
-          <input
-            id="c-nome"
-            value={nome}
-            onChange={(e) => setNome(e.target.value)}
-            placeholder="Marco"
-            autoComplete="name"
-            aria-invalid={manca("il vostro nome") || undefined}
-            className={manca("il vostro nome") ? "manca" : undefined}
-          />
-        </span>
+        <CampoInput
+          id="c-nome"
+          etichetta="il vostro nome"
+          valore={nome}
+          onChange={setNome}
+          placeholder="Marco"
+          autoComplete="name"
+          manca={manca("il vostro nome")}
+        />
         {frase.attivita.chiede}{" "}
-        <span className="mod-campo mod-campo--largo">
-          <label className="mod-etichetta" htmlFor="c-attivita">
-            {frase.attivita.etichetta}
-          </label>
-          <input
-            id="c-attivita"
-            value={attivita}
-            onChange={(e) => setAttivita(e.target.value)}
-            placeholder={frase.attivita.esempio}
-            aria-invalid={manca(frase.attivita.etichetta) || undefined}
-            className={manca(frase.attivita.etichetta) ? "manca" : undefined}
-          />
-        </span>{" "}
+        <CampoInput
+          id="c-attivita"
+          etichetta={frase.attivita.etichetta}
+          valore={attivita}
+          onChange={setAttivita}
+          placeholder={frase.attivita.esempio}
+          manca={manca(frase.attivita.etichetta)}
+          largo
+        />{" "}
         {frase.serve.chiede}{" "}
-        <span className="mod-campo mod-campo--largo">
-          <label className="mod-etichetta" htmlFor="c-serve">
-            {frase.serve.etichetta}
-          </label>
-          <input
-            id="c-serve"
-            value={serve}
-            onChange={(e) => setServe(e.target.value)}
-            placeholder={frase.serve.esempio}
-            aria-invalid={manca(frase.serve.etichetta) || undefined}
-            className={manca(frase.serve.etichetta) ? "manca" : undefined}
-          />
-        </span>
+        <CampoInput
+          id="c-serve"
+          etichetta={frase.serve.etichetta}
+          valore={serve}
+          onChange={setServe}
+          placeholder={frase.serve.esempio}
+          manca={manca(frase.serve.etichetta)}
+          largo
+        />
         . Rispondetemi a{" "}
-        <span className="mod-campo mod-campo--largo">
-          <label className="mod-etichetta" htmlFor="c-mail">
-            la vostra email
-          </label>
-          <input
-            id="c-mail"
-            type="email"
-            value={mittente}
-            onChange={(e) => setMittente(e.target.value)}
-            placeholder={frase.mail ?? "marco@esempio.it"}
-            autoComplete="email"
-            aria-invalid={
-              manca("la vostra email") ||
-              manca("un'email scritta bene") ||
-              undefined
-            }
-            className={
-              manca("la vostra email") || manca("un'email scritta bene")
-                ? "manca"
-                : undefined
-            }
-          />
-        </span>
+        <CampoInput
+          id="c-mail"
+          etichetta="la vostra email"
+          valore={mittente}
+          onChange={setMittente}
+          placeholder={frase.mail ?? "marco@esempio.it"}
+          type="email"
+          autoComplete="email"
+          manca={manca("la vostra email") || manca("un'email scritta bene")}
+          largo
+        />
         <span className="mod-dot" aria-hidden="true" />
       </p>
 

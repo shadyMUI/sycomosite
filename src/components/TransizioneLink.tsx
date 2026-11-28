@@ -44,13 +44,16 @@ export default function TransizioneLink({
     };
 
     window.addEventListener("sycomo:navigation-covered", naviga, { once: true });
-    timer = window.setTimeout(naviga, 1600);
+    /* Il sipario copre in ~0,72 s: oltre non serve aspettare. La rete di
+       sicurezza resta più larga dell'animazione, non più di 1,6 s. */
+    timer = window.setTimeout(naviga, 850);
     window.dispatchEvent(new CustomEvent("sycomo:navigation-start"));
   };
 
   return (
     <Link
       href={href}
+      prefetch={false}
       className={className}
       aria-label={ariaLabel}
       style={style}

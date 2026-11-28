@@ -56,8 +56,11 @@ export default function ProjectDetailModal({ project, onClose }: Props) {
     triggerRef.current =
       typeof document !== "undefined" ? (document.activeElement as HTMLElement | null) : null;
 
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    /* Blocca lo scorrimento con una classe sul root invece di scrivere
+       `overflow` inline sul body: la scrittura inline costringeva Chrome a
+       ricalcolare tutta la pagina (≈110 ms su mobile) alla prima apertura. */
+    const root = document.documentElement;
+    root.classList.add("sycomo-modal-aperto");
     window.addEventListener("keydown", handleKeyDown);
 
     // Focus iniziale sul tasto di chiusura per conformità WCAG AA
@@ -69,7 +72,7 @@ export default function ProjectDetailModal({ project, onClose }: Props) {
 
     return () => {
       clearTimeout(timer);
-      document.body.style.overflow = previousOverflow;
+      root.classList.remove("sycomo-modal-aperto");
       window.removeEventListener("keydown", handleKeyDown);
 
       // WCAG 2.4.3: Ripristina il focus sull'elemento attivatore

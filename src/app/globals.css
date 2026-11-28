@@ -166,7 +166,7 @@ html {
   animation: none !important;
 }
 .intro--chiudi .intro-sheet {
-  animation: intro-cover 0.98s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: intro-cover 0.72s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 @keyframes intro-done {
   to {
@@ -276,9 +276,10 @@ html {
     transition: none !important;
   }
   .logo-fly {
+    left: 22px !important;
     top: 12px !important;
     translate: 0 0 !important;
-    margin-left: 22px !important;
+    scale: 1 !important;
     font-size: 30px !important;
     transition: none !important;
   }
@@ -344,13 +345,17 @@ html {
    senza bisogno di animarlo a parte. */
 .logo-fly {
   position: fixed;
-  left: 0;
-  top: calc((1 - var(--p)) * 50vh + var(--p) * 12px);
-  translate: 0 calc(-50% * (1 - var(--p)));
-  margin-left: calc(
-    (1 - var(--p)) * 8vw + var(--p) * 22px
-  ); /* centrato in basso a sinistra → filo della header */
-  font-size: calc((1 - var(--p)) * clamp(84px, 19vw, 300px) + var(--p) * 30px);
+  /* Base alla misura dell'apertura: il volo riduce con `scale`, non con
+     `font-size`. Così il testo resta grande e nitido alla partenza, mentre
+     la testata riceve il marchio a 30px senza ricalcolare il layout. */
+  left: 8vw;
+  top: 50vh;
+  font-size: clamp(84px, 19vw, 300px);
+  transform-origin: top left;
+  translate:
+    calc(var(--p) * (22px - 8vw))
+    calc((1 - var(--p)) * -50% + var(--p) * (12px - 50vh));
+  scale: calc(1 - var(--p) * var(--logo-rimpicciolisci, 0.9));
   z-index: 50;
   pointer-events: none;
   will-change: transform;
@@ -370,14 +375,16 @@ html {
   z-index: 50; /* sopra il vetro della barra, come il logo */
 
   /* Il viaggio, in due coordinate.
-     In orizzontale: dal margine sinistro del logo fino al bordo destro
-     dello schermo. Il translate a -100% è ciò che permette di ancorare a
-     destra usando `left` — due proprietà diverse non si possono
-     interpolare fra loro, una sola sì.
-     In verticale: da sotto il marchio al centro dei 64px della barra. */
-  left: calc((1 - var(--p)) * 8vw + var(--p) * (100vw - 22px));
-  top: calc((1 - var(--p)) * (50vh + clamp(96px, 15vw, 240px)) + var(--p) * 32px);
-  translate: calc(var(--p) * -100%) calc(var(--p) * -50%);
+     La posizione finale è quella della barra; il viaggio avviene tutto in
+     `translate`, quindi non sposta il layout della pagina. In orizzontale:
+     dal margine sinistro del logo fino al bordo destro dello schermo, con
+     il -100% che ancora il blocco al suo bordo destro. In verticale: da
+     sotto il marchio al centro dei 64px della barra. */
+  left: calc(100vw - 22px);
+  top: 32px;
+  translate:
+    calc(var(--p) * -100% + (1 - var(--p)) * (8vw - (100vw - 22px)))
+    calc(var(--p) * -50% + (1 - var(--p)) * (50vh + clamp(96px, 15vw, 240px) - 32px));
 
   /* Le due voci stanno SEMPRE in riga. L'aspetto incolonnato
      dell'apertura è ottenuto spostando la seconda sotto la prima (vedi
@@ -506,11 +513,17 @@ html {
      che lì è `auto`. Il richiamo della pagina dei siti finiva così
      ancorato a 100vw e usciva dallo schermo a destra. */
   .sotto-logo:not(.sotto-logo--barra) {
-    left: calc((1 - var(--p)) * 7vw + var(--p) * (100vw - 14px));
+    /* Anche qui il viaggio è solo `translate`: il layout resta fermo alla
+       posizione della barra. I valori finali sono 14px dal bordo destro,
+       quelli iniziali 7vw dal sinistro. */
+    left: calc(100vw - 14px);
+    top: 32px;
+    translate:
+      calc(var(--p) * -100% + (1 - var(--p)) * (7vw - (100vw - 14px)))
+      calc(var(--p) * -50% + (1 - var(--p)) * (50vh + clamp(104px, 28vw, 200px) - 32px));
     /* Più staccati dal marchio che sul grande schermo: qui il lockup è
        centrato e sotto c'è tutta la schermata vuota, mentre i richiami
        gli stavano addosso come se fossero una terza riga del logo. */
-    top: calc((1 - var(--p)) * (50vh + clamp(104px, 28vw, 200px)) + var(--p) * 32px);
     /* le variabili, non la scorciatoia `gap`: servono anche al calcolo
        dello scivolamento della seconda voce */
     --gap-x: 14px;
@@ -599,8 +612,21 @@ html {
     ml-respiro var(--r, 13s) ease-in-out infinite;
   animation-play-state: paused;
 }
+/* Il vetro si muove durante l'ingresso e mentre si scorre; a riposo si
+   ferma. Il movimento è decorativo e lentissimo, ma le due animazioni
+   per lastra costavano ~3 s di main thread ogni 4 s. */
 .figs-on .ml {
-  animation-play-state: running;
+  animation-play-state: paused;
+}
+/* Sul touch il vetro resta fermo: il movimento non si vede e il costo
+   del main thread durante lo scroll è più importante. */
+@media (hover: hover) and (pointer: fine) {
+  .figs-on.sycomo-muove .ml {
+    animation-play-state: running;
+  }
+}
+.figs-on .massa--ferma .ml {
+  animation-play-state: paused;
 }
 /* sheen: una sola sorgente di luce per tutta la massa */
 .ml::before {
@@ -3256,13 +3282,19 @@ body::after {
   to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 }
 
+/* Blocco scroll del modale: classe sul root, non `overflow` inline sul
+   body, che alla prima apertura costava ~110 ms di stile su mobile. */
+html.sycomo-modal-aperto {
+  overflow: hidden;
+}
+
 .alb-modal-backdrop {
   position: fixed;
   inset: 0;
   z-index: 9998;
   background: rgba(18, 18, 16, 0.65);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  /* Niente blur a tutto schermo: su mobile l'apertura costava ~80 ms di
+     render. Il pannello del modale resta in vetro, il velo no. */
   animation: albModalFadeIn 0.24s cubic-bezier(0.16, 1, 0.3, 1);
   overscroll-behavior: contain;
   touch-action: none;
@@ -3657,6 +3689,15 @@ body::after {
 /* Footer & CTA */
 .alb-modal-footer {
   margin-top: 6px;
+}
+
+/* Le sezioni sotto la piega del pannello non servono nel primo frame:
+   lasciarle fuori dal render iniziale taglia il picco di stile della prima
+   apertura, senza cambiare ciò che si vede né lo scroll del pannello. */
+.alb-modal-section,
+.alb-modal-footer {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 260px;
 }
 
 .alb-modal-cta-btn {
@@ -4980,7 +5021,6 @@ body::after {
   color: #e12c1a;
   filter: none;
   transition: color 120ms linear, filter 120ms linear;
-  will-change: filter, color;
 }
 
 .kaomoji-separator {

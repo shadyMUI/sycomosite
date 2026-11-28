@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Manrope, Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import IntroCurtain from "@/components/IntroCurtain";
+import PausaMassa from "@/components/PausaMassa";
 import ScorrimentoFluido from "@/components/ScorrimentoFluido";
 import { BASE_PATH, SITO, NOME, DESCRIZIONE, DESCRIZIONE_BREVE, urlSito } from "@/lib/sito";
 
@@ -115,6 +116,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <IntroCurtain />
+        <PausaMassa />
         <ScorrimentoFluido />
         {children}
       </body>

@@ -24,6 +24,19 @@ export default function ScrollDirector() {
   useEffect(() => {
     const root = document.documentElement;
 
+    /* Il logo usa una scala, non un font-size interpolato. La riduzione
+       necessaria per arrivare a 30px dipende dalla misura base del clamp;
+       la calcoliamo qui una volta per viewport, così il CSS resta puro. */
+    const aggiornaRimpicciolimentoLogo = () => {
+      const base = Math.min(300, Math.max(84, window.innerWidth * 0.19));
+      root.style.setProperty(
+        "--logo-rimpicciolisci",
+        (1 - 30 / base).toFixed(5)
+      );
+    };
+    aggiornaRimpicciolimentoLogo();
+    window.addEventListener("resize", aggiornaRimpicciolimentoLogo);
+
     // Se il sito è già aperto (ad es. navigazione interna client-side tra pagine), manteniamo --p = 1
     if (
       root.classList.contains("figs-on") ||
@@ -31,7 +44,8 @@ export default function ScrollDirector() {
     ) {
       root.style.setProperty("--p", "1");
       root.classList.add("figs-on");
-      return;
+      return () =>
+        window.removeEventListener("resize", aggiornaRimpicciolimentoLogo);
     }
 
     const mediaReducedMotion = window.matchMedia(
@@ -117,6 +131,7 @@ export default function ScrollDirector() {
       if (timer) clearTimeout(timer);
       if (onIntroDoneRef) window.removeEventListener("sycomo:intro-done", onIntroDoneRef);
       if (onScrollRef) window.removeEventListener("scroll", onScrollRef);
+      window.removeEventListener("resize", aggiornaRimpicciolimentoLogo);
     };
   }, []);
 

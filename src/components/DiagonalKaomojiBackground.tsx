@@ -98,7 +98,14 @@ export default function DiagonalKaomojiBackground({
     const righe = Array.from(layer.children, track => track.querySelectorAll<HTMLElement>("[data-kaomoji]"));
     const reach = 100;
     let inVista = false;
+    let textRects: DOMRect[] = [];
+    let textKey = "";
+    let textDirty = true;
     const stiliApplicati = new Map<HTMLElement, { filter: string; color: string }>();
+
+    // I rettangoli del testo cambiano solo con scroll, resize o font: fuori
+    // da questi eventi non ha senso ricalcolarli a ogni correzione del blur.
+    document.fonts?.ready.then(() => { textDirty = true; }).catch(() => {});
 
     const updateBlur = () => {
       if (!inVista || document.hidden) return;
@@ -124,12 +131,17 @@ export default function DiagonalKaomojiBackground({
         }
       }
       if (!glyphRects.length) return;
-      const textRects: DOMRect[] = [];
-      for (const element of testi) {
-        const style = getComputedStyle(element);
-        if (style.visibility === "hidden" || Number(style.opacity) <= 0.01) continue;
-        range.selectNodeContents(element);
-        textRects.push(...range.getClientRects());
+      const key = `${window.scrollX}:${window.scrollY}:${window.innerWidth}:${window.innerHeight}`;
+      if (textDirty || key !== textKey) {
+        textRects = [];
+        for (const element of testi) {
+          const style = getComputedStyle(element);
+          if (style.visibility === "hidden" || Number(style.opacity) <= 0.01) continue;
+          range.selectNodeContents(element);
+          textRects.push(...range.getClientRects());
+        }
+        textKey = key;
+        textDirty = false;
       }
       if (!textRects.length) return;
 
@@ -181,17 +193,17 @@ export default function DiagonalKaomojiBackground({
     observer.observe(document.documentElement);
     window.addEventListener("scroll", schedule, { passive: true });
     window.addEventListener("resize", schedule, { passive: true });
-    /* Intervallo rado: il blur serve solo per far sembrare il testo
-       leggibile davanti al flusso, una correzione ogni ~120ms è
-       indistinguibile e costa un terzo di prima. La scheda nascosta
-       fa fermare tutto il ciclo. */
+    /* Il nastro è lentissimo (137 px/s): correggere il blur ogni 120 ms
+       era indistinguibile a occhio ma costava un aggiornamento continuo.
+       A 1000 ms il passaggio resta graduale e il ciclo costa meno di un
+       quinto, senza correzioni visibili a occhio. */
     let animation: number | null = null;
     const syncAnimation = () => {
       if (document.hidden || !inVista) {
         if (animation !== null) window.clearInterval(animation);
         animation = null;
       } else {
-        if (animation === null) animation = window.setInterval(schedule, 120);
+        if (animation === null) animation = window.setInterval(schedule, 1000);
         schedule();
       }
     };
@@ -217,6 +229,10 @@ export default function DiagonalKaomojiBackground({
     };
   }), []);
 
+  // Il fondo resta nascosto finché la geometria non è quella reale: così
+  // le tracce non fanno in tempo a spostarsi sulla pagina già visibile.
+  const [pronto, setPronto] = useState(false);
+
   // SSR initial baseline: exact deterministic defaults
   const [geometry, setGeometry] = useState<GeometryState>(() => {
     const initW = 1920;
@@ -236,12 +252,11 @@ export default function DiagonalKaomojiBackground({
     const measureAndAdjust = () => {
       const winWidth = document.documentElement.clientWidth || window.innerWidth;
       const winH = window.innerHeight || 950;
-      const totalPageHeight = Math.max(
-        document.documentElement.scrollHeight,
-        document.body.scrollHeight,
-        containerRef.current?.parentElement?.scrollHeight || 0,
-        winH
-      );
+      // `document.scrollHeight` include anche questo contenitore assoluto:
+      // usarlo creava un ciclo (7000 px di altezza che si autoalimentavano)
+      // e ~1.600 px di pagina vuota. Il contenuto vero è l'altezza del padre.
+      const parent = containerRef.current?.parentElement;
+      const totalPageHeight = Math.max(parent?.clientHeight || 0, winH);
       const L = Math.sqrt(winWidth * winWidth + totalPageHeight * totalPageHeight);
       const trackWidth = Math.max(L * 2.5, 35000);
       /* Distanza perpendicolare fra le tre diagonali: 200px lascia aria
@@ -266,6 +281,7 @@ export default function DiagonalKaomojiBackground({
           spacing,
         };
       });
+      setPronto(true);
     };
 
     measureAndAdjust();
@@ -399,7 +415,7 @@ export default function DiagonalKaomojiBackground({
     <div
       ref={containerRef}
       className={`${className || "absolute inset-x-0 top-0 z-0 overflow-hidden pointer-events-none select-none"} kaomoji-background`}
-      style={{ height: `${viewHeight}px` }}
+      style={{ height: pronto ? `${viewHeight}px` : 0, opacity: pronto ? 1 : 0 }}
       aria-hidden="true"
     >
       <div ref={tracksLayerRef} className="absolute inset-0">
