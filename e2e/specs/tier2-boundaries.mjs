@@ -1,7 +1,7 @@
 /**
  * e2e/specs/tier2-boundaries.mjs
  * Tier 2: Boundary & Corner Cases (≥5 tests per feature)
- * - F1 Boundaries: Rapid reload, fast scroll, overscroll y=0, compact height, reduced motion
+ * - F1 Boundaries: Rapid reload, scroll restoration, fast scroll, overscroll y=0, compact height, reduced motion
  * - F2 Boundaries: Exactly 859px, 375px zero overflow, 390px zero overflow, 412px zero overflow, landscape 667x375
  * - F3 Boundaries: Exactly 860px, 1280px standard, 1920px high-res, midpoint scroll jump, boundary exit
  */
@@ -204,6 +204,34 @@ export const tier2Tests = [
         passed: true,
         details: `Reduced motion instant entrance verified: --p=${instantState.pVal}, headerOpacity=${instantState.headerOpacity}`,
       };
+    },
+  },
+
+  {
+    id: "F1-T2-06",
+    tier: 2,
+    feature: "F1",
+    name: "Reload preserves the reading position with the animated background visible",
+    async run(driver, { baseUrl }) {
+      await driver.setViewport({ width: 1440, height: 900 });
+      await driver.setReducedMotion(false);
+      await driver.goto(baseUrl);
+      const ready = () => document.fonts.status === "loaded" && document.documentElement.classList.contains("figs-on");
+      await driver.waitForFunction(ready);
+      const middle = await driver.evaluate(() => Math.round((document.documentElement.scrollHeight - innerHeight) / 2));
+      if (middle <= 0) throw new Error("The page must be scrollable to test restoration");
+
+      for (const expected of [0, middle]) {
+        await driver.scrollTo({ top: expected });
+        await driver.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+        await driver.reload();
+        await driver.waitForFunction(ready);
+        const actual = await driver.evaluate(() => window.scrollY);
+        if (Math.abs(actual - expected) > 1) {
+          throw new Error(`Reload moved the viewport from ${expected}px to ${actual}px`);
+        }
+      }
+      return { passed: true, details: `Reload preserved the top and the reading position at ${middle}px` };
     },
   },
 

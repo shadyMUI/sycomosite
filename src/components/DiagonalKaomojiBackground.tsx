@@ -415,7 +415,12 @@ export default function DiagonalKaomojiBackground({
     <div
       ref={containerRef}
       className={`${className || "absolute inset-x-0 top-0 z-0 overflow-hidden pointer-events-none select-none"} kaomoji-background`}
-      style={{ height: pronto ? `${viewHeight}px` : 0, opacity: pronto ? 1 : 0 }}
+      style={{
+        height: pronto ? `${viewHeight}px` : 0,
+        opacity: pronto ? 1 : 0,
+        // Al refresh i simboli cambiano posizione: non sono ancore di lettura.
+        overflowAnchor: "none",
+      }}
       aria-hidden="true"
     >
       <div ref={tracksLayerRef} className="absolute inset-0">
